@@ -1,0 +1,7 @@
+pkl
+.idea
+**/*/__pycache__
+**/.ipynb_checkpoints
+__pycache__
+.ipynb_checkpoints
+社会交流步骤分析
