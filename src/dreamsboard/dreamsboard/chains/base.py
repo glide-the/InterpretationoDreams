@@ -41,7 +41,7 @@ class StoryBoardDreamsGenerationChain(ABC):
         review_chain1 = LLMChain(llm=llm, prompt=prompt_template1, output_key="story_scenario_context")
 
         # 03-故事场景生成.txt
-        prompt_template2 = PromptTemplate(input_variables=["scene_content"],
+        prompt_template2 = PromptTemplate(input_variables=["story_board_summary_context"],
                                           template=STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE)
         review_chain2 = LLMChain(llm=llm, prompt=prompt_template2, output_key="scene_monologue_context")
         # 04-情感情景引导.txt
@@ -84,8 +84,11 @@ class StoryBoardDreamsGenerationChain(ABC):
         selected_columns = ["story_board_text", "story_board"]
         scene_content = self.builder.build_text(selected_columns)
 
+        selected_story_board_columns = ["story_board_role", "story_board_text", "story_board"]
+        story_board_summary_context = self.builder.build_text(selected_story_board_columns)
+
         dreams_guidance_out = self.dreams_guidance_chain({"scene_content": scene_content,
-                                                          "story_board_summary_context": scene_content})
+                                                          "story_board_summary_context": story_board_summary_context})
         dreams_personality_out = self.dreams_personality_chain({"scene_content": scene_content})
         return {"dreams_guidance_context": dreams_guidance_out["dreams_guidance_context"],
                 "dreams_personality_context": dreams_personality_out["dreams_personality_context"]}

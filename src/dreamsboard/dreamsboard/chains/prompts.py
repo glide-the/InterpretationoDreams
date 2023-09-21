@@ -56,7 +56,7 @@ STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE = """根据下面对话分析这里的人�
 
 人物对话如下
 
-{scene_content}
+{story_board_summary_context}
 """
 
 
