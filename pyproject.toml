@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "interpretationodreams"
+version = "0.1.0"
+description = ""
+authors = ["glide-the <2533736852@qq.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[tool.poetry.group.docs.dependencies]
+dreamsboard = { path = "src/dreamsboard/", develop = true }
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
