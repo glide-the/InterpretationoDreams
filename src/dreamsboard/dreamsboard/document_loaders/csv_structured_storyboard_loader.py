@@ -25,10 +25,7 @@ story_board_role:"七七",
 
 """
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import List, Dict, Any
-from langchain.document_loaders.base import BaseLoader
-from langchain.docstore.document import Document
+from abc import ABC
 import csv
 
 
@@ -40,11 +37,11 @@ class Metadata:
 
 class StructuredStoryboard:
     def __init__(self, start_point_len, end_point_len, story_board, story_board_text, story_board_role):
-        self.start_point_len = (start_point_len, "开始时间")
-        self.end_point_len = (end_point_len, "结束时间")
-        self.story_board = (story_board, "分镜")
-        self.story_board_text = (story_board_text, "内容")
-        self.story_board_role = (story_board_role, "角色")
+        self.start_point_len = Metadata(start_point_len, "开始时间")
+        self.end_point_len = Metadata(end_point_len, "结束时间")
+        self.story_board = Metadata(story_board, "分镜")
+        self.story_board_text = Metadata(story_board_text, "内容")
+        self.story_board_role = Metadata(story_board_role, "角色")
 
 
 class StructuredStoryboardCSVBuilder(ABC):
@@ -85,14 +82,14 @@ class StructuredStoryboardCSVBuilder(ABC):
             selected_item = {}
             for column in columns_to_select:
                 if hasattr(item, column):
-                    selected_item[column] = getattr(item, column)[0]
+                    selected_item[column] = getattr(item, column).name
             selected_data.append(selected_item)
 
         # 获取列名对应的标签
         metadatas = []
         for column in columns_to_select:
             if hasattr(self.data[0], column):
-                metadata = getattr(self.data[0], column)[1]
+                metadata = getattr(self.data[0], column).label
                 metadatas.append(metadata)
 
         # 输出格式化的文本
