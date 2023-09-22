@@ -5,9 +5,10 @@
 
 
 ### 数据处理方式
-通过此项目`https://github.com/glide-the/Keyframe-Extraction-for-video-summarization`
-提取视频关键帧,视频字母及其对应的时间戳，和分镜信息
- 
+相关工具
+`https://github.com/glide-the/Keyframe-Extraction-for-video-summarization` 提取视频关键帧,结合字幕文件整理分镜信息
+`https://github.com/LC1332/Chat-Haruhi-Suzumiya` 提取视频字幕及其对应的时间戳
+
 ### 一些想法
 在通过了解梦的精神分析后，我认为梦的精神分析是一种心理学的应用，
 通过梦的内容，可以分析出一个人的心理状态，以及他的一些心理问题，通过这些信息，
