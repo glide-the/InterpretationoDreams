@@ -21,14 +21,13 @@ def test_structured_storyboard_csv_builder() -> None:
     llm = ChatOpenAI(
         streaming=False,
         verbose=True,
-        openai_api_key="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",
         openai_api_base="https://api.openai.com/v1",
         model_name="gpt-3.5-turbo",
         temperature=0.7,
-        # openai_proxy="http://127.0.0.1:7890"
+        openai_proxy="http://127.0.0.1:7890"
     )
     dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-        llm=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/ieAeWyXU/str/ieAeWyXU_keyframe.csv")
+        llm=llm, csv_file_path="/home/dmeck/Documents/ieAeWyXU.csv")
 
     os.environ["LANGCHAIN_WANDB_TRACING"] = "true"
 
@@ -40,4 +39,6 @@ def test_structured_storyboard_csv_builder() -> None:
     from langchain.callbacks import wandb_tracing_enabled
 
     output = dreams_generation_chain.run()
-    logger.info(output)
+    logger.info("dreams_guidance_context:"+output.get("dreams_guidance_context"))
+    logger.info("dreams_personality_context:"+output.get("dreams_personality_context"))
+    assert True
