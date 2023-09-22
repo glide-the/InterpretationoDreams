@@ -6,8 +6,8 @@
 
 ### 数据处理方式
 相关工具
-`https://github.com/glide-the/Keyframe-Extraction-for-video-summarization` 提取视频关键帧,结合字幕文件整理分镜信息
-`https://github.com/LC1332/Chat-Haruhi-Suzumiya` 提取视频字幕及其对应的时间戳
+- `https://github.com/glide-the/Keyframe-Extraction-for-video-summarization` 提取视频关键帧,结合字幕文件整理分镜信息
+- `https://github.com/LC1332/Chat-Haruhi-Suzumiya` 提取视频字幕及其对应的时间戳
 
 ### 一些想法
 在通过了解梦的精神分析后，我认为梦的精神分析是一种心理学的应用，
