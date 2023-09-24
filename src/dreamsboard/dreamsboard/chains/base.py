@@ -59,7 +59,7 @@ class StoryBoardDreamsGenerationChain(ABC):
             verbose=True)
 
         # 05-剧情总结.txt
-        prompt_template05 = PromptTemplate(input_variables=["scene_content"],
+        prompt_template05 = PromptTemplate(input_variables=["story_board_summary_context"],
                                            template=EDREAMS_EVOLUTIONARY_TEMPLATE)
         evolutionary_chain = LLMChain(llm=llm, prompt=prompt_template05, output_key="evolutionary_step")
         # 05-性格分析.txt
@@ -68,28 +68,31 @@ class StoryBoardDreamsGenerationChain(ABC):
         personality_chain = LLMChain(llm=llm, prompt=prompt_template05, output_key="dreams_personality_context")
 
         dreams_personality_chain = SequentialChain(
-                chains=[evolutionary_chain, personality_chain],
-                input_variables=["scene_content"],
-                # Here we return multiple variables
-                output_variables=["dreams_personality_context"],
-                verbose=True)
+            chains=[evolutionary_chain, personality_chain],
+            input_variables=["story_board_summary_context"],
+            # Here we return multiple variables
+            output_variables=["dreams_personality_context"],
+            verbose=True)
         return cls(csv_file_path=csv_file_path,
                    dreams_guidance_chain=dreams_guidance_chain,
                    dreams_personality_chain=dreams_personality_chain)
 
     def run(self) -> Dict[str, Any]:
-
         # 对传入的剧本台词转换成 scene_content
         self.builder.load()
         selected_columns = ["story_board_text", "story_board"]
         scene_content = self.builder.build_text(selected_columns)
+        story_board_summary_context = self.builder.build_msg()
 
-        selected_story_board_columns = ["story_board_role", "story_board_text", "story_board"]
-        story_board_summary_context = self.builder.build_text(selected_story_board_columns)
+        dreams_guidance_personality_chain = SequentialChain(
+            chains=[self.dreams_guidance_chain, self.dreams_personality_chain],
+            input_variables=["scene_content", "story_board_summary_context"],
+            # Here we return multiple variables
+            output_variables=["dreams_guidance_context", "dreams_personality_context"],
+            verbose=True)
 
-        dreams_guidance_out = self.dreams_guidance_chain({"scene_content": scene_content,
-                                                          "story_board_summary_context": story_board_summary_context})
-        dreams_personality_out = self.dreams_personality_chain({"scene_content": scene_content})
-        return {"dreams_guidance_context": dreams_guidance_out["dreams_guidance_context"],
-                "dreams_personality_context": dreams_personality_out["dreams_personality_context"]}
+        dreams_out = dreams_guidance_personality_chain({"scene_content": scene_content,
+                                                        "story_board_summary_context": story_board_summary_context})
 
+        return {"dreams_guidance_context": dreams_out["dreams_guidance_context"],
+                "dreams_personality_context": dreams_out["dreams_personality_context"]}

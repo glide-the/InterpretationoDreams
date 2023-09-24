@@ -61,7 +61,7 @@ STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE = """根据下面对话分析这里的人�
 
 
 # 05-剧情总结.txt
-EDREAMS_EVOLUTIONARY_TEMPLATE = """作为一个社会学研究学者，尝试通过下方的片段总结该内容
+EDREAMS_EVOLUTIONARY_TEMPLATE = """作为一个社会学研究学者，尝试通过社会学研究相关内容总结下方的对话
 社会学研究相关内容分成如下步骤
 研究交流媒介领域的语义信息
 研究激情的非理性与风雅情术的偶然性
@@ -71,7 +71,9 @@ EDREAMS_EVOLUTIONARY_TEMPLATE = """作为一个社会学研究学者，尝试通
 
 
 
-{scene_content}
+人物对话如下
+
+{story_board_summary_context}
 """
 
 # 05-性格分析.txt
