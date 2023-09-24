@@ -13,7 +13,7 @@ from dreamsboard.chains.prompts import (
     EDREAMS_EVOLUTIONARY_TEMPLATE,
     DREAMS_GEN_TEMPLATE,
 )
-from dreamsboard.document_loaders.csv_structured_storyboard_loader import StructuredStoryboardCSVBuilder
+from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder, KorLoader
 
 
 class StoryBoardDreamsGenerationChain(ABC):
@@ -96,3 +96,89 @@ class StoryBoardDreamsGenerationChain(ABC):
 
         return {"dreams_guidance_context": dreams_out["dreams_guidance_context"],
                 "dreams_personality_context": dreams_out["dreams_personality_context"]}
+
+
+class DreamsStepInfo:
+    def __init__(self, step_advice, step_description):
+        self.step_advice = step_advice
+        self.step_description = step_description
+
+
+class StructuredDreamsStoryboard:
+    """
+    对剧本和分析结果进行结构化，将开放问题与性格分析结果进行结合。生成情景扮演代码
+    此过程如下
+        对开放问题结果进行抽取，得到问题内容
+        对性格分析结果进行抽取，得到性格分析结果
+        根据剧本与任务性格基础情景扮演代码，在传入得到的问题，生成问题的答案
+        增加系统提示词
+        导出代码
+    """
+
+    def __init__(self,
+                 structured_storyboard: StructuredStoryboardCSVBuilder,
+                 dreams_guidance_context: str,
+                 dreams_personality_context: str,
+                 kor_dreams_guidance_chain: LLMChain,
+                 kor_dreams_personality_chain: LLMChain,
+                 ):
+        """
+
+        :param structured_storyboard: 剧本
+        :param dreams_guidance_context: 开放问题
+        :param dreams_personality_context: 性格分析结果
+        """
+        self.structured_storyboard = structured_storyboard
+        self.dreams_guidance_context = dreams_guidance_context
+        self.dreams_personality_context = dreams_personality_context
+        self.kor_dreams_guidance_chain = kor_dreams_guidance_chain
+        self.kor_dreams_personality_chain = kor_dreams_personality_chain
+
+    @classmethod
+    def form_builder(cls,
+                     llm: BaseLanguageModel,
+                     structured_storyboard: StructuredStoryboardCSVBuilder,
+                     dreams_guidance_context: str,
+                     dreams_personality_context: str) -> StructuredDreamsStoryboard:
+        kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(llm=llm)
+        kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(llm=llm)
+
+        return cls(structured_storyboard=structured_storyboard,
+                   dreams_guidance_context=dreams_guidance_context,
+                   dreams_personality_context=dreams_personality_context,
+                   kor_dreams_guidance_chain=kor_dreams_guidance_chain,
+                   kor_dreams_personality_chain=kor_dreams_personality_chain)
+
+    def kor_dreams_guidance_context(self) -> List[DreamsStepInfo]:
+        """
+        对开放问题结果进行抽取，得到问题内容
+        :return:
+        """
+        response = self.kor_dreams_guidance_chain.run(self.dreams_guidance_context)
+        dreams_step_list = []
+        if response.get('data') is not None and response.get('data').get('script') is not None:
+            step_list = response.get('data').get('script')
+            for step in step_list:
+                dreams_step = DreamsStepInfo(step_advice=step.get('step_advice'),
+                                             step_description=step.get('step_description'))
+                dreams_step_list.append(dreams_step)
+
+        return dreams_step_list
+
+    def kor_dreams_personality_context(self) -> str:
+        """
+        对性格分析结果进行抽取，得到性格分析结果
+        :return:
+        """
+        response = self.kor_dreams_personality_chain.run(self.dreams_personality_context)
+
+        personality = ""
+        if response.get('data') is not None and response.get('data').get('script') is not None:
+            personality_list = response.get('data').get('script')
+            # [{'personality': '具有情感表达和期待、注重个体快感、善于运用语义信息、对社会行为产生兴趣'}]},
+            # 拼接personality 成一个字符串
+            for item in personality_list:
+                personality += item.get('personality') + "、"
+
+        return personality
+

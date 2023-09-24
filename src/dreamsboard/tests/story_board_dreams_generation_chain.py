@@ -28,7 +28,7 @@ def test_story_board_dreams_generation_chain():
     )
 
     dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-        llm=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/ieA2m5p2/str/ieA2m5p2_keyframe.csv")
+        llm=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/ieAeWyXU/str/ieAeWyXU_keyframe.csv")
 
     output = dreams_generation_chain.run()
     logger.info("dreams_guidance_context:"+output.get("dreams_guidance_context"))
