@@ -75,7 +75,7 @@ class StructuredStoryboardCSVBuilder(ABC):
                     # 添加到数据列表
                     self.data.append(structured_storyboard)
 
-    def build_text(self, columns_to_select):
+    def build_text(self, columns_to_select) -> str:
         # 根据传入的列名列表筛选数据
         selected_data = []
         for item in self.data:
@@ -103,10 +103,10 @@ class StructuredStoryboardCSVBuilder(ABC):
 
         return formatted_text
 
-    def build_msg(self):
+    def build_dict(self) -> dict:
         """
-        把StructuredStoryboard的列表将story_board_text和story_board_role按照story_board顺序拼接为下面内容
-        story_board_role:「相同story_board的story_board_text」
+        把StructuredStoryboard的列表 转换为story_board字典
+        (story_board:[])
         :return:
         """
 
@@ -117,14 +117,28 @@ class StructuredStoryboardCSVBuilder(ABC):
         for storyboard in self.data:
             if storyboard.story_board.name in storyboard_dict:
                 # 如果已经存在该story_board的组，追加内容和角色
-                storyboard_dict[storyboard.story_board.name]['story_board_text'].append(storyboard.story_board_text.name)
-                storyboard_dict[storyboard.story_board.name]['story_board_role'].append(storyboard.story_board_role.name)
+                storyboard_dict[storyboard.story_board.name]['story_board_text'].append(
+                    storyboard.story_board_text.name)
+                storyboard_dict[storyboard.story_board.name]['story_board_role'].append(
+                    storyboard.story_board_role.name)
             else:
                 # 如果还没有该story_board的组，创建一个新的组
                 storyboard_dict[storyboard.story_board.name] = {
                     'story_board_text': [storyboard.story_board_text.name],
                     'story_board_role': [storyboard.story_board_role.name]
                 }
+
+        return storyboard_dict
+
+    def build_msg(self) -> str:
+        """
+        把StructuredStoryboard的列表将story_board_text和story_board_role按照story_board顺序拼接为下面内容
+        story_board_role:「相同story_board的story_board_text」
+        :return:
+        """
+
+        # 创建一个字典，用于按照story_board组织内容和角色
+        storyboard_dict = self.build_dict()
 
         # 根据story_board组织内容和角色
         formatted_text = ""
