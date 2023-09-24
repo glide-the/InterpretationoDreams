@@ -24,3 +24,13 @@ def test_structured_storyboard_csv_builder() -> None:
     formatted_text = builder.build_text(selected_columns)
     logger.info("formatted_text:"+formatted_text)
     assert formatted_text is not None
+
+
+def test_structured_storyboard_csv_builder_msg() -> None:
+    builder = StructuredStoryboardCSVBuilder(csv_file_path="/media/checkpoint/speech_data/抖音作品/ieAeWyXU/str"
+                                                           "/ieAeWyXU_keyframe.csv")
+    builder.load()  # 替换为你的CSV文件路径
+
+    formatted_text = builder.build_msg()
+    logger.info("formatted_text:"+formatted_text)
+    assert formatted_text is not None
