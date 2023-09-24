@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
+from langchain.schema import HumanMessage
 from langchain.schema.language_model import BaseLanguageModel
 
 from dreamsboard.chains.prompts import (
@@ -181,4 +182,25 @@ class StructuredDreamsStoryboard:
                 personality += item.get('personality') + "、"
 
         return personality
+
+    def builder_base_cosplay_code(self) -> List[str]:
+        """
+        根据剧本与任务性格基础情景扮演代码，
+        :return:
+        """
+
+        self.structured_storyboard.load()
+        # 创建一个字典，用于按照story_board组织内容和角色
+        storyboard_dict = self.structured_storyboard.build_dict()
+
+        # 根据story_board组织内容和角色
+        messages = []
+        for storyboard, storyboard_data in storyboard_dict.items():
+            # 格式化内容
+            text = '，'.join(storyboard_data['story_board_text'])
+            text += "。"
+            messages.append(f"{storyboard_data['story_board_role'][0]}:「{text}」")
+
+        return messages
+
 
