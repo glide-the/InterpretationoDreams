@@ -15,10 +15,10 @@ def test_template() -> None:
     # 读取模板文件
     with open('/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/dreamsboard/dreamsboard/templates'
               '/base_template.py-tpl', 'r') as template_file:
-        template_content = template_file.read()
+        base_template_content = template_file.read()
 
     # 创建一个Jinja2模板对象
-    template = Template(template_content)
+    base_template = Template(base_template_content)
 
     # 定义要填充到模板中的数据
     data = {
@@ -34,8 +34,9 @@ def test_template() -> None:
     }
 
     # 使用模板和数据生成代码
-    generated_code = template.render(data)
+    base_generated_code = base_template.render(data)
 
     # 打印生成的代码
-    logger.info(generated_code)
+    logger.info(base_generated_code)
     assert True
+

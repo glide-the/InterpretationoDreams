@@ -1,0 +1,2 @@
+# 需要模型详细输出
+chat = ChatOpenAI(model="gpt-3.5-turbo")
