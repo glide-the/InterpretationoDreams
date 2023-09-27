@@ -49,6 +49,6 @@ class CodeGeneratorBuilder:
         if self.chain_head is None:
             raise RuntimeError("chain_head is None.")
 
-        code = self.chain_head.generate(render_data)
-        executor = CodeExecutor(code=code)
+        executor_code = self.chain_head.generate(render_data)
+        executor = CodeExecutor(executor_code=executor_code)
         return executor

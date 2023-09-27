@@ -10,12 +10,13 @@ from langchain.schema import (
 
 # 创建一个代码执行器
 class CodeExecutor:
+    executor_code: str
     _messages: List[BaseMessage] = []
     _chat_function: ChatOpenAI
     _ai_message: AIMessage
 
-    def __init__(self, code: str):
-        self.code = code
+    def __init__(self, executor_code: str):
+        self.executor_code = executor_code
 
     def execute(self):
         # 创建变量字典
@@ -24,7 +25,7 @@ class CodeExecutor:
             'chat': None,  # type: ChatOpenAI
         }
 
-        exec(self.code, variables)
+        exec(self.executor_code, variables)
 
         self._chat_function = variables.get('chat', None)
         self._messages = variables.get('messages', None)

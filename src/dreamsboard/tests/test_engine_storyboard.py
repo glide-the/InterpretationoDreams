@@ -38,6 +38,7 @@ def test_structured_dreams_storyboard() -> None:
                                                                   dreams_personality_context=dreams_personality_context
                                                                   )
     code_gen_builder = storyboard_executor.loader_cosplay_builder()
-
-    logger.info(code_gen_builder)
+    executor = code_gen_builder.build_executor()
+    logger.info(executor)
+    logger.info(executor.executor_code)
     assert True

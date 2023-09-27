@@ -19,6 +19,15 @@ from dreamsboard.generate.code_executor import CodeExecutor
 from dreamsboard.generate.code_generate import BaseProgramGenerator, EngineProgramGenerator, AIProgramGenerator, \
     QueryProgramGenerator
 from dreamsboard.generate.run_generate import CodeGeneratorBuilder
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# 控制台打印
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+
+logger.addHandler(handler)
 
 
 class StoryBoardDreamsGenerationChain(ABC):
@@ -230,7 +239,7 @@ class StructuredDreamsStoryboard:
         }))
 
         for guidance_question in guidance_questions:
-            print(guidance_question.step_description)
+            logger.info(f'{guidance_question.step_description}:{guidance_question.step_advice}')
             _dreams_render_data = {
                 'dreams_cosplay_role': '心理咨询工作者',
                 'dreams_message': guidance_question.step_advice,
@@ -245,6 +254,8 @@ class StructuredDreamsStoryboard:
             executor = code_gen_builder.build_executor()
             executor.execute()
             _ai_message = executor.chat_run()
+
+            logger.info(f'{guidance_question.step_description}:{_ai_message}')
             code_gen_builder.remove_last_generator()
 
             _ai_render_data = {
