@@ -15,6 +15,10 @@ from dreamsboard.chains.prompts import (
     DREAMS_GEN_TEMPLATE,
 )
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder, KorLoader
+from dreamsboard.generate.code_executor import CodeExecutor
+from dreamsboard.generate.code_generate import BaseProgramGenerator, EngineProgramGenerator, AIProgramGenerator, \
+    QueryProgramGenerator
+from dreamsboard.generate.run_generate import CodeGeneratorBuilder
 
 
 class StoryBoardDreamsGenerationChain(ABC):
@@ -117,7 +121,7 @@ class StructuredDreamsStoryboard:
     """
 
     def __init__(self,
-                 structured_storyboard: StructuredStoryboardCSVBuilder,
+                 builder: StructuredStoryboardCSVBuilder,
                  dreams_guidance_context: str,
                  dreams_personality_context: str,
                  kor_dreams_guidance_chain: LLMChain,
@@ -125,11 +129,11 @@ class StructuredDreamsStoryboard:
                  ):
         """
 
-        :param structured_storyboard: 剧本
+        :param builder: 剧本
         :param dreams_guidance_context: 开放问题
         :param dreams_personality_context: 性格分析结果
         """
-        self.structured_storyboard = structured_storyboard
+        self.builder = builder
         self.dreams_guidance_context = dreams_guidance_context
         self.dreams_personality_context = dreams_personality_context
         self.kor_dreams_guidance_chain = kor_dreams_guidance_chain
@@ -138,13 +142,13 @@ class StructuredDreamsStoryboard:
     @classmethod
     def form_builder(cls,
                      llm: BaseLanguageModel,
-                     structured_storyboard: StructuredStoryboardCSVBuilder,
+                     builder: StructuredStoryboardCSVBuilder,
                      dreams_guidance_context: str,
                      dreams_personality_context: str) -> StructuredDreamsStoryboard:
         kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(llm=llm)
         kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(llm=llm)
 
-        return cls(structured_storyboard=structured_storyboard,
+        return cls(builder=builder,
                    dreams_guidance_context=dreams_guidance_context,
                    dreams_personality_context=dreams_personality_context,
                    kor_dreams_guidance_chain=kor_dreams_guidance_chain,
@@ -189,9 +193,9 @@ class StructuredDreamsStoryboard:
         :return:
         """
 
-        self.structured_storyboard.load()
+        self.builder.load()
         # 创建一个字典，用于按照story_board组织内容和角色
-        storyboard_dict = self.structured_storyboard.build_dict()
+        storyboard_dict = self.builder.build_dict()
 
         # 根据story_board组织内容和角色
         messages = []
@@ -203,4 +207,53 @@ class StructuredDreamsStoryboard:
 
         return messages
 
+    def loader_cosplay_builder(self) -> CodeGeneratorBuilder:
+        code_gen_builder = CodeGeneratorBuilder()
+
+        # 创建一个字典，用于按照story_board组织内容和角色
+        storyboard_dict = self.builder.build_dict()
+        # 获取第一个story_board_role属性的值
+        cosplay_role = list(storyboard_dict.values())[0]['story_board_role'][0]
+
+        guidance_questions = self.kor_dreams_guidance_context()
+        personality = self.kor_dreams_personality_context()
+
+        base_cosplay_message = self.builder_base_cosplay_code()
+        _base_render_data = {
+            'cosplay_role': cosplay_role,
+            'personality': personality,
+            'messages': base_cosplay_message
+        }
+        code_gen_builder.add_generator(BaseProgramGenerator.from_config(cfg={
+            "code_file": "base_template.py-tpl",
+            "render_data": _base_render_data,
+        }))
+
+        for guidance_question in guidance_questions:
+            print(guidance_question.step_description)
+            _dreams_render_data = {
+                'dreams_cosplay_role': '心理咨询工作者',
+                'dreams_message': guidance_question.step_advice,
+            }
+            code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
+                "dreams_query_code_file": "dreams_query_template.py-tpl",
+                "render_data": _dreams_render_data,
+            }))
+            code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
+                "engine_code_file": "engine_template.py-tpl",
+            }))
+            executor = code_gen_builder.build_executor()
+            executor.execute()
+            _ai_message = executor.chat_run()
+            code_gen_builder.remove_last_generator()
+
+            _ai_render_data = {
+                'ai_message_content': _ai_message.content
+            }
+            code_gen_builder.add_generator(AIProgramGenerator.from_config(cfg={
+                "ai_code_file": "ai_template.py-tpl",
+                "render_data": _ai_render_data,
+            }))
+
+        return code_gen_builder
 

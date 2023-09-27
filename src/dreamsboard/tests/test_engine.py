@@ -1,8 +1,11 @@
 import logging
 
-from dreamsboard.generate.code_generate import BaseProgramGenerator, EngineProgramGenerator
+from dreamsboard.generate.code_generate import BaseProgramGenerator, EngineProgramGenerator, QueryProgramGenerator, \
+    AIProgramGenerator
 from dreamsboard.generate.run_generate import CodeGeneratorBuilder
-
+import langchain
+import os
+langchain.verbose = True
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -29,19 +32,10 @@ logger.addHandler(handler)
 
 
 def test_engine() -> None:
-    builder = CodeGeneratorBuilder()
-    builder.add_generator(BaseProgramGenerator.from_config(cfg={
-        "code_file": "base_template.py-tpl"
-    }))
-    builder.add_generator(EngineProgramGenerator.from_config(cfg={
-        "dreams_query_code_file": "dreams_query_template.py-tpl",
-        "engine_code_file": "engine_template.py-tpl",
-    }))
+    code_gen_builder = CodeGeneratorBuilder()
 
-    # 定义要填充到模板中的数据
-    render_data = {
-        'dreams_cosplay_role': '心理咨询工作者',
-        'dreams_message': '我听到你今天经历了一些有趣的事情，而且你似乎充满了好奇和喜悦。在这一切之中，有没有让你感到困惑或者需要探讨的问题？',
+
+    _base_render_data = {
         'cosplay_role': '兔兔没有牙',
         'personality': '包括充满好奇心、善于分析和有广泛研究兴趣的人。',
         'messages': ['兔兔没有牙:「 今天是温柔长裙风。」',
@@ -52,9 +46,36 @@ def test_engine() -> None:
                      '兔兔没有牙:「 宝宝,我给你剥了虾,你要全部吃掉哦,乖乖.」',
                      '兔兔没有牙:「 宝宝,你想不想知道小鱼都在说什么,我来告诉你吧.」']
     }
+    code_gen_builder.add_generator(BaseProgramGenerator.from_config(cfg={
+        "code_file": "base_template.py-tpl",
+        "render_data": _base_render_data,
+    }))
 
-    executor = builder.build_executor(render_data)
+
+    _dreams_render_data = {
+        'dreams_cosplay_role': '心理咨询工作者',
+        'dreams_message': '我听到你今天经历了一些有趣的事情，而且你似乎充满了好奇和喜悦。在这一切之中，有没有让你感到困惑或者需要探讨的问题？',
+    }
+    code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
+        "dreams_query_code_file": "dreams_query_template.py-tpl",
+        "render_data": _dreams_render_data,
+    }))
+    code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
+        "engine_code_file": "engine_template.py-tpl",
+    }))
+    executor = code_gen_builder.build_executor()
     executor.execute()
-    executor.chat_run()
+    _ai_message = executor.chat_run()
+    code_gen_builder.remove_last_generator()
+
+    _ai_render_data = {
+        'ai_message_content': _ai_message.content
+    }
+    code_gen_builder.add_generator(AIProgramGenerator.from_config(cfg={
+        "ai_code_file": "ai_template.py-tpl",
+        "render_data": _ai_render_data,
+    }))
+
     logger.info(executor._messages)
     logger.info(executor._ai_message)
+    assert True

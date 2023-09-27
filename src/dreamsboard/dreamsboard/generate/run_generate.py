@@ -15,22 +15,37 @@ class CodeGeneratorHandler:
         return code
 
 
-# 创建一个代码生成器的建造者
+# Create a code generator builder
 class CodeGeneratorBuilder:
     def __init__(self):
         self.chain_head = None
+        self.chain_tail = None  # Track the tail of the chain
 
     def add_generator(self, generator: CodeGenerator):
         handler = CodeGeneratorHandler(generator)
-        if self.chain_head:
-            current_handler = self.chain_head
-            while current_handler.next_handler:
-                current_handler = current_handler.next_handler
-            current_handler.next_handler = handler
-        else:
+        if self.chain_head is None:
             self.chain_head = handler
+            self.chain_tail = handler
+        else:
+            self.chain_tail.next_handler = handler  # Update the tail
+            self.chain_tail = handler  # Update the new tail
 
-    def build_executor(self, render_data: dict):
+    def remove_last_generator(self):
+        if self.chain_head is None:
+            return
+
+        if self.chain_head == self.chain_tail:
+            # Only one handler in the chain
+            self.chain_head = None
+            self.chain_tail = None
+        else:
+            current_handler = self.chain_head
+            while current_handler.next_handler != self.chain_tail:
+                current_handler = current_handler.next_handler
+            current_handler.next_handler = None
+            self.chain_tail = current_handler
+
+    def build_executor(self, render_data: dict = {}) -> CodeExecutor:
         if self.chain_head is None:
             raise RuntimeError("chain_head is None.")
 
