@@ -2,11 +2,9 @@ import logging
 
 from langchain.chat_models import ChatOpenAI
 
-from dreamsboard.chains.base import StructuredDreamsStoryboard, StoryBoardDreamsGenerationChain
-from dreamsboard.generate.code_generate import BaseProgramGenerator, EngineProgramGenerator, QueryProgramGenerator
-from dreamsboard.generate.run_generate import CodeGeneratorBuilder
+from dreamsboard.dreams.dreams_personality_chain.base import StructuredDreamsStoryboard, StoryBoardDreamsGenerationChain
 import langchain
-import os
+
 langchain.verbose = True
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

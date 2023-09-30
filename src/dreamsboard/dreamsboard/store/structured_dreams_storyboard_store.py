@@ -27,6 +27,8 @@ try:
     # BaseIndexStore的索引实现由KVIndexStore实现，它的作用是将文档转换为索引结构，然后存储到KVStore中
     # KVIndexStore的子类有SimpleIndexStore，RedisIndexStore，MongoIndexStore
     # 这是一个缓存模块，用于存储索引结构，以便下次使用，避免每次文件加载，都要读取磁盘
+    
+    SimpleIndexStore 被load_index_from_storage加载，得到检索器，实现整个矢量检索的功能
     """
     storage_context = StorageContext.from_defaults(persist_dir="./storage/march")
     march_index = load_index_from_storage(storage_context)

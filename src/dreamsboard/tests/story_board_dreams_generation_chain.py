@@ -1,8 +1,8 @@
 from langchain.chat_models import ChatOpenAI
-from dreamsboard.chains.base import StoryBoardDreamsGenerationChain
+from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
 import logging
 import langchain
-import os
+
 langchain.verbose = True
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
