@@ -16,10 +16,10 @@ class CodeGeneratorHandler:
 
 
 # Create a code generator builder
-class CodeGeneratorBuilder:
+class CodeGeneratorChain:
     def __init__(self):
-        self.chain_head = None
-        self.chain_tail = None  # Track the tail of the chain
+        self.chain_head: CodeGeneratorHandler = None
+        self.chain_tail: CodeGeneratorHandler = None  # Track the tail of the chain
 
     def add_generator(self, generator: CodeGenerator):
         handler = CodeGeneratorHandler(generator)
@@ -45,10 +45,8 @@ class CodeGeneratorBuilder:
             current_handler.next_handler = None
             self.chain_tail = current_handler
 
-    def build_executor(self, render_data: dict = {}) -> CodeExecutor:
+    def generate(self, render_data: dict):
         if self.chain_head is None:
             raise RuntimeError("chain_head is None.")
 
-        executor_code = self.chain_head.generate(render_data)
-        executor = CodeExecutor(executor_code=executor_code)
-        return executor
+        return self.chain_head.generate(render_data)
