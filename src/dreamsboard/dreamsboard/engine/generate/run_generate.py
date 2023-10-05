@@ -1,5 +1,5 @@
-from dreamsboard.generate.code_executor import CodeExecutor
-from dreamsboard.generate.code_generate import CodeGenerator
+from dreamsboard.engine.generate.code_executor import CodeExecutor
+from dreamsboard.engine.generate.code_generate import CodeGenerator
 
 
 # 创建一个责任链节点

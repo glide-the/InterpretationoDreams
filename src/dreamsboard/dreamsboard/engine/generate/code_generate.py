@@ -17,10 +17,9 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
+from typing import Any
 
-from jinja2 import Template
-import hashlib
 import logging
 
 from dreamsboard.engine.schema import BaseNode, ObjectTemplateType
@@ -36,40 +35,27 @@ handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 
-# 创建一个代码生成器接口
-class CodeGenerator(BaseNode):
-    class Config:
-        allow_population_by_field_name = True
-
-    def __init__(self, **data: Any):
-        super().__init__(**data)
-        self.transform = lambda x: x
-        return
+# 创建一个代码生成器抽象类
+class CodeGenerator(BaseNode, ABC):
 
     @classmethod
     def from_config(cls, cfg=None):
         return cls()
 
-    @abstractmethod
-    def generate(self, render_data: dict = {}) -> str:
-        raise NotImplementedError
-
-    def calculate_md5(self):
-        md5_hash = hashlib.md5()
-        md5_hash.update(self.render_code.encode('utf-8'))
-        return md5_hash.hexdigest()
-
 
 # 创建不同类型的代码生成器
 class BaseProgramGenerator(CodeGenerator):
     _exec_code: str
+    _base_template_content: str
+    _render_data: dict
 
     def __init__(self, code_file: str, render_data: dict = {}):
         super().__init__()
-        self.render_data = render_data
+        self._exec_code = None
+        self._render_data = render_data
         # 读取模板文件
         with open(code_file, 'r') as template_file:
-            self.base_template_content = template_file.read()
+            self._base_template_content = template_file.read()
 
     @classmethod
     def get_type(cls) -> str:
@@ -89,33 +75,42 @@ class BaseProgramGenerator(CodeGenerator):
         return cls(code_file=get_template_path(code_file), render_data=render_data)
 
     @property
+    def template_content(self) -> str:
+        return self._base_template_content
+
+    @template_content.setter
+    def template_content(self, _template_content) -> None:
+        self._base_template_content = _template_content
+
+    @property
+    def render_data(self) -> dict:
+        return self._render_data
+
+    @render_data.setter
+    def render_data(self, _render_data: dict) -> None:
+        self._render_data = _render_data
+
+    @property
     def render_code(self) -> str:
         return self._exec_code
 
-    def generate(self, render_data: dict = {}) -> str:
-        logger.info(f'{self.__class__},生成代码')
-        base_template = Template(self.base_template_content)
-        if render_data is not None and self.render_data is not None:
-            merged_render = {**render_data, **self.render_data}
-        else:
-            # 处理其中一个或两者都为 None 的情况
-            merged_render = render_data or self.render_data or {}
-
-        self._exec_code = base_template.render(merged_render)
-
-        logger.info(f'{self.__class__},生成代码成功 {self.calculate_md5()}')
-        return self._exec_code
+    @render_code.setter
+    def render_code(self, _exec_code) -> None:
+        self._exec_code = _exec_code
 
 
 class QueryProgramGenerator(CodeGenerator):
     _exec_code: str
+    _dreams_query_template_content: str
+    _render_data: dict
 
     def __init__(self, dreams_query_code_file: str, render_data: dict = {}):
         super().__init__()
-        self.render_data = render_data
+        self._exec_code = None
+        self._render_data = render_data
         # 读取模板文件
         with open(dreams_query_code_file, 'r') as dreams_query_template_file:
-            self.dreams_query_template_content = dreams_query_template_file.read()
+            self._dreams_query_template_content = dreams_query_template_file.read()
 
     @classmethod
     def get_type(cls) -> str:
@@ -135,33 +130,42 @@ class QueryProgramGenerator(CodeGenerator):
         return cls(dreams_query_code_file=get_template_path(dreams_query_code_file), render_data=render_data)
 
     @property
+    def template_content(self) -> str:
+        return self._dreams_query_template_content
+
+    @template_content.setter
+    def template_content(self, _template_content) -> None:
+        self._dreams_query_template_content = _template_content
+
+    @property
+    def render_data(self) -> dict:
+        return self._render_data
+
+    @render_data.setter
+    def render_data(self, _render_data: dict) -> None:
+        self._render_data = _render_data
+
+    @property
     def render_code(self) -> str:
         return self._exec_code
 
-    def generate(self, render_data: dict = {}) -> str:
-        logger.info(f'{self.__class__},生成代码')
-        # 创建一个Jinja2模板对象
-        dreams_query_template = Template(self.dreams_query_template_content)
-        if render_data is not None and self.render_data is not None:
-            merged_render = {**render_data, **self.render_data}
-        else:
-            # 处理其中一个或两者都为 None 的情况
-            merged_render = render_data or self.render_data or {}
-
-        self._exec_code = dreams_query_template.render(merged_render)
-        logger.info(f'{self.__class__},生成代码成功 {self.calculate_md5()}')
-        return self._exec_code
+    @render_code.setter
+    def render_code(self, _exec_code) -> None:
+        self._exec_code = _exec_code
 
 
 class AIProgramGenerator(CodeGenerator):
     _exec_code: str
+    _ai_template_content: str
+    _render_data: dict
 
     def __init__(self, ai_code_file: str, render_data: dict = {}):
         super().__init__()
-        self.render_data = render_data
+        self._exec_code = None
+        self._render_data = render_data
         # 读取模板文件
         with open(ai_code_file, 'r') as ai_template_file:
-            self.ai_template_content = ai_template_file.read()
+            self._ai_template_content = ai_template_file.read()
 
     @classmethod
     def get_type(cls) -> str:
@@ -181,32 +185,42 @@ class AIProgramGenerator(CodeGenerator):
         return cls(ai_code_file=get_template_path(ai_code_file), render_data=render_data)
 
     @property
+    def template_content(self) -> str:
+        return self._ai_template_content
+
+    @template_content.setter
+    def template_content(self, _template_content) -> None:
+        self._ai_template_content = _template_content
+
+    @property
+    def render_data(self) -> dict:
+        return self._render_data
+
+    @render_data.setter
+    def render_data(self, _render_data: dict) -> None:
+        self._render_data = _render_data
+
+    @property
     def render_code(self) -> str:
         return self._exec_code
 
-    def generate(self, render_data: dict = {}) -> str:
-        logger.info(f'{self.__class__},生成代码')
-        ai_template = Template(self.ai_template_content)
-        if render_data is not None and self.render_data is not None:
-            merged_render = {**render_data, **self.render_data}
-        else:
-            # 处理其中一个或两者都为 None 的情况
-            merged_render = render_data or self.render_data or {}
-
-        self._exec_code = ai_template.render(merged_render)
-        logger.info(f'{self.__class__},生成代码成功 {self.calculate_md5()}')
-        return self._exec_code
+    @render_code.setter
+    def render_code(self, _exec_code) -> None:
+        self._exec_code = _exec_code
 
 
 class EngineProgramGenerator(CodeGenerator):
     _exec_code: str
+    _engine_template_content: str
+    _render_data: dict
 
     def __init__(self, engine_code_file: str, render_data: dict = {}):
         super().__init__()
-        self.render_data = render_data
+        self._exec_code = None
+        self._render_data = render_data
         # 读取模板文件
         with open(engine_code_file, 'r') as engine_template_file:
-            self.engine_template_content = engine_template_file.read()
+            self._engine_template_content = engine_template_file.read()
 
     @classmethod
     def get_type(cls) -> str:
@@ -226,18 +240,25 @@ class EngineProgramGenerator(CodeGenerator):
         return cls(engine_code_file=get_template_path(engine_code_file), render_data=render_data)
 
     @property
+    def template_content(self) -> str:
+        return self._engine_template_content
+
+    @template_content.setter
+    def template_content(self, _template_content) -> None:
+        self._engine_template_content = _template_content
+
+    @property
+    def render_data(self) -> dict:
+        return self._render_data
+
+    @render_data.setter
+    def render_data(self, _render_data: dict) -> None:
+        self._render_data = _render_data
+
+    @property
     def render_code(self) -> str:
         return self._exec_code
 
-    def generate(self, render_data: dict = {}) -> str:
-        logger.info(f'{self.__class__},生成代码')
-        engine_template = Template(self.engine_template_content)
-        if render_data is not None and self.render_data is not None:
-            merged_render = {**render_data, **self.render_data}
-        else:
-            # 处理其中一个或两者都为 None 的情况
-            merged_render = render_data or self.render_data or {}
-
-        self._exec_code = engine_template.render(merged_render)
-        logger.info(f'{self.__class__},生成代码成功 {self.calculate_md5()}')
-        return self._exec_code
+    @render_code.setter
+    def render_code(self, _exec_code) -> None:
+        self._exec_code = _exec_code
