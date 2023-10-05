@@ -41,6 +41,8 @@ class BaseEngineBuilder(Generic[IS], ABC):
 
         if index_struct is None:
             assert nodes is not None
+            for node in nodes:
+                self._template_store.set_template_hash(node.node_id, node.hash)
             index_struct = self.build_index_from_nodes(nodes)
         self._index_struct = index_struct
         self._storage_context.index_store.add_index_struct(self._index_struct)

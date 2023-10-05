@@ -18,9 +18,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABC
-from typing import Any
+from typing import Any, Optional, Dict
 
 import logging
+
+from pydantic import Field
 
 from dreamsboard.engine.schema import BaseNode, ObjectTemplateType
 from dreamsboard.templates import get_template_path
@@ -45,17 +47,26 @@ class CodeGenerator(BaseNode, ABC):
 
 # 创建不同类型的代码生成器
 class BaseProgramGenerator(CodeGenerator):
-    _exec_code: str
-    _base_template_content: str
-    _render_data: dict
+    exec_code: Optional[str] = Field(
+        default="", description="执行代码"
+    )
+    base_template_content: Optional[str] = Field(
+        default="", description="模板内容",
+    )
+    exec_data: Optional[Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="执行环境数据",
+        alias="exec_data",
+    )
 
-    def __init__(self, code_file: str, render_data: dict = {}):
-        super().__init__()
-        self._exec_code = None
-        self._render_data = render_data
+    def __init__(self, code_file: str, render_data=None):
+        if render_data is None:
+            render_data = {}
         # 读取模板文件
         with open(code_file, 'r') as template_file:
-            self._base_template_content = template_file.read()
+            base_template_content = template_file.read()
+
+        super().__init__(exec_data=render_data, base_template_content=base_template_content)
 
     @classmethod
     def get_type(cls) -> str:
@@ -76,41 +87,50 @@ class BaseProgramGenerator(CodeGenerator):
 
     @property
     def template_content(self) -> str:
-        return self._base_template_content
+        return self.base_template_content
 
     @template_content.setter
     def template_content(self, _template_content) -> None:
-        self._base_template_content = _template_content
+        self.base_template_content = _template_content
 
     @property
     def render_data(self) -> dict:
-        return self._render_data
+        return self.exec_data
 
     @render_data.setter
-    def render_data(self, _render_data: dict) -> None:
-        self._render_data = _render_data
+    def render_data(self, exec_data: dict) -> None:
+        self.exec_data = exec_data
 
     @property
     def render_code(self) -> str:
-        return self._exec_code
+        return self.exec_code
 
     @render_code.setter
-    def render_code(self, _exec_code) -> None:
-        self._exec_code = _exec_code
+    def render_code(self, exec_code) -> None:
+        self.exec_code = exec_code
 
 
 class QueryProgramGenerator(CodeGenerator):
-    _exec_code: str
-    _dreams_query_template_content: str
-    _render_data: dict
+    exec_code: Optional[str] = Field(
+        default="", description="执行代码"
+    )
+    dreams_query_template_content: Optional[str] = Field(
+        default="", description="模板内容",
+    )
+    exec_data: Optional[Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="执行环境数据",
+        alias="exec_data",
+    )
 
-    def __init__(self, dreams_query_code_file: str, render_data: dict = {}):
-        super().__init__()
-        self._exec_code = None
-        self._render_data = render_data
+    def __init__(self, dreams_query_code_file: str, render_data=None):
+        if render_data is None:
+            render_data = {}
         # 读取模板文件
         with open(dreams_query_code_file, 'r') as dreams_query_template_file:
-            self._dreams_query_template_content = dreams_query_template_file.read()
+            dreams_query_template_content = dreams_query_template_file.read()
+
+        super().__init__(exec_data=render_data, dreams_query_template_content=dreams_query_template_content)
 
     @classmethod
     def get_type(cls) -> str:
@@ -131,41 +151,50 @@ class QueryProgramGenerator(CodeGenerator):
 
     @property
     def template_content(self) -> str:
-        return self._dreams_query_template_content
+        return self.dreams_query_template_content
 
     @template_content.setter
     def template_content(self, _template_content) -> None:
-        self._dreams_query_template_content = _template_content
+        self.dreams_query_template_content = _template_content
 
     @property
     def render_data(self) -> dict:
-        return self._render_data
+        return self.exec_data
 
     @render_data.setter
-    def render_data(self, _render_data: dict) -> None:
-        self._render_data = _render_data
+    def render_data(self, exec_data: dict) -> None:
+        self.exec_data = exec_data
 
     @property
     def render_code(self) -> str:
-        return self._exec_code
+        return self.exec_code
 
     @render_code.setter
-    def render_code(self, _exec_code) -> None:
-        self._exec_code = _exec_code
+    def render_code(self, exec_code) -> None:
+        self.exec_code = exec_code
 
 
 class AIProgramGenerator(CodeGenerator):
-    _exec_code: str
-    _ai_template_content: str
-    _render_data: dict
+    exec_code: Optional[str] = Field(
+        default="", description="执行代码"
+    )
+    ai_template_content: Optional[str] = Field(
+        default="", description="模板内容",
+    )
+    exec_data: Optional[Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="执行环境数据",
+        alias="exec_data",
+    )
 
-    def __init__(self, ai_code_file: str, render_data: dict = {}):
-        super().__init__()
-        self._exec_code = None
-        self._render_data = render_data
+    def __init__(self, ai_code_file: str, render_data=None):
+        if render_data is None:
+            render_data = {}
         # 读取模板文件
         with open(ai_code_file, 'r') as ai_template_file:
-            self._ai_template_content = ai_template_file.read()
+            ai_template_content = ai_template_file.read()
+
+        super().__init__(exec_data=render_data, ai_template_content=ai_template_content)
 
     @classmethod
     def get_type(cls) -> str:
@@ -186,41 +215,50 @@ class AIProgramGenerator(CodeGenerator):
 
     @property
     def template_content(self) -> str:
-        return self._ai_template_content
+        return self.ai_template_content
 
     @template_content.setter
     def template_content(self, _template_content) -> None:
-        self._ai_template_content = _template_content
+        self.ai_template_content = _template_content
 
     @property
     def render_data(self) -> dict:
-        return self._render_data
+        return self.exec_data
 
     @render_data.setter
-    def render_data(self, _render_data: dict) -> None:
-        self._render_data = _render_data
+    def render_data(self, exec_data: dict) -> None:
+        self.exec_data = exec_data
 
     @property
     def render_code(self) -> str:
-        return self._exec_code
+        return self.exec_code
 
     @render_code.setter
-    def render_code(self, _exec_code) -> None:
-        self._exec_code = _exec_code
+    def render_code(self, exec_code) -> None:
+        self.exec_code = exec_code
 
 
 class EngineProgramGenerator(CodeGenerator):
-    _exec_code: str
-    _engine_template_content: str
-    _render_data: dict
+    exec_code: Optional[str] = Field(
+        default="", description="执行代码"
+    )
+    engine_template_content: Optional[str] = Field(
+        default="", description="模板内容",
+    )
+    exec_data: Optional[Dict[str, Any]] = Field(
+        default_factory=dict,
+        description="执行环境数据",
+        alias="exec_data",
+    )
 
-    def __init__(self, engine_code_file: str, render_data: dict = {}):
-        super().__init__()
-        self._exec_code = None
-        self._render_data = render_data
+    def __init__(self, engine_code_file: str, render_data=None):
+        if render_data is None:
+            render_data = {}
         # 读取模板文件
         with open(engine_code_file, 'r') as engine_template_file:
-            self._engine_template_content = engine_template_file.read()
+            engine_template_content = engine_template_file.read()
+
+        super().__init__(exec_data=render_data, engine_template_content=engine_template_content)
 
     @classmethod
     def get_type(cls) -> str:
@@ -241,24 +279,24 @@ class EngineProgramGenerator(CodeGenerator):
 
     @property
     def template_content(self) -> str:
-        return self._engine_template_content
+        return self.engine_template_content
 
     @template_content.setter
     def template_content(self, _template_content) -> None:
-        self._engine_template_content = _template_content
+        self.engine_template_content = _template_content
 
     @property
     def render_data(self) -> dict:
-        return self._render_data
+        return self.exec_data
 
     @render_data.setter
-    def render_data(self, _render_data: dict) -> None:
-        self._render_data = _render_data
+    def render_data(self, exec_data: dict) -> None:
+        self.exec_data = exec_data
 
     @property
     def render_code(self) -> str:
-        return self._exec_code
+        return self.exec_code
 
     @render_code.setter
-    def render_code(self, _exec_code) -> None:
-        self._exec_code = _exec_code
+    def render_code(self, exec_code) -> None:
+        self.exec_code = exec_code
