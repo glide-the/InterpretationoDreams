@@ -1,6 +1,6 @@
 from dreamsboard.engine.constants import DATA_KEY, TYPE_KEY
 from dreamsboard.engine.data_structs.data_structs import IndexStruct
-from dreamsboard.engine.generate.registry import TEMPLATE_TYPE_TO_GENERATOR_CLASS
+from dreamsboard.engine.data_structs.registry import INDEX_STRUCT_TYPE_TO_INDEX_STRUCT_CLASS
 
 
 def index_struct_to_json(index_struct: IndexStruct) -> dict:
@@ -14,7 +14,7 @@ def index_struct_to_json(index_struct: IndexStruct) -> dict:
 def json_to_index_struct(struct_dict: dict) -> IndexStruct:
     type = struct_dict[TYPE_KEY]
     data_dict = struct_dict[DATA_KEY]
-    cls = TEMPLATE_TYPE_TO_GENERATOR_CLASS[type]
+    cls = INDEX_STRUCT_TYPE_TO_INDEX_STRUCT_CLASS[type]
     try:
         return cls.from_json(data_dict)
     except TypeError:

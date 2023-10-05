@@ -10,6 +10,7 @@ from dreamsboard.engine.generate.run_generate import CodeGeneratorChain
 import langchain
 import os
 
+from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.storage_context import StorageContext
 
 langchain.verbose = True
@@ -24,9 +25,17 @@ logger.addHandler(handler)
 
 
 def test_engine_storage() -> None:
+    storage_context = StorageContext.from_defaults(persist_dir="./storage")
+    code_gen_builder = load_store_from_storage(storage_context)
+    # logger.info(executor._ai_message)
+    assert True
+
+
+def test_engine_storage_code_gen_builder() -> None:
     try:
 
         storage_context = StorageContext.from_defaults(persist_dir="./storage")
+        code_gen_builder = load_store_from_storage(storage_context)
         index_loaded = True
     except:
         index_loaded = False
@@ -66,16 +75,17 @@ def test_engine_storage() -> None:
         code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
             "engine_code_file": "engine_template.py-tpl",
         }))
-        executor = code_gen_builder.build_executor()
-        executor.execute()
-        _ai_message = executor.chat_run()
 
-        logger.info(executor._messages)
-        logger.info(executor._ai_message)
-        assert executor._ai_message is not None
+    executor = code_gen_builder.build_executor()
+    executor.execute()
+    _ai_message = executor.chat_run()
 
-        # persist index to disk
-        code_gen_builder.storage_context.persist(persist_dir="./storage")
+    logger.info(executor._messages)
+    logger.info(executor._ai_message)
+    assert executor._ai_message is not None
+
+    # persist index to disk
+    code_gen_builder.storage_context.persist(persist_dir="./storage")
     # executor = code_gen_builder.build_executor()
     # executor.execute()
     # _ai_message = executor.chat_run()
