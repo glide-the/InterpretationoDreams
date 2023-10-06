@@ -53,7 +53,7 @@ def test_structured_dreams_storyboard_store() -> None:
 
     _dreams_render_data = {
         'cosplay_role': '宝宝',
-        'message': '兔兔，我今天去打羽毛球了，顺道刷了一下二刀流，死亡如风，常伴吾身。'
+        'message': '兔兔，我没有跟你一起打羽毛球，你会不会不开心呀？'
     }
     code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
         "query_code_file": "query_template.py-tpl",
