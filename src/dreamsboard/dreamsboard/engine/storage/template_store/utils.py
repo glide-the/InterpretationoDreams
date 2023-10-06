@@ -58,17 +58,17 @@ def legacy_json_to_template(template_dict: dict) -> CodeGenerator:
         })
     elif template_type == QueryProgramGenerator.get_type():
         generator = QueryProgramGenerator.from_config(cfg={
-            "code_file": "dreams_query_template.py-tpl",
+            "query_code_file": "dreams_query_template.py-tpl",
             "render_data": _base_render_data,
         })
     elif template_type == AIProgramGenerator.get_type():
         generator = AIProgramGenerator.from_config(cfg={
-            "code_file": "ai_template.py-tpl",
+            "ai_code_file": "ai_template.py-tpl",
             "render_data": _base_render_data,
         })
     elif template_type == EngineProgramGenerator.get_type():
         generator = EngineProgramGenerator.from_config(cfg={
-            "code_file": "engine_template.py-tpl",
+            "engine_code_file": "engine_template.py-tpl",
             "render_data": _base_render_data,
         })
     else:

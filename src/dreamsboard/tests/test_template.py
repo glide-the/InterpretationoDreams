@@ -1,6 +1,8 @@
 from jinja2 import Template
 import logging
 
+from dreamsboard.templates import get_template_path
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -13,8 +15,7 @@ logger.addHandler(handler)
 
 def test_template() -> None:
     # 读取模板文件
-    with open('/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/dreamsboard/dreamsboard/templates'
-              '/base_template.py-tpl', 'r') as template_file:
+    with open(get_template_path('base_template.py-tpl'), 'r') as template_file:
         base_template_content = template_file.read()
 
     # 创建一个Jinja2模板对象

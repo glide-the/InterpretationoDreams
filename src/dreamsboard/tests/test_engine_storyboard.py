@@ -2,7 +2,8 @@ import logging
 
 from langchain.chat_models import ChatOpenAI
 
-from dreamsboard.dreams.dreams_personality_chain.base import StructuredDreamsStoryboard, StoryBoardDreamsGenerationChain
+from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
+from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
 import langchain
 
 langchain.verbose = True
@@ -39,4 +40,7 @@ def test_structured_dreams_storyboard() -> None:
     executor = code_gen_builder.build_executor()
     logger.info(executor)
     logger.info(executor.executor_code)
-    assert True
+
+    assert executor.executor_code is not None
+
+

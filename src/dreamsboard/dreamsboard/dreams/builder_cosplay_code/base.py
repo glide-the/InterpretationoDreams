@@ -1,12 +1,20 @@
 from __future__ import annotations
 from typing import List
-from dreamsboard.generate import BaseProgramGenerator, EngineProgramGenerator, AIProgramGenerator, \
-    QueryProgramGenerator
-from dreamsboard.generate.run_generate import CodeGeneratorBuilder
+from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
+from dreamsboard.engine.generate.code_generate import (
+    BaseProgramGenerator,
+    QueryProgramGenerator,
+    AIProgramGenerator,
+    EngineProgramGenerator,
+)
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder, KorLoader
 from langchain.chains import LLMChain
 from langchain.schema.language_model import BaseLanguageModel
 import logging
+
+from dreamsboard.engine.loading import load_store_from_storage
+from dreamsboard.engine.storage.storage_context import StorageContext
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -123,7 +131,7 @@ class StructuredDreamsStoryboard:
         return messages
 
     def loader_cosplay_builder(self) -> CodeGeneratorBuilder:
-        code_gen_builder = CodeGeneratorBuilder()
+        code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[])
 
         # 创建一个字典，用于按照story_board组织内容和角色
         storyboard_dict = self.builder.build_dict()
@@ -151,7 +159,7 @@ class StructuredDreamsStoryboard:
                 'dreams_message': guidance_question.step_advice,
             }
             code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-                "dreams_query_code_file": "dreams_query_template.py-tpl",
+                "query_code_file": "dreams_query_template.py-tpl",
                 "render_data": _dreams_render_data,
             }))
             code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={

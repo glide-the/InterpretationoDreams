@@ -68,7 +68,7 @@ def test_engine_storage_code_gen_builder() -> None:
             'dreams_message': '我听到你今天经历了一些有趣的事情，而且你似乎充满了好奇和喜悦。在这一切之中，有没有让你感到困惑或者需要探讨的问题？',
         }
         code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-            "dreams_query_code_file": "dreams_query_template.py-tpl",
+            "query_code_file": "dreams_query_template.py-tpl",
             "render_data": _dreams_render_data,
         }))
 

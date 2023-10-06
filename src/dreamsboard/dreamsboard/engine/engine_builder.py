@@ -43,14 +43,16 @@ class BaseEngineBuilder(Generic[IS], ABC):
             assert nodes is not None
             for node in nodes:
                 self._template_store.set_template_hash(node.node_id, node.hash)
-            index_struct = self.build_index_from_nodes(nodes)
+            self._index_struct = self.build_index_from_nodes(nodes)
+
         elif storage_context is not None and nodes is None and index_struct is not None:
             for node_id, node in storage_context.template_store.templates.items():
                 if node is not None:
                     self._template_store.set_template_hash(node_id, node.hash)
-            index_struct = self.build_index_from_nodes(storage_context.template_store.templates.values())
 
-        self._index_struct = index_struct
+            self._index_struct = index_struct
+            self.build_index_from_nodes(storage_context.template_store.templates.values())
+
         self._storage_context.index_store.add_index_struct(self._index_struct)
 
     @classmethod
@@ -166,7 +168,10 @@ class CodeGeneratorBuilder(BaseEngineBuilder[IndexDict]):
 
     def _build_index_from_nodes(self, nodes: Sequence[CodeGenerator]) -> IndexDict:
         """Build index from nodes."""
-        index_struct = self.index_struct_cls()
+        if self._index_struct is None:
+            index_struct = self.index_struct_cls()
+        else:
+            index_struct = self._index_struct
         self._add_nodes_to_index(
             index_struct, nodes, show_progress=self._show_progress
         )

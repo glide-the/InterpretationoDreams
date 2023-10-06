@@ -127,17 +127,15 @@ class QueryProgramGenerator(CodeGenerator):
         alias="exec_data",
     )
 
-    def __init__(self, dreams_query_code_file: str = None, render_data=None, **kwargs):
+    def __init__(self, query_code_file: str = None, render_data=None, **kwargs):
 
         # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
         if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
             if render_data is None:
                 render_data = {}
             # 读取模板文件
-            with open(dreams_query_code_file, 'r') as dreams_query_template_file:
+            with open(query_code_file, 'r') as dreams_query_template_file:
                 dreams_query_template_content = dreams_query_template_file.read()
-
-            self.dreams_query_template_content = dreams_query_template_content
 
             super().__init__(exec_data=render_data, dreams_query_template_content=dreams_query_template_content)
         else:
@@ -156,9 +154,9 @@ class QueryProgramGenerator(CodeGenerator):
     def from_config(cls, cfg=None):
         if cfg is None:
             raise RuntimeError("from_config cfg is None.")
-        dreams_query_code_file = cfg.get("dreams_query_code_file", "")
+        query_code_file = cfg.get("query_code_file", "")
         render_data = cfg.get("render_data", None)
-        return cls(dreams_query_code_file=get_template_path(dreams_query_code_file), render_data=render_data)
+        return cls(query_code_file=get_template_path(query_code_file), render_data=render_data)
 
     @property
     def template_content(self) -> str:

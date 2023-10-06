@@ -1,8 +1,13 @@
 import logging
 
-from dreamsboard.generate.code_generate import BaseProgramGenerator, EngineProgramGenerator, QueryProgramGenerator, \
-    AIProgramGenerator
-from dreamsboard.generate.run_generate import CodeGeneratorBuilder
+from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
+from dreamsboard.engine.generate.code_generate import (
+    CodeGenerator,
+    BaseProgramGenerator,
+    QueryProgramGenerator,
+    AIProgramGenerator,
+    EngineProgramGenerator,
+)
 import langchain
 import os
 langchain.verbose = True
@@ -32,7 +37,7 @@ logger.addHandler(handler)
 
 
 def test_engine() -> None:
-    code_gen_builder = CodeGeneratorBuilder()
+    code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[])
 
 
     _base_render_data = {
@@ -57,7 +62,7 @@ def test_engine() -> None:
         'dreams_message': '我听到你今天经历了一些有趣的事情，而且你似乎充满了好奇和喜悦。在这一切之中，有没有让你感到困惑或者需要探讨的问题？',
     }
     code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-        "dreams_query_code_file": "dreams_query_template.py-tpl",
+        "query_code_file": "dreams_query_template.py-tpl",
         "render_data": _dreams_render_data,
     }))
     code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
