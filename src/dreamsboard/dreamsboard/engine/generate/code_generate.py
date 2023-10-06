@@ -59,14 +59,18 @@ class BaseProgramGenerator(CodeGenerator):
         alias="exec_data",
     )
 
-    def __init__(self, code_file: str, render_data=None):
-        if render_data is None:
-            render_data = {}
-        # 读取模板文件
-        with open(code_file, 'r') as template_file:
-            base_template_content = template_file.read()
+    def __init__(self, code_file: str = None, render_data=None, **kwargs):
+        # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
+        if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
+            if render_data is None:
+                render_data = {}
+            # 读取模板文件
+            with open(code_file, 'r') as template_file:
+                base_template_content = template_file.read()
 
-        super().__init__(exec_data=render_data, base_template_content=base_template_content)
+            super().__init__(exec_data=render_data, base_template_content=base_template_content)
+        else:
+            super().__init__(**kwargs)
 
     @classmethod
     def get_type(cls) -> str:
@@ -123,14 +127,21 @@ class QueryProgramGenerator(CodeGenerator):
         alias="exec_data",
     )
 
-    def __init__(self, dreams_query_code_file: str, render_data=None):
-        if render_data is None:
-            render_data = {}
-        # 读取模板文件
-        with open(dreams_query_code_file, 'r') as dreams_query_template_file:
-            dreams_query_template_content = dreams_query_template_file.read()
+    def __init__(self, dreams_query_code_file: str = None, render_data=None, **kwargs):
 
-        super().__init__(exec_data=render_data, dreams_query_template_content=dreams_query_template_content)
+        # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
+        if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
+            if render_data is None:
+                render_data = {}
+            # 读取模板文件
+            with open(dreams_query_code_file, 'r') as dreams_query_template_file:
+                dreams_query_template_content = dreams_query_template_file.read()
+
+            self.dreams_query_template_content = dreams_query_template_content
+
+            super().__init__(exec_data=render_data, dreams_query_template_content=dreams_query_template_content)
+        else:
+            super().__init__(**kwargs)
 
     @classmethod
     def get_type(cls) -> str:
@@ -187,14 +198,19 @@ class AIProgramGenerator(CodeGenerator):
         alias="exec_data",
     )
 
-    def __init__(self, ai_code_file: str, render_data=None):
-        if render_data is None:
-            render_data = {}
-        # 读取模板文件
-        with open(ai_code_file, 'r') as ai_template_file:
-            ai_template_content = ai_template_file.read()
+    def __init__(self, ai_code_file: str = None, render_data=None, **kwargs):
 
-        super().__init__(exec_data=render_data, ai_template_content=ai_template_content)
+        # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
+        if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
+            if render_data is None:
+                render_data = {}
+            # 读取模板文件
+            with open(ai_code_file, 'r') as ai_template_file:
+                ai_template_content = ai_template_file.read()
+
+            super().__init__(exec_data=render_data, ai_template_content=ai_template_content)
+        else:
+            super().__init__(**kwargs)
 
     @classmethod
     def get_type(cls) -> str:
@@ -251,14 +267,19 @@ class EngineProgramGenerator(CodeGenerator):
         alias="exec_data",
     )
 
-    def __init__(self, engine_code_file: str, render_data=None):
-        if render_data is None:
-            render_data = {}
-        # 读取模板文件
-        with open(engine_code_file, 'r') as engine_template_file:
-            engine_template_content = engine_template_file.read()
+    def __init__(self, engine_code_file: str = None, render_data=None, **kwargs):
 
-        super().__init__(exec_data=render_data, engine_template_content=engine_template_content)
+        # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
+        if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
+            if render_data is None:
+                render_data = {}
+            # 读取模板文件
+            with open(engine_code_file, 'r') as engine_template_file:
+                engine_template_content = engine_template_file.read()
+
+            super().__init__(exec_data=render_data, engine_template_content=engine_template_content)
+        else:
+            super().__init__(**kwargs)
 
     @classmethod
     def get_type(cls) -> str:

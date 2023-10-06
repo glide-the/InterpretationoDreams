@@ -66,7 +66,7 @@ class KVTemplateStore(BaseTemplateStore):
 
         """
         json_dict = self._kvstore.get_all(collection=self._node_collection)
-        return {key: template_to_json(json) for key, json in json_dict.items()}
+        return {key: json_to_template(json) for key, json in json_dict.items()}
 
     def add_templates(
         self, nodes: Sequence[BaseNode], allow_update: bool = True

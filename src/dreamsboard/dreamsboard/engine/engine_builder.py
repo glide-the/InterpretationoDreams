@@ -44,6 +44,12 @@ class BaseEngineBuilder(Generic[IS], ABC):
             for node in nodes:
                 self._template_store.set_template_hash(node.node_id, node.hash)
             index_struct = self.build_index_from_nodes(nodes)
+        elif storage_context is not None and nodes is None and index_struct is not None:
+            for node_id, node in storage_context.template_store.templates.items():
+                if node is not None:
+                    self._template_store.set_template_hash(node_id, node.hash)
+            index_struct = self.build_index_from_nodes(storage_context.template_store.templates.values())
+
         self._index_struct = index_struct
         self._storage_context.index_store.add_index_struct(self._index_struct)
 

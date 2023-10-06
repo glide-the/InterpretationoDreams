@@ -30,11 +30,11 @@ def json_to_template(template_dict: dict) -> BaseNode:
         if template_type == BaseProgramGenerator.get_type():
             doc = BaseProgramGenerator.model_validate(data_dict)
         elif template_type == QueryProgramGenerator.get_type():
-            doc = QueryProgramGenerator.parse_obj(data_dict)
+            doc = QueryProgramGenerator.model_validate(data_dict)
         elif template_type == AIProgramGenerator.get_type():
-            doc = AIProgramGenerator.parse_obj(data_dict)
+            doc = AIProgramGenerator.model_validate(data_dict)
         elif template_type == EngineProgramGenerator.get_type():
-            doc = EngineProgramGenerator.parse_obj(data_dict)
+            doc = EngineProgramGenerator.model_validate(data_dict)
         else:
             raise ValueError(f"Unknown doc type: {template_type}")
 
