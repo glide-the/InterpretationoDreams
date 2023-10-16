@@ -61,6 +61,9 @@ def test_structured_dreams_storyboard_store() -> None:
     }))
     code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
         "engine_code_file": "simple_engine_template.py-tpl",
+        "render_data": {
+            'model_name': 'gpt-4',
+        },
     }))
 
     executor = code_gen_builder.build_executor()

@@ -270,7 +270,12 @@ class EngineProgramGenerator(CodeGenerator):
         # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
         if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
             if render_data is None:
-                render_data = {}
+                render_data = {
+                    'model_name': 'gpt-4',
+                }
+            model_name = render_data.get("model_name", None)
+            if model_name is None:
+                raise RuntimeError("model_name is None.")
             # 读取模板文件
             with open(engine_code_file, 'r') as engine_template_file:
                 engine_template_content = engine_template_file.read()
