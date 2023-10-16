@@ -1,2 +1,2 @@
 
-messages.append(HumanMessage(content = '{{cosplay_role}}:「 {{ message }}」'))
+messages.append(HumanMessage(content = '''{{cosplay_role}}:「 {{ message }}」'''))
