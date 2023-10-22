@@ -36,7 +36,7 @@ def test_structured_dreams_storyboard_store() -> None:
         )
 
         dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-            llm=llm, csv_file_path="../../docs/csv/ieAeWyXU_keyframe.csv")
+            llm=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/id46Bv3g/str/id46Bv3g_keyframe.csv")
 
         output = dreams_generation_chain.run()
         logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))
@@ -52,8 +52,9 @@ def test_structured_dreams_storyboard_store() -> None:
         code_gen_builder = storyboard_executor.loader_cosplay_builder()
 
     _dreams_render_data = {
-        'cosplay_role': '宝宝',
-        'message': '兔兔，我没有跟你一起打羽毛球，你会不会不开心呀？'
+        'cosplay_role': '心理咨询工作者',
+        'message': '''宝宝今天做了一个梦，有一个非常美味的面条，宝宝想吃，但是宝宝想跟你分享。可是这是一个梦，宝宝不知道怎么跟你分享。
+        你尝试下用你之前的语气，给宝宝报备一个一模一样的生活，让宝宝能很开心的给你说他也做过这样的梦，可以不只是吃面条，也可以有其他的内容'''
     }
     code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
         "query_code_file": "query_template.py-tpl",

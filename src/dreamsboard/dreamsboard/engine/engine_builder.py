@@ -18,6 +18,7 @@ EngineBuilderType = TypeVar("EngineBuilderType", bound="BaseEngineBuilder")
 class BaseEngineBuilder(Generic[IS], ABC):
 
     index_struct_cls: Type[IS]
+    _index_struct: Optional[IS] = None
 
     def __init__(
             self,
