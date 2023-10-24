@@ -1,7 +1,7 @@
 # InterpretationoDreams
 
 ## Description
-通过梦的精神分析，诠释心理学的一些应用
+使用langchain实现 故事情景生成，情感情景引导，剧情总结，性格分析
 
 
 ### 数据处理方式
