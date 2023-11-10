@@ -1,2 +1,2 @@
 
-messages.append(AIMessage(content = '{{ ai_message_content }}'))
+messages.append(AIMessage(content = '''{{ ai_message_content }}'''))

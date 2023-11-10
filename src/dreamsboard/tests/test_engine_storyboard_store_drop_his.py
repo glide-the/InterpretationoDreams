@@ -21,7 +21,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def test_structured_dreams_storyboard_store() -> None:
+def test_structured_dreams_storyboard_store_drop_his() -> None:
     try:
 
         storage_context = StorageContext.from_defaults(persist_dir="./storage")
@@ -36,7 +36,7 @@ def test_structured_dreams_storyboard_store() -> None:
         )
 
         dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-            llm=llm, csv_file_path="../../docs/csv/iRMa9DMW_keyframe.csv")
+            llm=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/id46Bv3g/str/id46Bv3g_keyframe.csv")
 
         output = dreams_generation_chain.run()
         logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))
@@ -51,51 +51,19 @@ def test_structured_dreams_storyboard_store() -> None:
                                                                       )
         code_gen_builder = storyboard_executor.loader_cosplay_builder()
 
-    _dreams_render_data = {
-        'cosplay_role': '宝宝',
-        'message': '''我今天做了一个梦，我不知道我怎么跟你说话，我觉得你在凭什么让我这么在意你，你还是故意让我有这种想法，我甚至觉得，我在被炫耀，我很想解释这种行为，但你给不了我答案'''
-    }
-    code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-        "query_code_file": "query_template.py-tpl",
-        "render_data": _dreams_render_data,
-    }))
-    _dreams_render_data1 = {
-        'cosplay_role': '心里咨询工作者',
-        'message': '''听到这些，你在想什么'''
-    }
-    code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-        "query_code_file": "query_template.py-tpl",
-        "render_data": _dreams_render_data1,
-    }))
-    code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
-        "engine_code_file": "simple_engine_template.py-tpl",
-        "render_data": {
-            'model_name': 'gpt-4',
-        },
-    }))
 
     executor = code_gen_builder.build_executor()
-    logger.info(executor)
-    logger.info(executor.executor_code)
+    logger.info("之前："+executor.executor_code)
 
-    assert executor.executor_code is not None
-    executor.execute()
-    _ai_message = executor.chat_run()
-
-    logger.info(executor._messages)
-    logger.info(executor._ai_message)
-    assert executor._ai_message is not None
     # 删除最后一个生成器，然后添加一个AI生成器
-    code_gen_builder.remove_last_generator()
-    _ai_render_data = {
-        'ai_message_content': _ai_message.content
-    }
-    code_gen_builder.add_generator(AIProgramGenerator.from_config(cfg={
-        "ai_code_file": "ai_template.py-tpl",
-        "render_data": _ai_render_data,
-    }))
+    code_gen_his = 3
+    # 循环删除最后一个生成器
+    for i in range(code_gen_his):
+        code_gen_builder.remove_last_generator()
 
+    executor = code_gen_builder.build_executor()
+
+    logger.info("之后："+executor.executor_code)
     # persist index to disk
     code_gen_builder.storage_context.persist(persist_dir="./storage")
-
     assert True
