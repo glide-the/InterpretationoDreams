@@ -66,7 +66,7 @@ class GlobalsHelper:
                     "`nltk` package not found, please run `pip install nltk`"
                 )
 
-            from llama_index.utils import get_cache_dir
+            from dreamsboard.engine.utils import get_cache_dir
 
             cache_dir = get_cache_dir()
             nltk_data_dir = os.environ.get("NLTK_DATA", cache_dir)

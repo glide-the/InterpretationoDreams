@@ -6,3 +6,6 @@ __pycache__
 .ipynb_checkpoints
 社会交流步骤分析
 **/*/wandb
+/InterpretationoDreams.iml
+/poetry.lock
+/src/dreamsboard/poetry.lock

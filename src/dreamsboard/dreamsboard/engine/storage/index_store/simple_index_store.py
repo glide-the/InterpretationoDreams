@@ -9,7 +9,7 @@ from dreamsboard.engine.storage.index_store.types import (
     DEFAULT_PERSIST_FNAME,
     DEFAULT_PERSIST_PATH,
 )
-from llama_index.utils import concat_dirs
+from dreamsboard.engine.utils import concat_dirs
 
 
 class SimpleIndexStore(KVIndexStore):
