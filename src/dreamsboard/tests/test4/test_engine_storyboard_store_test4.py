@@ -1,0 +1,124 @@
+import logging
+
+from langchain.chat_models import ChatOpenAI
+
+from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
+from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
+import langchain
+
+from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator, AIProgramGenerator
+from dreamsboard.engine.loading import load_store_from_storage
+from dreamsboard.engine.storage.storage_context import StorageContext
+
+langchain.verbose = True
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# 控制台打印
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+
+logger.addHandler(handler)
+
+
+def test_structured_dreams_storyboard_store_test4() -> None:
+    try:
+
+        storage_context = StorageContext.from_defaults(persist_dir="./storage")
+        code_gen_builder = load_store_from_storage(storage_context)
+        index_loaded = True
+    except:
+        index_loaded = False
+
+    if not index_loaded:
+        llm = ChatOpenAI(
+            verbose=True
+        )
+
+        dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
+            llm=llm, csv_file_path="../../docs/csv/iRMa9DMW_keyframe.csv")
+
+        output = dreams_generation_chain.run()
+        logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))
+        logger.info("dreams_personality_context:" + output.get("dreams_personality_context"))
+        dreams_guidance_context = output.get("dreams_guidance_context")
+        dreams_personality_context = output.get("dreams_personality_context")
+
+        storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
+                                                                      builder=dreams_generation_chain.builder,
+                                                                      dreams_guidance_context=dreams_guidance_context,
+                                                                      dreams_personality_context=dreams_personality_context
+                                                                      )
+        code_gen_builder = storyboard_executor.loader_cosplay_builder()
+
+    _dreams_render_data = {
+        'cosplay_role': '心理咨询工作者',
+        'message': '''你看到了一个广告词
+俗话说“肠无渣，面如花”
+肠道如果不给力，
+毒素和垃圾堆积会往脸上走
+出油，暗沉，爆痘都是信号
+-
+管理肠道还是得从补充有益菌下手
+肠道有益菌多了，坏菌自然发挥不了作用
+堆积的垃圾自然也能慢慢排除
+肠干净了，脸蛋子自然也就干净了
+-
+这个万益蓝小蓝瓶益生菌
+小小一瓶，充分满足肠道每日所需
+📌400亿的高活益生菌
+📌耐胃酸，胆汁，存活率可达到99%
+📌菌株都是经过千挑万选的杜邦尖子菌
+📌6种菌株都是有自己的编号的
+协同合作，肠道回正轨！！
+-
+还是0蔗糖低脂肪的
+减脂期的姐妹也可以放心吃
+建议🔸厕所久蹲的
+🔸反复爆痘的
+🔸没时间护肤的姐妹
+都可以直接安排上！每天饭后来一瓶！
+感谢@今天在干嘛的分享
+-
+#益生菌推荐#万益蓝WonderLab #小蓝瓶益生菌
+
+        你尝试下用你之前的语气，仿写一个类似的 产品是减肥药
+        然后再给对方一个反馈，看看对方的反应。'''
+    }
+    code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
+        "query_code_file": "query_template.py-tpl",
+        "render_data": _dreams_render_data,
+    }))
+
+    code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
+        "engine_code_file": "simple_engine_template.py-tpl",
+        "render_data": {
+            'model_name': 'gpt-4',
+        },
+    }))
+
+    executor = code_gen_builder.build_executor()
+    logger.info(executor)
+    logger.info(executor.executor_code)
+
+    assert executor.executor_code is not None
+    executor.execute()
+    _ai_message = executor.chat_run()
+
+    logger.info(executor._messages)
+    logger.info(executor._ai_message)
+    assert executor._ai_message is not None
+    # 删除最后一个生成器，然后添加一个AI生成器
+    code_gen_builder.remove_last_generator()
+    _ai_render_data = {
+        'ai_message_content': _ai_message.content
+    }
+    code_gen_builder.add_generator(AIProgramGenerator.from_config(cfg={
+        "ai_code_file": "ai_template.py-tpl",
+        "render_data": _ai_render_data,
+    }))
+
+    # persist index to disk
+    code_gen_builder.storage_context.persist(persist_dir="./storage")
+
+    assert True
