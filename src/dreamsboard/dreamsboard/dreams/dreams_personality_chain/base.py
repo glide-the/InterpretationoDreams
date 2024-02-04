@@ -31,10 +31,13 @@ class StoryBoardDreamsGenerationChain(ABC):
     dreams_guidance_chain: SequentialChain
     dreams_personality_chain: SequentialChain
 
-    def __init__(self, csv_file_path: str,
+    def __init__(self,
+                 csv_file_path: str,
+                 user_id: str,
                  dreams_guidance_chain: SequentialChain,
                  dreams_personality_chain: SequentialChain):
         self.builder = StructuredStoryboardCSVBuilder.form_builder(csv_file_path=csv_file_path)
+        self.user_id = user_id
         self.dreams_guidance_chain = dreams_guidance_chain
         self.dreams_personality_chain = dreams_personality_chain
 
@@ -42,7 +45,8 @@ class StoryBoardDreamsGenerationChain(ABC):
     def from_dreams_personality_chain(
             cls,
             llm: BaseLanguageModel,
-            csv_file_path: str
+            csv_file_path: str,
+            user_id: str = None,
     ) -> StoryBoardDreamsGenerationChain:
         # 03- 故事情境生成.txt STORY_BOARD_SCENE_TEMPLATE_Chain
         prompt_template1 = PromptTemplate(input_variables=["scene_content"],
@@ -57,7 +61,8 @@ class StoryBoardDreamsGenerationChain(ABC):
         # 04-情感情景引导.txt
         prompt_template = PromptTemplate(input_variables=["story_board_summary_context",
                                                           "story_scenario_context",
-                                                          "scene_monologue_context"],
+                                                          "scene_monologue_context",
+                                                          "user_id"],
                                          template=DREAMS_GEN_TEMPLATE)
         social_chain = LLMChain(llm=llm, prompt=prompt_template, output_key="dreams_guidance_context")
 
@@ -84,6 +89,7 @@ class StoryBoardDreamsGenerationChain(ABC):
             output_variables=["dreams_personality_context"],
             verbose=True)
         return cls(csv_file_path=csv_file_path,
+                   user_id=user_id if user_id else "此患者",
                    dreams_guidance_chain=dreams_guidance_chain,
                    dreams_personality_chain=dreams_personality_chain)
 
@@ -102,7 +108,8 @@ class StoryBoardDreamsGenerationChain(ABC):
             verbose=True)
 
         dreams_out = dreams_guidance_personality_chain({"scene_content": scene_content,
-                                                        "story_board_summary_context": story_board_summary_context})
+                                                        "story_board_summary_context": story_board_summary_context,
+                                                        "user_id": self.user_id})
 
         return {"dreams_guidance_context": dreams_out["dreams_guidance_context"],
                 "dreams_personality_context": dreams_out["dreams_personality_context"]}
