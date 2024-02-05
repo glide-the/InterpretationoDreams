@@ -92,7 +92,8 @@ def test_batch_extract() -> None:
                     try:
 
                         storage_context = StorageContext.from_defaults(
-                            persist_dir=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}")
+                            persist_dir=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}"
+                        )
                         code_gen_builder = load_store_from_storage(storage_context)
                         index_loaded = True
                         logger.info(f"load storage success:{index_loaded}")
@@ -103,7 +104,9 @@ def test_batch_extract() -> None:
                     if not index_loaded:
                         try:
 
-                            dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(persist_dir="./storage")
+                            dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(
+                                persist_dir=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}"
+                            )
 
                             dreams_analysis_store_loaded = True
                         except:
@@ -123,7 +126,8 @@ def test_batch_extract() -> None:
                             })
                             dreams_analysis_store.add_analysis([dreams])
                             logger.info(dreams_analysis_store.analysis_all)
-                            dreams_analysis_store_path = concat_dirs(dirname=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}", basename="dreams_analysis_store.json")
+                            dreams_analysis_store_path = concat_dirs(dirname=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}",
+                                                                     basename="dreams_analysis_store.json")
                             dreams_analysis_store.persist(persist_path=dreams_analysis_store_path)
                         else:
                             for val in dreams_analysis_store.analysis_all.values():

@@ -62,7 +62,8 @@ class StructuredStoryboardCSVBuilder(ABC):
         """
         role = set()
         for item in self.data:
-            role.add(item.story_board_role.name)
+            if len(item.story_board_role.name) > 0 and item.story_board_role.name is not None:
+                role.add(item.story_board_role.name)
         return role
 
     def load(self):
