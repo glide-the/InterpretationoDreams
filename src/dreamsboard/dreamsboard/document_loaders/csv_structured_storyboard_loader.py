@@ -131,16 +131,20 @@ class StructuredStoryboardCSVBuilder(ABC):
         for storyboard in self.data:
             if storyboard.story_board.name in storyboard_dict:
                 # 如果已经存在该story_board的组，追加内容和角色
-                storyboard_dict[storyboard.story_board.name]['story_board_text'].append(
-                    storyboard.story_board_text.name)
-                storyboard_dict[storyboard.story_board.name]['story_board_role'].append(
-                    storyboard.story_board_role.name)
+                if storyboard.story_board_role.name in storyboard_dict[storyboard.story_board.name]:
+                    storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name].append(
+                        storyboard.story_board_text.name)
+                else:
+                    storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name] = []
+                    storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name].append(
+                        storyboard.story_board_text.name)
             else:
                 # 如果还没有该story_board的组，创建一个新的组
-                storyboard_dict[storyboard.story_board.name] = {
-                    'story_board_text': [storyboard.story_board_text.name],
-                    'story_board_role': [storyboard.story_board_role.name]
-                }
+
+                storyboard_dict[storyboard.story_board.name] = {}
+                storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name] = []
+                storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name].append(
+                    storyboard.story_board_text.name)
 
         return storyboard_dict
 
@@ -151,18 +155,15 @@ class StructuredStoryboardCSVBuilder(ABC):
         :return:
         """
 
-        # 创建一个字典，用于按照story_board组织内容和角色
-        storyboard_dict = self.build_dict()
-
-        # 根据story_board组织内容和角色
+        # 组织内容和角色
         formatted_text = ""
-        for storyboard, storyboard_data in storyboard_dict.items():
-            # 格式化内容
-            text = '，'.join(storyboard_data['story_board_text'])
-            text += "。"
-            formatted_text += f"{storyboard_data['story_board_role'][0]}:「{text}」"
-            # 判断是否是最后一个storyboard
-            if storyboard != list(storyboard_dict.keys())[-1]:
-                formatted_text += "\n"
+
+        for storyboard in self.data:
+            role = storyboard.story_board_role.name
+            text = storyboard.story_board_text.name
+            if len(role) > 0 and len(text) > 0:
+                formatted_text += f"{role}:「{''.join(text)}」\n"
+            else:
+                formatted_text += f"「{''.join(text)}」\n"
 
         return formatted_text

@@ -69,7 +69,7 @@ class StructuredDreamsStoryboard:
                      dreams_guidance_context: str,
                      dreams_personality_context: str,
                      guidance_llm: BaseLanguageModel = None,
-                     user_id: str = None,) -> StructuredDreamsStoryboard:
+                     user_id: str = None, ) -> StructuredDreamsStoryboard:
         kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
             llm=llm if guidance_llm is None else guidance_llm)
         kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(llm=llm)
@@ -132,16 +132,15 @@ class StructuredDreamsStoryboard:
         """
 
         self.builder.load()
-        # 创建一个字典，用于按照story_board组织内容和角色
-        storyboard_dict = self.builder.build_dict()
-
-        # 根据story_board组织内容和角色
+        # 组织内容和角色
         messages = []
-        for storyboard, storyboard_data in storyboard_dict.items():
-            # 格式化内容
-            text = '，'.join(storyboard_data['story_board_text'])
-            text += "。"
-            messages.append(f"{storyboard_data['story_board_role'][0]}:「{text}」")
+        for storyboard in self.builder.data:
+            role = storyboard.story_board_role.name
+            text = storyboard.story_board_text.name
+            if len(role) > 0 and len(text) > 0:
+                messages.append(f"{role}:「{''.join(text)}」\n")
+            else:
+                messages.append(f"「{''.join(text)}」\n")
 
         return messages
 
@@ -149,10 +148,10 @@ class StructuredDreamsStoryboard:
         code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[])
 
         # 创建一个字典，用于按照story_board组织内容和角色
-        storyboard_dict = self.builder.build_dict()
+        export_role = self.builder.export_role()
         if self.user_id is None:
-            # 获取第一个story_board_role属性的值
-            cosplay_role = list(storyboard_dict.values())[0]['story_board_role'][0]
+            # 获取export_role set的第一个值
+            cosplay_role = export_role.pop()
         else:
             cosplay_role = self.user_id
 
@@ -187,9 +186,12 @@ class StructuredDreamsStoryboard:
             code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
                 "engine_code_file": "engine_template.py-tpl",
                 "render_data": {
-                    'model_name': 'gpt-3.5-turbo' if engine_template_render_data.get('model_name') is None else engine_template_render_data.get('model_name'),
-                    'OPENAI_API_BASE': None if engine_template_render_data.get('OPENAI_API_BASE') is None else engine_template_render_data.get('OPENAI_API_BASE'),
-                    'OPENAI_API_KEY': None if engine_template_render_data.get('OPENAI_API_KEY') is None else engine_template_render_data.get('OPENAI_API_KEY'),
+                    'model_name': 'gpt-3.5-turbo' if engine_template_render_data.get(
+                        'model_name') is None else engine_template_render_data.get('model_name'),
+                    'OPENAI_API_BASE': None if engine_template_render_data.get(
+                        'OPENAI_API_BASE') is None else engine_template_render_data.get('OPENAI_API_BASE'),
+                    'OPENAI_API_KEY': None if engine_template_render_data.get(
+                        'OPENAI_API_KEY') is None else engine_template_render_data.get('OPENAI_API_KEY'),
                 },
             }))
             executor = code_gen_builder.build_executor()

@@ -34,8 +34,7 @@ def test_structured_storyboard_csv_builder_export_role() -> None:
 
 
 def test_structured_storyboard_csv_builder_msg() -> None:
-    builder = StructuredStoryboardCSVBuilder(csv_file_path="/media/checkpoint/speech_data/抖音作品/ieAeWyXU/str"
-                                                           "/ieAeWyXU_keyframe.csv")
+    builder = StructuredStoryboardCSVBuilder(csv_file_path="/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv/msg-1_5_keyframe.csv")
     builder.load()  # 替换为你的CSV文件路径
 
     formatted_text = builder.build_msg()
