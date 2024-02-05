@@ -156,6 +156,7 @@ def test_batch_extract() -> None:
                         code_gen_builder.storage_context.dreams_analysis_store = dreams_analysis_store
                         code_gen_builder.storage_context.persist(
                             persist_dir=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}")
+                        logger.info(f"persist storage success")
                 except Exception as e:
                     logger.error(f"解析出错role{role} in {filename} error:{e}", exc_info=True)
 
