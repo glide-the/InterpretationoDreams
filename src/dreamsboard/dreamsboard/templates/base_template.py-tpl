@@ -20,5 +20,5 @@ messages.append(SystemMessage(content = """你正在扮演{{ cosplay_role }}，�
 """))
 
 {% for message in messages %}
-messages.append(HumanMessage(content = '{{ message }}'))
+messages.append(HumanMessage(content = '''{{ message }}'''))
 {% endfor %}
