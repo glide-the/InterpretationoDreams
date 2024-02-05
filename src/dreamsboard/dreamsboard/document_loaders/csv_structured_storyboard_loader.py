@@ -27,6 +27,7 @@ story_board_role:"七七",
 from __future__ import annotations
 from abc import ABC
 import csv
+from typing import List, Set
 
 
 class Metadata:
@@ -54,6 +55,16 @@ class StructuredStoryboardCSVBuilder(ABC):
 
         return cls(csv_file_path=csv_file_path)
 
+    def export_role(self) -> Set[str]:
+        """
+        输出角色
+        :return:
+        """
+        role = set()
+        for item in self.data:
+            role.add(item.story_board_role.name)
+        return role
+
     def load(self):
         # 清空现有数据
         self.data = []
@@ -61,14 +72,16 @@ class StructuredStoryboardCSVBuilder(ABC):
         # 打开CSV文件并读取数据
         with open(self.csv_file_path, newline='', encoding='utf-8') as file:
             csv_reader = csv.reader(file, delimiter=',', quotechar='"')
-            next(csv_reader)  # 跳过标题行
+            headers = next(csv_reader)  # 读取标题行
 
             for row in csv_reader:
-                if len(row) == 5:  # 确保每行有5个字段
-                    role, text, start_time, end_time, storyboard = row
-                    start_point_len = start_time
-                    end_point_len = end_time
-
+                if len(row) == len(headers):  # 确保每行字段数与标题相同
+                    data_dict = dict(zip(headers, row))
+                    role = data_dict.get('角色', '')
+                    text = data_dict.get('内容', '')
+                    start_point_len = data_dict.get('开始时间', '')
+                    end_point_len = data_dict.get('结束时间', '')
+                    storyboard = data_dict.get('分镜', '')
                     # 创建StructuredStoryboard对象
                     structured_storyboard = StructuredStoryboard(start_point_len, end_point_len, storyboard, text, role)
 

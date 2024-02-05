@@ -68,7 +68,7 @@ class StoryBoardDreamsGenerationChain(ABC):
 
         dreams_guidance_chain = SequentialChain(
             chains=[review_chain1, review_chain2, social_chain],
-            input_variables=["scene_content", "story_board_summary_context"],
+            input_variables=["user_id", "scene_content", "story_board_summary_context"],
             # Here we return multiple variables
             output_variables=["dreams_guidance_context"],
             verbose=True)
@@ -96,13 +96,13 @@ class StoryBoardDreamsGenerationChain(ABC):
     def run(self) -> Dict[str, Any]:
         # 对传入的剧本台词转换成 scene_content
         self.builder.load()
-        selected_columns = ["story_board_text", "story_board"]
+        selected_columns = ["story_board_role", "story_board_text", "story_board"]
         scene_content = self.builder.build_text(selected_columns)
         story_board_summary_context = self.builder.build_msg()
 
         dreams_guidance_personality_chain = SequentialChain(
             chains=[self.dreams_guidance_chain, self.dreams_personality_chain],
-            input_variables=["scene_content", "story_board_summary_context"],
+            input_variables=["user_id", "scene_content", "story_board_summary_context"],
             # Here we return multiple variables
             output_variables=["dreams_guidance_context", "dreams_personality_context"],
             verbose=True)

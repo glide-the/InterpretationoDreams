@@ -19,15 +19,15 @@ class KorLoader:
         # @title 长的prompt
         schema = Object(
             id="script",
-            description="Adapted from the novel into script",
+            description="开放性引导问题",
             attributes=[
                 Text(
                     id="step_advice",
-                    description='''Advice provided in this step, e.g. "I would say something like: 'I understand this is a difficult situation for you.'" ''',
+                    description='''在这一步骤中提供的建议，例如“我想说这样的话：‘我理解这对你来说是一个困难的情况。’” ''',
                 ),
                 Text(
                     id="step_description",
-                    description="""(Description of the counseling step, e.g. "Establish trust" """,
+                    description="""咨询步骤的描述，例如“建立信任”""",
                 )
             ],
             examples=[

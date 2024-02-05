@@ -1,5 +1,8 @@
 from __future__ import annotations
 from typing import List
+
+from dreamsboard.document_loaders.ner_loader import NerLoader
+from dreamsboard.document_loaders.protocol.ner_protocol import DreamsStepInfo, Personality
 from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
 from dreamsboard.engine.generate.code_generate import (
     BaseProgramGenerator,
@@ -25,12 +28,6 @@ handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 
-class DreamsStepInfo:
-    def __init__(self, step_advice, step_description):
-        self.step_advice = step_advice
-        self.step_description = step_description
-
-
 class StructuredDreamsStoryboard:
     """
     对剧本和分析结果进行结构化，将开放问题与性格分析结果进行结合。生成情景扮演代码
@@ -48,6 +45,7 @@ class StructuredDreamsStoryboard:
                  dreams_personality_context: str,
                  kor_dreams_guidance_chain: LLMChain,
                  kor_dreams_personality_chain: LLMChain,
+                 ner_dreams_personality_chain: LLMChain,
                  ):
         """
 
@@ -60,6 +58,7 @@ class StructuredDreamsStoryboard:
         self.dreams_personality_context = dreams_personality_context
         self.kor_dreams_guidance_chain = kor_dreams_guidance_chain
         self.kor_dreams_personality_chain = kor_dreams_personality_chain
+        self.ner_dreams_personality_chain = ner_dreams_personality_chain
         self.storage_context = None
 
     @classmethod
@@ -67,15 +66,19 @@ class StructuredDreamsStoryboard:
                      llm: BaseLanguageModel,
                      builder: StructuredStoryboardCSVBuilder,
                      dreams_guidance_context: str,
-                     dreams_personality_context: str) -> StructuredDreamsStoryboard:
-        kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(llm=llm)
+                     dreams_personality_context: str,
+                     guidance_llm: BaseLanguageModel = None) -> StructuredDreamsStoryboard:
+        kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
+            llm=llm if guidance_llm is None else guidance_llm)
         kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(llm=llm)
+        ner_dreams_personality_chain = NerLoader.form_ner_dreams_personality_builder(llm=llm)
 
         return cls(builder=builder,
                    dreams_guidance_context=dreams_guidance_context,
                    dreams_personality_context=dreams_personality_context,
                    kor_dreams_guidance_chain=kor_dreams_guidance_chain,
-                   kor_dreams_personality_chain=kor_dreams_personality_chain)
+                   kor_dreams_personality_chain=kor_dreams_personality_chain,
+                   ner_dreams_personality_chain=ner_dreams_personality_chain)
 
     def kor_dreams_guidance_context(self) -> List[DreamsStepInfo]:
         """
@@ -110,6 +113,15 @@ class StructuredDreamsStoryboard:
 
         return personality
 
+    def ner_dreams_personality_context(self) -> str:
+        """
+        对性格分析结果进行抽取，得到性格分析结果,ner版本
+        :return:
+        """
+        response: Personality = self.ner_dreams_personality_chain.invoke({"input": self.dreams_personality_context})
+
+        return response.personality
+
     def builder_base_cosplay_code(self) -> List[str]:
         """
         根据剧本与任务性格基础情景扮演代码，
@@ -130,7 +142,7 @@ class StructuredDreamsStoryboard:
 
         return messages
 
-    def loader_cosplay_builder(self) -> CodeGeneratorBuilder:
+    def loader_cosplay_builder(self, engine_template_render_data: dict = {}) -> CodeGeneratorBuilder:
         code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[])
 
         # 创建一个字典，用于按照story_board组织内容和角色
@@ -139,7 +151,7 @@ class StructuredDreamsStoryboard:
         cosplay_role = list(storyboard_dict.values())[0]['story_board_role'][0]
 
         guidance_questions = self.kor_dreams_guidance_context()
-        personality = self.kor_dreams_personality_context()
+        personality = self.ner_dreams_personality_context()
 
         base_cosplay_message = self.builder_base_cosplay_code()
         _base_render_data = {
@@ -164,6 +176,11 @@ class StructuredDreamsStoryboard:
             }))
             code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
                 "engine_code_file": "engine_template.py-tpl",
+                "render_data": {
+                    'model_name': 'gpt-3.5-turbo' if engine_template_render_data.get('model_name') is None else engine_template_render_data.get('model_name'),
+                    'OPENAI_API_BASE': None if engine_template_render_data.get('OPENAI_API_BASE') is None else engine_template_render_data.get('OPENAI_API_BASE'),
+                    'OPENAI_API_KEY': None if engine_template_render_data.get('OPENAI_API_KEY') is None else engine_template_render_data.get('OPENAI_API_KEY'),
+                },
             }))
             executor = code_gen_builder.build_executor()
             executor.execute()
