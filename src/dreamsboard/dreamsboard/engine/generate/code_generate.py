@@ -75,7 +75,6 @@ class CodeGenerator(BaseNode, ABC):
         """Get render_code."""
 
     def generate(self, render_data: dict = {}) -> str:
-        logger.info(f'{self.__class__},生成代码')
         base_template = Template(self.template_content)
         if render_data is not None and self.render_data is not None:
             self.render_data = {**render_data, **self.render_data}
@@ -85,7 +84,6 @@ class CodeGenerator(BaseNode, ABC):
 
         self.render_code = base_template.render(self.render_data)
 
-        logger.info(f'{self.__class__},生成代码成功 {self.calculate_md5()}')
         return self.render_code
 
     def calculate_md5(self):

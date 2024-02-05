@@ -15,9 +15,11 @@ from tqdm import tqdm
 import time
 import re
 
+from dreamsboard.engine.dreams_personality.dreams_personality import DreamsPersonalityNode
 from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_store import SimpleDreamsAnalysisStore
 from dreamsboard.engine.storage.storage_context import StorageContext
+from dreamsboard.engine.utils import concat_dirs
 
 langchain.verbose = True
 logger = logging.getLogger(__name__)
@@ -93,8 +95,10 @@ def test_batch_extract() -> None:
                             persist_dir=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}")
                         code_gen_builder = load_store_from_storage(storage_context)
                         index_loaded = True
+                        logger.info(f"load storage success:{index_loaded}")
                     except:
                         index_loaded = False
+                        logger.info(f"load storage error:{index_loaded}")
 
                     if not index_loaded:
                         try:
@@ -109,20 +113,27 @@ def test_batch_extract() -> None:
                             dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
                                 llm=llm, csv_file_path=filename, user_id=role)
 
-                            logger.info("dreams_guidance_context:")
                             output = dreams_generation_chain.run()
-                            logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))
-                            logger.info("dreams_personality_context:" + output.get("dreams_personality_context"))
                             dreams_guidance_context = output.get("dreams_guidance_context")
                             dreams_personality_context = output.get("dreams_personality_context")
-
+                            dreams_analysis_store = SimpleDreamsAnalysisStore()
+                            dreams = DreamsPersonalityNode.from_config(cfg={
+                                "dreams_guidance_context":  dreams_guidance_context,
+                                "dreams_personality_context": dreams_personality_context
+                            })
+                            dreams_analysis_store.add_analysis([dreams])
+                            logger.info(dreams_analysis_store.analysis_all)
+                            dreams_analysis_store_path = concat_dirs(dirname=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}", basename="dreams_analysis_store.json")
+                            dreams_analysis_store.persist(persist_path=dreams_analysis_store_path)
                         else:
                             for val in dreams_analysis_store.analysis_all.values():
                                 dreams_guidance_context = val.dreams_guidance_context
                                 dreams_personality_context = val.dreams_personality_context
 
+                        builder = StructuredStoryboardCSVBuilder.form_builder(csv_file_path=filename)
+                        builder.load()
                         storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
-                                                                                      builder=dreams_generation_chain.builder,
+                                                                                      builder=builder,
                                                                                       dreams_guidance_context=dreams_guidance_context,
                                                                                       dreams_personality_context=dreams_personality_context,
                                                                                       guidance_llm=guidance_llm

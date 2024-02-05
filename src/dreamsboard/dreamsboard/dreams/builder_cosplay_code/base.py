@@ -151,7 +151,11 @@ class StructuredDreamsStoryboard:
         cosplay_role = list(storyboard_dict.values())[0]['story_board_role'][0]
 
         guidance_questions = self.kor_dreams_guidance_context()
-        personality = self.ner_dreams_personality_context()
+        try:
+            personality = self.ner_dreams_personality_context()
+        except Exception as e:
+            logger.error(f'ner_dreams_personality_context error:{e}')
+            personality = self.kor_dreams_personality_context()
 
         base_cosplay_message = self.builder_base_cosplay_code()
         _base_render_data = {
