@@ -12,10 +12,10 @@ def analysis_to_json(doc: BaseNode) -> dict:
     }
 
 
-def json_to_analysis(analysis_dict: dict) -> BaseNode:
+def json_to_analysis(analysis_dict: dict) -> DreamsPersonalityNode:
     analysis_type = analysis_dict[TYPE_KEY]
     data_dict = analysis_dict[DATA_KEY]
-    doc: BaseNode
+    doc: DreamsPersonalityNode
 
     if "extra_info" in data_dict:
         return legacy_json_to_analysis(analysis_dict)
@@ -32,16 +32,16 @@ def legacy_json_to_analysis(analysis_dict: dict) -> DreamsPersonalityNode:
     """Todo: Deprecated legacy support for old node versions."""
     analysis_type = analysis_dict[TYPE_KEY]
     data_dict = analysis_dict[DATA_KEY]
-    generator: DreamsPersonalityNode
+    node: DreamsPersonalityNode
 
     _base_render_data = data_dict.get("render_data", {}) or {}
 
     if analysis_type == DreamsPersonalityNode.get_type():
-        generator = DreamsPersonalityNode.from_config(cfg={
+        node = DreamsPersonalityNode.from_config(cfg={
             "code_file": "base_analysis.py-tpl",
             "render_data": _base_render_data,
         })
     else:
         raise ValueError(f"Unknown analysis type: {analysis_type}")
 
-    return generator
+    return node

@@ -16,6 +16,7 @@ import time
 import re
 
 from dreamsboard.engine.loading import load_store_from_storage
+from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_store import SimpleDreamsAnalysisStore
 from dreamsboard.engine.storage.storage_context import StorageContext
 
 langchain.verbose = True
@@ -96,15 +97,29 @@ def test_batch_extract() -> None:
                         index_loaded = False
 
                     if not index_loaded:
-                        dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-                            llm=llm, csv_file_path=filename, user_id=role)
+                        try:
 
-                        logger.info("dreams_guidance_context:")
-                        output = dreams_generation_chain.run()
-                        logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))
-                        logger.info("dreams_personality_context:" + output.get("dreams_personality_context"))
-                        dreams_guidance_context = output.get("dreams_guidance_context")
-                        dreams_personality_context = output.get("dreams_personality_context")
+                            dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(persist_dir="./storage")
+
+                            dreams_analysis_store_loaded = True
+                        except:
+                            dreams_analysis_store_loaded = False
+
+                        if not dreams_analysis_store_loaded:
+                            dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
+                                llm=llm, csv_file_path=filename, user_id=role)
+
+                            logger.info("dreams_guidance_context:")
+                            output = dreams_generation_chain.run()
+                            logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))
+                            logger.info("dreams_personality_context:" + output.get("dreams_personality_context"))
+                            dreams_guidance_context = output.get("dreams_guidance_context")
+                            dreams_personality_context = output.get("dreams_personality_context")
+
+                        else:
+                            for val in dreams_analysis_store.analysis_all.values():
+                                dreams_guidance_context = val.dreams_guidance_context
+                                dreams_personality_context = val.dreams_personality_context
 
                         storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
                                                                                       builder=dreams_generation_chain.builder,
@@ -123,6 +138,7 @@ def test_batch_extract() -> None:
                         logger.info(executor.executor_code)
 
                         # persist index to disk
+                        code_gen_builder.storage_context.dreams_analysis_store = dreams_analysis_store
                         code_gen_builder.storage_context.persist(
                             persist_dir=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}")
                 except Exception as e:

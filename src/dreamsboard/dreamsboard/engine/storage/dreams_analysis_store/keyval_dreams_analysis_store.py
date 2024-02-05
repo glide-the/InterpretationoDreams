@@ -2,7 +2,7 @@
 
 from typing import Dict, Optional, Sequence
 
-from dreamsboard.engine.schema import BaseNode
+from dreamsboard.engine.dreams_personality.dreams_personality import DreamsPersonalityNode
 from dreamsboard.engine.generate.code_generate import (
     CodeGenerator
 )
@@ -56,23 +56,23 @@ class KVDreamsAnalysisStore(BaseDreamsAnalysisStore):
         self._metadata_collection = f"{self._namespace}/metadata"
 
     @property
-    def analysis_all(self) -> Dict[str, BaseNode]:
+    def analysis_all(self) -> Dict[str, DreamsPersonalityNode]:
         """Get all analysis.
 
         Returns:
-            Dict[str, BaseNode]: analysis
+            Dict[str, DreamsPersonalityNode]: analysis
 
         """
         json_dict = self._kvstore.get_all(collection=self._node_collection)
         return {key: json_to_analysis(json) for key, json in json_dict.items()}
 
     def add_analysis(
-            self, analyses: Sequence[BaseNode], allow_update: bool = True
+            self, analyses: Sequence[DreamsPersonalityNode], allow_update: bool = True
     ) -> None:
         """Add a analyses to the store.
 
         Args:
-            analyses (List[BaseNode]): analyses
+            analyses (List[DreamsPersonalityNode]): analyses
             allow_update (bool): allow update of store from analyses
             :param allow_update:
             :param analyses:
@@ -112,7 +112,7 @@ class KVDreamsAnalysisStore(BaseDreamsAnalysisStore):
                     node_key, metadata, collection=self._metadata_collection
                 )
 
-    def get_analysis(self, analysis_id: str, raise_error: bool = True) -> Optional[BaseNode]:
+    def get_analysis(self, analysis_id: str, raise_error: bool = True) -> Optional[DreamsPersonalityNode]:
         """Get a analysis from the store.
 
         Args:

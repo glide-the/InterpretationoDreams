@@ -5,8 +5,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import DataClassJsonMixin
 from typing import Any, Dict, List, Optional, Sequence
 
-from dreamsboard.engine.schema import BaseNode
-
+from dreamsboard.engine.dreams_personality.dreams_personality import DreamsPersonalityNode
 
 DEFAULT_PERSIST_FNAME = "dreams_analysis_store.json"
 DEFAULT_PERSIST_DIR = "./storage"
@@ -34,17 +33,17 @@ class BaseDreamsAnalysisStore(ABC):
     # ===== 存储性格相关的信息 =====
     @property
     @abstractmethod
-    def analysis_all(self) -> Dict[str, BaseNode]:
+    def analysis_all(self) -> Dict[str, DreamsPersonalityNode]:
         ...
 
     @abstractmethod
     def add_analysis(
-        self, analyses: Sequence[BaseNode], allow_update: bool = True
+        self, analyses: Sequence[DreamsPersonalityNode], allow_update: bool = True
     ) -> None:
         ...
 
     @abstractmethod
-    def get_analysis(self, analysis_id: str, raise_error: bool = True) -> Optional[BaseNode]:
+    def get_analysis(self, analysis_id: str, raise_error: bool = True) -> Optional[DreamsPersonalityNode]:
         ...
 
     @abstractmethod
