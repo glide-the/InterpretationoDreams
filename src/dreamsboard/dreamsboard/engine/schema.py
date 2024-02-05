@@ -3,23 +3,13 @@ from typing_extensions import Self
 from abc import abstractmethod
 from pydantic import BaseModel, Field
 from enum import Enum, auto
-from jinja2 import Template
 import uuid
 import json
-import textwrap
-import hashlib
 import logging
 logger = logging.getLogger(__name__)
 # NOTE: for pretty printing
 TRUNCATE_LENGTH = 350
 WRAP_WIDTH = 70
-
-
-def truncate_text(text: str, max_length: int) -> str:
-    """Truncate text to a maximum length."""
-    if len(text) <= max_length:
-        return text
-    return text[: max_length - 3] + "..."
 
 
 class BaseComponent(BaseModel):
@@ -146,26 +136,6 @@ class BaseNode(BaseComponent):
         """Get base_template_content."""
 
     @property
-    @abstractmethod
-    def render_data(self) -> dict:
-        """Get render_data."""
-
-    @render_data.setter
-    @abstractmethod
-    def render_data(self, _render_data: dict) -> None:
-        """Get render_data."""
-
-    @property
-    @abstractmethod
-    def render_code(self) -> str:
-        """Get render_code."""
-
-    @render_code.setter
-    @abstractmethod
-    def render_code(self, _exec_code: str) -> None:
-        """Get render_code."""
-
-    @property
     def node_id(self) -> str:
         return self.id_
 
@@ -212,32 +182,3 @@ class BaseNode(BaseComponent):
         return RelatedNodeInfo(
             node_id=self.node_id, node_type=node_type, metadata=self.metadata, hash=self.hash
         )
-
-    def generate(self, render_data: dict = {}) -> str:
-        logger.info(f'{self.__class__},生成代码')
-        base_template = Template(self.template_content)
-        if render_data is not None and self.render_data is not None:
-            self.render_data = {**render_data, **self.render_data}
-        else:
-            # 处理其中一个或两者都为 None 的情况
-            self.render_data = render_data or self.render_data or {}
-
-        self.render_code = base_template.render(self.render_data)
-
-        logger.info(f'{self.__class__},生成代码成功 {self.calculate_md5()}')
-        return self.render_code
-
-    def calculate_md5(self):
-        md5_hash = hashlib.md5()
-        md5_hash.update(self.render_code.encode('utf-8'))
-        return md5_hash.hexdigest()
-
-    def __str__(self) -> str:
-        source_text_truncated = truncate_text(
-            self.render_code.strip(), TRUNCATE_LENGTH
-        )
-        source_text_wrapped = textwrap.fill(
-            f"Text: {source_text_truncated}\n", width=WRAP_WIDTH
-        )
-        return f"Node ID: {self.node_id}\n{source_text_wrapped}"
-

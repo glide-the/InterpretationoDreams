@@ -7,8 +7,11 @@ import fsspec
 
 from dreamsboard.engine.constants import (
     DOC_STORE_KEY,
-    INDEX_STORE_KEY,
+    INDEX_STORE_KEY, DREAMS_ANALYSIS_STORE_KEY,
 )
+from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_store import SimpleDreamsAnalysisStore
+from dreamsboard.engine.storage.dreams_analysis_store.types import BaseDreamsAnalysisStore
+from dreamsboard.engine.storage.dreams_analysis_store.types import DEFAULT_PERSIST_FNAME as DREAMS_ANALYSIS_STORE_FNAME
 from dreamsboard.engine.storage.template_store.simple_template_store import SimpleTemplateStore
 from dreamsboard.engine.storage.template_store.types import DEFAULT_PERSIST_FNAME as TEMPLATE_STORE_FNAME
 from dreamsboard.engine.storage.template_store.types import BaseTemplateStore
@@ -28,17 +31,20 @@ class StorageContext:
 
     The storage context container is a utility container for storing nodes,
     indices, and vectors. It contains the following:
+    - dreams_analysis_store: BaseTemplateStore
     - template_store: BaseTemplateStore
     - index_store: BaseIndexStore
 
     """
 
+    dreams_analysis_store: BaseDreamsAnalysisStore
     template_store: BaseTemplateStore
     index_store: BaseIndexStore
 
     @classmethod
     def from_defaults(
             cls,
+            dreams_analysis_store: Optional[BaseDreamsAnalysisStore] = None,
             template_store: Optional[BaseTemplateStore] = None,
             index_store: Optional[BaseIndexStore] = None,
             persist_dir: Optional[str] = None,
@@ -47,8 +53,10 @@ class StorageContext:
         """Create a StorageContext from defaults.
 
         Args:
+            dreams_analysis_store (Optional[BaseDreamsAnalysisStore]): dreams_analysis_store
             template_store (Optional[BaseTemplateStore]): document store
             index_store (Optional[BaseIndexStore]): index store
+            :param dreams_analysis_store:
             :param template_store:
             :param index_store:
             :param fs:
@@ -56,9 +64,13 @@ class StorageContext:
 
         """
         if persist_dir is None:
+            dreams_analysis_store = dreams_analysis_store or SimpleDreamsAnalysisStore()
             template_store = template_store or SimpleTemplateStore()
             index_store = index_store or SimpleIndexStore()
         else:
+            dreams_analysis_store = dreams_analysis_store or SimpleDreamsAnalysisStore.from_persist_dir(
+                persist_dir, fs=fs
+            )
             template_store = template_store or SimpleTemplateStore.from_persist_dir(
                 persist_dir, fs=fs
             )
@@ -66,11 +78,12 @@ class StorageContext:
                 persist_dir, fs=fs
             )
 
-        return cls(template_store, index_store)
+        return cls(dreams_analysis_store, template_store, index_store)
 
     def persist(
             self,
             persist_dir: Union[str, os.PathLike] = DEFAULT_PERSIST_DIR,
+            dreams_analysis_store_fname: str = DREAMS_ANALYSIS_STORE_FNAME,
             template_store_fname: str = TEMPLATE_STORE_FNAME,
             index_store_fname: str = INDEX_STORE_FNAME,
             fs: Optional[fsspec.AbstractFileSystem] = None,
@@ -81,24 +94,29 @@ class StorageContext:
             persist_dir (str): directory to persist the storage context
             :param fs:
             :param persist_dir:
+            :param dreams_analysis_store_fname:
             :param index_store_fname:
             :param template_store_fname:
         """
         if fs is not None:
             persist_dir = str(persist_dir)  # NOTE: doesn't support Windows here
+            dreams_analysis_store_path = concat_dirs(persist_dir, dreams_analysis_store_fname)
             template_store_path = concat_dirs(persist_dir, template_store_fname)
             index_store_path = concat_dirs(persist_dir, index_store_fname)
         else:
             persist_dir = Path(persist_dir)
+            dreams_analysis_store_path = str(persist_dir / dreams_analysis_store_fname)
             template_store_path = str(persist_dir / template_store_fname)
             index_store_path = str(persist_dir / index_store_fname)
 
+        self.dreams_analysis_store.persist(persist_path=dreams_analysis_store_path, fs=fs)
         self.template_store.persist(persist_path=template_store_path, fs=fs)
         self.index_store.persist(persist_path=index_store_path, fs=fs)
 
     def to_dict(self) -> dict:
         all_simple = (
-                isinstance(self.template_store, SimpleTemplateStore)
+                isinstance(self.dreams_analysis_store, SimpleDreamsAnalysisStore)
+                and isinstance(self.template_store, SimpleTemplateStore)
                 and isinstance(self.index_store, SimpleIndexStore)
         )
         if not all_simple:
@@ -106,10 +124,12 @@ class StorageContext:
                 "to_dict only available when using simple doc/index/vector stores"
             )
 
+        assert isinstance(self.dreams_analysis_store, SimpleDreamsAnalysisStore)
         assert isinstance(self.template_store, SimpleTemplateStore)
         assert isinstance(self.index_store, SimpleIndexStore)
 
         return {
+            DREAMS_ANALYSIS_STORE_KEY: self.dreams_analysis_store.to_dict(),
             DOC_STORE_KEY: self.template_store.to_dict(),
             INDEX_STORE_KEY: self.index_store.to_dict(),
         }
@@ -117,9 +137,11 @@ class StorageContext:
     @classmethod
     def from_dict(cls, save_dict: dict) -> "StorageContext":
         """Create a StorageContext from dict."""
+        dreams_analysis_store = SimpleDreamsAnalysisStore.from_dict(save_dict[DREAMS_ANALYSIS_STORE_KEY])
         template_store = SimpleTemplateStore.from_dict(save_dict[DOC_STORE_KEY])
         index_store = SimpleIndexStore.from_dict(save_dict[INDEX_STORE_KEY])
         return cls(
+            dreams_analysis_store=dreams_analysis_store,
             template_store=template_store,
             index_store=index_store,
         )

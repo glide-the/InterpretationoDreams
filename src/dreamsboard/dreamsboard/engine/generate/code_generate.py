@@ -20,11 +20,14 @@ from __future__ import annotations
 from abc import abstractmethod, ABC
 from typing import Any, Optional, Dict
 
+from jinja2 import Template
 import logging
 
+import textwrap
+import hashlib
 from pydantic import Field
 
-from dreamsboard.engine.schema import BaseNode, ObjectTemplateType
+from dreamsboard.engine.schema import BaseNode, ObjectTemplateType, TRUNCATE_LENGTH, WRAP_WIDTH
 from dreamsboard.templates import get_template_path
 
 logger = logging.getLogger(__name__)
@@ -37,12 +40,67 @@ handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 
+def truncate_text(text: str, max_length: int) -> str:
+    """Truncate text to a maximum length."""
+    if len(text) <= max_length:
+        return text
+    return text[: max_length - 3] + "..."
+
+
 # 创建一个代码生成器抽象类
 class CodeGenerator(BaseNode, ABC):
 
     @classmethod
     def from_config(cls, cfg=None):
         return cls()
+
+    @property
+    @abstractmethod
+    def render_data(self) -> dict:
+        """Get render_data."""
+
+    @render_data.setter
+    @abstractmethod
+    def render_data(self, _render_data: dict) -> None:
+        """Get render_data."""
+
+    @property
+    @abstractmethod
+    def render_code(self) -> str:
+        """Get render_code."""
+
+    @render_code.setter
+    @abstractmethod
+    def render_code(self, _exec_code: str) -> None:
+        """Get render_code."""
+
+    def generate(self, render_data: dict = {}) -> str:
+        logger.info(f'{self.__class__},生成代码')
+        base_template = Template(self.template_content)
+        if render_data is not None and self.render_data is not None:
+            self.render_data = {**render_data, **self.render_data}
+        else:
+            # 处理其中一个或两者都为 None 的情况
+            self.render_data = render_data or self.render_data or {}
+
+        self.render_code = base_template.render(self.render_data)
+
+        logger.info(f'{self.__class__},生成代码成功 {self.calculate_md5()}')
+        return self.render_code
+
+    def calculate_md5(self):
+        md5_hash = hashlib.md5()
+        md5_hash.update(self.render_code.encode('utf-8'))
+        return md5_hash.hexdigest()
+
+    def __str__(self) -> str:
+        source_text_truncated = truncate_text(
+            self.render_code.strip(), TRUNCATE_LENGTH
+        )
+        source_text_wrapped = textwrap.fill(
+            f"Text: {source_text_truncated}\n", width=WRAP_WIDTH
+        )
+        return f"Node ID: {self.node_id}\n{source_text_wrapped}"
 
 
 # 创建不同类型的代码生成器
