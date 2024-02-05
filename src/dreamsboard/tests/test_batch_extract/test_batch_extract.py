@@ -140,7 +140,8 @@ def test_batch_extract() -> None:
                                                                                       builder=builder,
                                                                                       dreams_guidance_context=dreams_guidance_context,
                                                                                       dreams_personality_context=dreams_personality_context,
-                                                                                      guidance_llm=guidance_llm
+                                                                                      guidance_llm=guidance_llm,
+                                                                                      user_id=role
                                                                                       )
                         code_gen_builder = storyboard_executor.loader_cosplay_builder(
                             engine_template_render_data={

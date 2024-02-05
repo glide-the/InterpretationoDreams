@@ -46,6 +46,7 @@ class StructuredDreamsStoryboard:
                  kor_dreams_guidance_chain: LLMChain,
                  kor_dreams_personality_chain: LLMChain,
                  ner_dreams_personality_chain: LLMChain,
+                 user_id: str = None,
                  ):
         """
 
@@ -59,7 +60,7 @@ class StructuredDreamsStoryboard:
         self.kor_dreams_guidance_chain = kor_dreams_guidance_chain
         self.kor_dreams_personality_chain = kor_dreams_personality_chain
         self.ner_dreams_personality_chain = ner_dreams_personality_chain
-        self.storage_context = None
+        self.user_id = user_id
 
     @classmethod
     def form_builder(cls,
@@ -67,7 +68,8 @@ class StructuredDreamsStoryboard:
                      builder: StructuredStoryboardCSVBuilder,
                      dreams_guidance_context: str,
                      dreams_personality_context: str,
-                     guidance_llm: BaseLanguageModel = None) -> StructuredDreamsStoryboard:
+                     guidance_llm: BaseLanguageModel = None,
+                     user_id: str = None,) -> StructuredDreamsStoryboard:
         kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
             llm=llm if guidance_llm is None else guidance_llm)
         kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(llm=llm)
@@ -78,7 +80,8 @@ class StructuredDreamsStoryboard:
                    dreams_personality_context=dreams_personality_context,
                    kor_dreams_guidance_chain=kor_dreams_guidance_chain,
                    kor_dreams_personality_chain=kor_dreams_personality_chain,
-                   ner_dreams_personality_chain=ner_dreams_personality_chain)
+                   ner_dreams_personality_chain=ner_dreams_personality_chain,
+                   user_id=user_id)
 
     def kor_dreams_guidance_context(self) -> List[DreamsStepInfo]:
         """
@@ -147,8 +150,11 @@ class StructuredDreamsStoryboard:
 
         # 创建一个字典，用于按照story_board组织内容和角色
         storyboard_dict = self.builder.build_dict()
-        # 获取第一个story_board_role属性的值
-        cosplay_role = list(storyboard_dict.values())[0]['story_board_role'][0]
+        if self.user_id is None:
+            # 获取第一个story_board_role属性的值
+            cosplay_role = list(storyboard_dict.values())[0]['story_board_role'][0]
+        else:
+            cosplay_role = self.user_id
 
         guidance_questions = self.kor_dreams_guidance_context()
         try:
