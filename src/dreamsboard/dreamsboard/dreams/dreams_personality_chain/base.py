@@ -89,7 +89,7 @@ class StoryBoardDreamsGenerationChain(ABC):
             output_variables=["dreams_personality_context"],
             verbose=True)
         return cls(csv_file_path=csv_file_path,
-                   user_id=user_id if user_id else "此患者",
+                   user_id=user_id if user_id else "此来访者",
                    dreams_guidance_chain=dreams_guidance_chain,
                    dreams_personality_chain=dreams_personality_chain)
 
