@@ -114,3 +114,4 @@ __pycache__
 /docker/logs/neo4j.log
 /docker/logs/query.log
 /docker/logs/security.log
+out
