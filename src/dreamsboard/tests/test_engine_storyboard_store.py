@@ -60,7 +60,7 @@ def test_structured_dreams_storyboard_store() -> None:
         "render_data": _dreams_render_data,
     }))
     _dreams_render_data1 = {
-        'cosplay_role': '心里咨询工作者',
+        'cosplay_role': '心理咨询工作者',
         'message': '''听到这些，你在想什么'''
     }
     code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
