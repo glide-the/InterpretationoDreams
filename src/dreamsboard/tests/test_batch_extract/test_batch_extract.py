@@ -39,8 +39,8 @@ def check_and_convert_special_characters(text):
 
 
 def test_batch_extract() -> None:
-    data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv'
-    save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_storage"
+    data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/docs/csv'
+    save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/docs/extract_storage"
     ds_path = Path(save_folder)
     if ds_path.exists() is False:
         ds_path.mkdir()
