@@ -37,7 +37,7 @@ def test_runnable_parallel_chain() -> None:
         verbose=True,
         # temperature=0.95,
     )
-    joke_chain = ChatPromptTemplate.from_template("tell me a joke about {topic}") | llm
+    joke_chain = ChatPromptTemplate.from_template("tell me a joke about {topic}") | llm | StrOutputParser()
     poem_chain = (
             ChatPromptTemplate.from_template("write a 2-line poem about {topic}") | llm
     )

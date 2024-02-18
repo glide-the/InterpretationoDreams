@@ -25,7 +25,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def test_structured_dreams_storyboard_store_test4() -> None:
+def test_structured_dreams_storyboard_store_test4(setup_log) -> None:
     llm = ChatOpenAI(
         openai_api_base='http://127.0.0.1:30000/v1',
         model="glm-4",
@@ -65,11 +65,13 @@ def test_structured_dreams_storyboard_store_test4() -> None:
             output = dreams_generation_chain.run()
             dreams_guidance_context = output.get("dreams_guidance_context")
             dreams_personality_context = output.get("dreams_personality_context")
+            # 拼接dreams_guidance_context和dreams_personality_context两个字典
+            dreams_generation = {}
+            dreams_generation.update(dreams_guidance_context)
+            dreams_generation.update(dreams_personality_context)
+
             dreams_analysis_store = SimpleDreamsAnalysisStore()
-            dreams = DreamsPersonalityNode.from_config(cfg={
-                "dreams_guidance_context":  dreams_guidance_context,
-                "dreams_personality_context": dreams_personality_context
-            })
+            dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
             dreams_analysis_store.add_analysis([dreams])
             logger.info(dreams_analysis_store.analysis_all)
             dreams_analysis_store_path = concat_dirs(dirname="./storage", basename="dreams_analysis_store.json")
@@ -83,8 +85,8 @@ def test_structured_dreams_storyboard_store_test4() -> None:
         builder.load()
         storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
                                                                       builder=builder,
-                                                                      dreams_guidance_context=dreams_guidance_context,
-                                                                      dreams_personality_context=dreams_personality_context,
+                                                                      dreams_guidance_context=dreams_guidance_context.get("dreams_guidance_context"),
+                                                                      dreams_personality_context=dreams_personality_context.get("dreams_personality_context"),
                                                                       guidance_llm=guidance_llm
                                                                       )
         code_gen_builder = storyboard_executor.loader_cosplay_builder(

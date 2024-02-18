@@ -39,31 +39,17 @@ def check_and_convert_special_characters(text):
     return converted_text
 
 
-def test_batch_extract() -> None:
+def test_batch_extract(setup_log) -> None:
 
-    logging_conf = get_config_dict(
-        "DEBUG",
-        get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
-        122,
-        111,
-    )
-    logging.config.dictConfig(logging_conf)  # type: ignore
-    os.environ["LANGCHAIN_WANDB_TRACING"] = "true"
-
-    # wandb documentation to configure wandb using env variables
-    # https://docs.wandb.ai/guides/track/advanced/environment-variables
-    # here we are configuring the wandb project name
-    os.environ["WANDB_PROJECT"] = "dreams_wechat_batch_extract"
-    os.environ["WANDB_API_KEY"] = "974207f7173417ef95d2ebad4cbe7f2f9668a093"
-    data_folder = '/media/manga-image-translator/InterpretationoDreams/社会交流步骤分析/msg_extract_csv'
-    save_folder = "/media/manga-image-translator/InterpretationoDreams/社会交流步骤分析/msg_extract_storage"
+    data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv'
+    save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_storage"
     ds_path = Path(save_folder)
     if ds_path.exists() is False:
         ds_path.mkdir()
     txt_files = load_csv(data_folder)
     logger.info("获取数据，成功{}".format(len(txt_files)))
     llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:3000/v1',
+        openai_api_base='http://127.0.0.1:30000/v1',
         model="glm-4",
         openai_api_key="sk-4ftOuS6xQ3he1MKZD8E7BeA295D04a33A7Ad3544857e70C6",
         verbose=True
@@ -78,7 +64,7 @@ def test_batch_extract() -> None:
     #     top_p=0.9,
     # )
     guidance_llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:3000/v1',
+        openai_api_base='http://127.0.0.1:30000/v1',
         model="glm-3-turbo",
         openai_api_key="sk-4ftOuS6xQ3he1MKZD8E7BeA295D04a33A7Ad3544857e70C6",
         verbose=True,
@@ -143,11 +129,13 @@ def test_batch_extract() -> None:
                             output = dreams_generation_chain.run()
                             dreams_guidance_context = output.get("dreams_guidance_context")
                             dreams_personality_context = output.get("dreams_personality_context")
+                            # 拼接dreams_guidance_context和dreams_personality_context两个字典
+                            dreams_generation = {}
+                            dreams_generation.update(dreams_guidance_context)
+                            dreams_generation.update(dreams_personality_context)
+
                             dreams_analysis_store = SimpleDreamsAnalysisStore()
-                            dreams = DreamsPersonalityNode.from_config(cfg={
-                                "dreams_guidance_context":  dreams_guidance_context,
-                                "dreams_personality_context": dreams_personality_context
-                            })
+                            dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
                             dreams_analysis_store.add_analysis([dreams])
                             logger.info(dreams_analysis_store.analysis_all)
                             dreams_analysis_store_path = concat_dirs(dirname=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}",
@@ -162,8 +150,8 @@ def test_batch_extract() -> None:
                         builder.load()
                         storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
                                                                                       builder=builder,
-                                                                                      dreams_guidance_context=dreams_guidance_context,
-                                                                                      dreams_personality_context=dreams_personality_context,
+                                                                                      dreams_guidance_context=dreams_guidance_context.get("dreams_guidance_context"),
+                                                                                      dreams_personality_context=dreams_personality_context.get("dreams_personality_context"),
                                                                                       guidance_llm=guidance_llm,
                                                                                       personality_llm=personality_llm,
                                                                                       user_id=role
@@ -171,7 +159,7 @@ def test_batch_extract() -> None:
                         code_gen_builder = storyboard_executor.loader_cosplay_builder(
                             engine_template_render_data={
                                 'model_name': 'glm-4',
-                                'OPENAI_API_BASE': 'http://127.0.0.1:3000/v1',
+                                'OPENAI_API_BASE': 'http://127.0.0.1:30000/v1',
                                 'OPENAI_API_KEY': 'glm-4',
                             })
 

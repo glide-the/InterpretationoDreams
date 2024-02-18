@@ -1,14 +1,21 @@
 import logging
 
 from langchain.chat_models import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableLambda
 
+from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
 from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
 import langchain
 
+from dreamsboard.engine.dreams_personality.dreams_personality import DreamsPersonalityNode
 from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator, AIProgramGenerator
 from dreamsboard.engine.loading import load_store_from_storage
+from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_store import SimpleDreamsAnalysisStore
 from dreamsboard.engine.storage.storage_context import StorageContext
+from dreamsboard.engine.utils import concat_dirs
 
 langchain.verbose = True
 logger = logging.getLogger(__name__)
@@ -21,7 +28,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def test_structured_dreams_storyboard_store_test6() -> None:
+def test_structured_dreams_storyboard_store_test6(setup_log) -> None:
     llm = ChatOpenAI(
         openai_api_base='http://127.0.0.1:30000/v1',
         model="glm-4",
@@ -61,11 +68,13 @@ def test_structured_dreams_storyboard_store_test6() -> None:
             output = dreams_generation_chain.run()
             dreams_guidance_context = output.get("dreams_guidance_context")
             dreams_personality_context = output.get("dreams_personality_context")
+            # 拼接dreams_guidance_context和dreams_personality_context两个字典
+            dreams_generation = {}
+            dreams_generation.update(dreams_guidance_context)
+            dreams_generation.update(dreams_personality_context)
+
             dreams_analysis_store = SimpleDreamsAnalysisStore()
-            dreams = DreamsPersonalityNode.from_config(cfg={
-                "dreams_guidance_context":  dreams_guidance_context,
-                "dreams_personality_context": dreams_personality_context
-            })
+            dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
             dreams_analysis_store.add_analysis([dreams])
             logger.info(dreams_analysis_store.analysis_all)
             dreams_analysis_store_path = concat_dirs(dirname="./storage", basename="dreams_analysis_store.json")
@@ -79,8 +88,8 @@ def test_structured_dreams_storyboard_store_test6() -> None:
         builder.load()
         storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
                                                                       builder=builder,
-                                                                      dreams_guidance_context=dreams_guidance_context,
-                                                                      dreams_personality_context=dreams_personality_context,
+                                                                      dreams_guidance_context=dreams_guidance_context.get("dreams_guidance_context"),
+                                                                      dreams_personality_context=dreams_personality_context.get("dreams_personality_context"),
                                                                       guidance_llm=guidance_llm
                                                                       )
         code_gen_builder = storyboard_executor.loader_cosplay_builder(
@@ -92,7 +101,6 @@ def test_structured_dreams_storyboard_store_test6() -> None:
 
         # persist index to disk
         code_gen_builder.storage_context.persist(persist_dir="./storage")
-
 
     _dreams_render_data = {
         'cosplay_role': '我在想',
@@ -145,3 +153,36 @@ def test_structured_dreams_storyboard_store_test6() -> None:
     code_gen_builder.storage_context.persist(persist_dir="./storage")
 
     assert True
+
+
+def test_1():
+    llm = ChatOpenAI(
+        openai_api_base='http://127.0.0.1:30000/v1',
+        model="glm-4",
+        openai_api_key="glm-4",
+        verbose=True
+    )
+    chain = (
+            PromptTemplate.from_template(
+                """Given the user question below, classify it as either being about `LangChain`, `Anthropic`, or `Other`.
+        
+        Do not respond with more than one word.
+        
+        <question>
+        {question}
+        </question>
+        
+        Classification:"""
+            )
+            | llm
+            | StrOutputParser()
+    )
+
+    def story_s(x: dict) -> str:
+        return x["story_scenario_context"]
+
+    full_chain = ({"topic": chain, "question": lambda x: x["question"]} | {"full_chain": RunnableLambda(lambda x: x["topic"].lower())}
+    | RunnableLambda(lambda x: x["full_chain"].lower())
+                  )
+    out = full_chain.invoke({"question": "how do I use Anthropic?"})
+    print(out)
