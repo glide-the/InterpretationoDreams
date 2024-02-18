@@ -69,11 +69,16 @@ class StructuredDreamsStoryboard:
                      dreams_guidance_context: str,
                      dreams_personality_context: str,
                      guidance_llm: BaseLanguageModel = None,
+                     personality_llm: BaseLanguageModel = None,
                      user_id: str = None, ) -> StructuredDreamsStoryboard:
         kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
             llm=llm if guidance_llm is None else guidance_llm)
-        kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(llm=llm)
-        ner_dreams_personality_chain = NerLoader.form_ner_dreams_personality_builder(llm=llm)
+        kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(
+            llm=llm if personality_llm is None else personality_llm
+        )
+        ner_dreams_personality_chain = NerLoader.form_ner_dreams_personality_builder(
+            llm=llm if personality_llm is None else personality_llm
+        )
 
         return cls(builder=builder,
                    dreams_guidance_context=dreams_guidance_context,
