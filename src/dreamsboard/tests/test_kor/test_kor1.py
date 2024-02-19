@@ -10,8 +10,8 @@ def test_kor():
         model="glm-3-turbo",
         openai_api_key="glm-4",
         verbose=True,
-        temperature=0.1,
-        top_p=0.9,
+        temperature=0.95,
+        top_p=0.70,
     )
     # @title 长的prompt
 

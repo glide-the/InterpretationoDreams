@@ -32,7 +32,10 @@ class KorLoader:
             ],
             examples=[
                 (
-                    """根据提供的故事场景，您作为心理咨询工作者可以使用开放性问题来引导来访者表达他们的感受和思维。以下是一步一步的分解：
+                    """Please output the extracted information in CSV format in Excel dialect. Please use a | as the delimiter. 
+Do NOT add any clarifying information. Output MUST follow the schema above. Do NOT add any additional columns that do not appear in the schema.
+不要包含"```plaintext"或"```"。
+根据提供的故事场景，您作为心理咨询工作者可以使用开放性问题来引导来访者表达他们的感受和思维。以下是一步一步的分解：
 
 **Step 1: 建立情感连接**
 开始时，您可以通过表达理解和共鸣来建立情感连接，让来访者感到舒适。您可以说：“我注意到这个对话中有许多愉快的时刻和互动。你对这些时刻有什么特别的感受吗？”
@@ -94,7 +97,10 @@ class KorLoader:
             ],
             examples=[
                 (
-                    """根据您提供的信息，您的性格特点可以总结如下：
+                    """Please output the extracted information in CSV format in Excel dialect. Please use a | as the delimiter. 
+ Do NOT add any clarifying information. Output MUST follow the schema above. Do NOT add any additional columns that do not appear in the schema.
+ 不要包含"```plaintext"或"```"。
+ 根据您提供的信息，您的性格特点可以总结如下：
         
 1. 热情和温柔：您在描述天气和气氛时使用了"温柔长裙风"这样的形容词，表现出您对温暖和舒适的情感。
 

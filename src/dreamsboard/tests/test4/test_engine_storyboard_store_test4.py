@@ -37,8 +37,8 @@ def test_structured_dreams_storyboard_store_test4(setup_log) -> None:
         model="glm-3-turbo",
         openai_api_key="glm-4",
         verbose=True,
-        temperature=0.1,
-        top_p=0.9,
+        temperature=0.95,
+        top_p=0.70,
     )
     try:
 
@@ -63,12 +63,12 @@ def test_structured_dreams_storyboard_store_test4(setup_log) -> None:
                 llm=llm, csv_file_path="../../../docs/csv/iRMa9DMW_keyframe.csv")
 
             output = dreams_generation_chain.run()
-            dreams_guidance_context = output.get("dreams_guidance_context")
-            dreams_personality_context = output.get("dreams_personality_context")
+            dreams_guidance_context = output.get("dreams_guidance_context").get("dreams_guidance_context")
+            dreams_personality_context = output.get("dreams_personality_context").get("dreams_personality_context")
             # 拼接dreams_guidance_context和dreams_personality_context两个字典
             dreams_generation = {}
-            dreams_generation.update(dreams_guidance_context)
-            dreams_generation.update(dreams_personality_context)
+            dreams_generation.update(output.get("dreams_guidance_context"))
+            dreams_generation.update(output.get("dreams_personality_context"))
 
             dreams_analysis_store = SimpleDreamsAnalysisStore()
             dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
@@ -85,8 +85,8 @@ def test_structured_dreams_storyboard_store_test4(setup_log) -> None:
         builder.load()
         storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
                                                                       builder=builder,
-                                                                      dreams_guidance_context=dreams_guidance_context.get("dreams_guidance_context"),
-                                                                      dreams_personality_context=dreams_personality_context.get("dreams_personality_context"),
+                                                                      dreams_guidance_context=dreams_guidance_context,
+                                                                      dreams_personality_context=dreams_personality_context,
                                                                       guidance_llm=guidance_llm
                                                                       )
         code_gen_builder = storyboard_executor.loader_cosplay_builder(
@@ -97,7 +97,8 @@ def test_structured_dreams_storyboard_store_test4(setup_log) -> None:
             })
 
         # persist index to disk
-        code_gen_builder.storage_context.persist(persist_dir="./storage")
+        code_gen_builder.storage_context.dreams_analysis_store = dreams_analysis_store
+        code_gen_builder.storage_context.persist(persist_dir="./storage_ieAkpNXB_keyframe")
 
 
     _dreams_render_data = {

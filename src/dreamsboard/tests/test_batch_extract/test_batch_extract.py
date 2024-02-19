@@ -41,8 +41,8 @@ def check_and_convert_special_characters(text):
 
 def test_batch_extract(setup_log) -> None:
 
-    data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv'
-    save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_storage"
+    data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/docs/csv'
+    save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/docs/extract_storage"
     ds_path = Path(save_folder)
     if ds_path.exists() is False:
         ds_path.mkdir()
@@ -74,10 +74,10 @@ def test_batch_extract(setup_log) -> None:
     personality_llm = ChatOpenAI(
         openai_api_base='http://127.0.0.1:30000/v1',
         model="glm-3-turbo",
-        openai_api_key="sk-4ftOuS6xQ3he1MKZD8E7BeA295D04a33A7Ad3544857e70C6",
+        openai_api_key="glm-4",
         verbose=True,
-        temperature=0.1,
-        top_p=0.9,
+        temperature=0.95,
+        top_p=0.70,
     )
     batch_len = 10
 
@@ -127,12 +127,12 @@ def test_batch_extract(setup_log) -> None:
                                 llm=llm, csv_file_path=filename, user_id=role)
 
                             output = dreams_generation_chain.run()
-                            dreams_guidance_context = output.get("dreams_guidance_context")
-                            dreams_personality_context = output.get("dreams_personality_context")
+                            dreams_guidance_context = output.get("dreams_guidance_context").get("dreams_guidance_context")
+                            dreams_personality_context = output.get("dreams_personality_context").get("dreams_personality_context")
                             # 拼接dreams_guidance_context和dreams_personality_context两个字典
                             dreams_generation = {}
-                            dreams_generation.update(dreams_guidance_context)
-                            dreams_generation.update(dreams_personality_context)
+                            dreams_generation.update(output.get("dreams_guidance_context"))
+                            dreams_generation.update(output.get("dreams_personality_context"))
 
                             dreams_analysis_store = SimpleDreamsAnalysisStore()
                             dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
@@ -150,9 +150,8 @@ def test_batch_extract(setup_log) -> None:
                         builder.load()
                         storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
                                                                                       builder=builder,
-                                                                                      dreams_guidance_context=dreams_guidance_context.get("dreams_guidance_context"),
-                                                                                      dreams_personality_context=dreams_personality_context.get("dreams_personality_context"),
-                                                                                      guidance_llm=guidance_llm,
+                                                                                      dreams_guidance_context=dreams_guidance_context,
+                                                                                      dreams_personality_context=dreams_personality_context,                                                                                      guidance_llm=guidance_llm,
                                                                                       personality_llm=personality_llm,
                                                                                       user_id=role
                                                                                       )
