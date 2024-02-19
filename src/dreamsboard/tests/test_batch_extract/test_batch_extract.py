@@ -41,8 +41,8 @@ def check_and_convert_special_characters(text):
 
 def test_batch_extract(setup_log) -> None:
 
-    data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/docs/csv'
-    save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/docs/extract_storage"
+    data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv'
+    save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_storage_2024_02_19"
     ds_path = Path(save_folder)
     if ds_path.exists() is False:
         ds_path.mkdir()
@@ -66,10 +66,10 @@ def test_batch_extract(setup_log) -> None:
     guidance_llm = ChatOpenAI(
         openai_api_base='http://127.0.0.1:30000/v1',
         model="glm-3-turbo",
-        openai_api_key="sk-4ftOuS6xQ3he1MKZD8E7BeA295D04a33A7Ad3544857e70C6",
+        openai_api_key="glm-4",
         verbose=True,
-        temperature=0.1,
-        top_p=0.9,
+        temperature=0.95,
+        top_p=0.70,
     )
     personality_llm = ChatOpenAI(
         openai_api_base='http://127.0.0.1:30000/v1',

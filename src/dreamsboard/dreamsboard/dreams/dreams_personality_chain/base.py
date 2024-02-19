@@ -59,7 +59,8 @@ class StoryBoardDreamsGenerationChain(ABC):
         review_chain1 = (prompt_template1 | llm | StrOutputParser())
 
         # 03-故事场景生成.txt
-        prompt_template2 = PromptTemplate(input_variables=["story_board_summary_context"],
+        prompt_template2 = PromptTemplate(input_variables=["story_board_summary_context",
+                                                           "user_id"],
                                           template=STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE)
         review_chain2 = (prompt_template2 | llm | StrOutputParser())
         # 04-情感情景引导.txt

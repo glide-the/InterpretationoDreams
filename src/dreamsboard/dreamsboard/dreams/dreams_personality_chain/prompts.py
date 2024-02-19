@@ -48,7 +48,7 @@ STORY_BOARD_SCENE_TEMPLATE = """根据文本执行任务。以下任务信息
 """
 
 # 03-故事场景生成.txt
-STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE = """根据下面人物对话分析这里的人物今天发生了什么，编写一个独白信息，使用第一人称描述。
+STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE = """根据下面人物对话分析这里关于{user_id}今天发生了什么，编写一个独白信息，使用第一人称描述。
 
 
 人物对话如下
