@@ -52,13 +52,13 @@ class StoryBoardDreamsGenerationChain(ABC):
             csv_file_path: str,
             user_id: str = None,
     ) -> StoryBoardDreamsGenerationChain:
-        # 03- 故事情境生成.txt STORY_BOARD_SCENE_TEMPLATE_Chain
+        # 03- 故事情境生成 `story_scenario_context`.txt STORY_BOARD_SCENE_TEMPLATE_Chain
         prompt_template1 = PromptTemplate(input_variables=["scene_content"],
                                           template=STORY_BOARD_SCENE_TEMPLATE)
 
         review_chain1 = (prompt_template1 | llm | StrOutputParser())
 
-        # 03-故事场景生成.txt
+        # 03-故事场景生成 `scene_monologue_context`.txt
         prompt_template2 = PromptTemplate(input_variables=["story_board_summary_context",
                                                            "user_id"],
                                           template=STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE)
@@ -109,11 +109,11 @@ class StoryBoardDreamsGenerationChain(ABC):
                                  }
                                  | RunnableLambda(wrapper_guidance_output))
 
-        # 05-剧情总结.txt
+        # 05-剧情总结 `evolutionary_step`.txt
         prompt_template04 = PromptTemplate(input_variables=["story_board_summary_context"],
                                            template=EDREAMS_EVOLUTIONARY_TEMPLATE)
         evolutionary_chain = prompt_template04 | llm | StrOutputParser()
-        # 05-性格分析.txt
+        # 05-性格分析 `dreams_personality_context`.txt
         prompt_template05 = PromptTemplate(input_variables=["evolutionary_step"],
                                            template=EDREAMS_PERSONALITY_TEMPLATE)
         personality_chain = prompt_template05 | llm | StrOutputParser()

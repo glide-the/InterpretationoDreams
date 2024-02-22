@@ -22,8 +22,7 @@ logger.addHandler(handler)
 
 
 def test_structured_dreams_storyboard_store_print() -> None:
-    storage_context = StorageContext.from_defaults(persist_dir="./storage")
-    code_gen_builder = load_store_from_storage(storage_context)
-    executor = code_gen_builder.build_executor()
-    logger.info(executor.executor_code)
+    storage_context = StorageContext.from_defaults(persist_dir="./storage_ieAjskDr_keyframe")
+
+    logger.info(    storage_context.dreams_analysis_store)
     assert True

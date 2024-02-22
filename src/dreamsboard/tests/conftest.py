@@ -13,11 +13,13 @@ def setup_log():
         122,
         111,
     )
+
     logging.config.dictConfig(logging_conf)  # type: ignore
     os.environ["LANGCHAIN_WANDB_TRACING"] = "true"
 
     # wandb documentation to configure wandb using env variables
     # https://docs.wandb.ai/guides/track/advanced/environment-variables
     # here we are configuring the wandb project name
-    os.environ["WANDB_PROJECT"] = "msg_extract_storage_2024_02_19"
-    os.environ["WANDB_API_KEY"] = "974207f7173417ef95d2ebad4cbe7f2f9668a093"
+    os.environ["WANDB_PROJECT"] = "msg_extract_storage_2024_02_22"
+    os.environ["WANDB_API_KEY"] = "local-08fe972f17575883ab88ed3cd49da17a5fc85f6d"
+    os.environ["WANDB_BASE_URL"] = "http://localhost:8080"

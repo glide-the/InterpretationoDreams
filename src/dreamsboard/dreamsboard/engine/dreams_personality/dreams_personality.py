@@ -23,25 +23,25 @@ logger.addHandler(handler)
 class DreamsPersonalityNode(BaseNode, ABC):
     """心里分析信息节点"""
     story_scenario_context: Optional[str] = Field(
-        default="", description="开放问题story_scenario_context"
+        default="", description="开放问题 故事情境"
     )
     scene_monologue_context: Optional[str] = Field(
-        default="", description="开放问题scene_monologue_context"
+        default="", description="开放问题 故事场景"
     )
     user_id: Optional[str] = Field(
         default="", description="开放问题user_id"
     )
     scene_content: Optional[str] = Field(
-        default="", description="开放问题scene_content"
+        default="", description="开放问题 文本内容"
     )
     story_board_summary_context: Optional[str] = Field(
-        default="", description="开放问题story_board_summary_context"
+        default="", description="开放问题 人物对话"
     )
     dreams_guidance_context: Optional[str] = Field(
-        default="", description="开放问题dreams_guidance_context"
+        default="", description="开放性问题dreams_guidance_context"
     )
     evolutionary_step: Optional[str] = Field(
-        default="", description="性格信息evolutionary_step",
+        default="", description="性格信息 剧情总结",
     )
     dreams_personality_context: Optional[str] = Field(
         default="", description="性格信息dreams_personality_context",

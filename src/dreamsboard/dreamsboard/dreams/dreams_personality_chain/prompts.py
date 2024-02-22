@@ -16,7 +16,7 @@ AEMO_REPRESENTATION_PROMPT_TEMPLATE = """作为一个社会学研究学者，您
 {scene_content}
 """
 
-# 03- 故事情境生成.txt
+# 03- 故事情境生成 `story_scenario_context`.txt
 STORY_BOARD_SCENE_TEMPLATE = """根据文本执行任务。以下任务信息
 
 作为一个社会学研究学者，您已经查阅了《作为激情的爱情》卢曼编写的书籍，尝试通过参考文献中定义的爱情语义学，从文本中总结下方片段
@@ -47,7 +47,7 @@ STORY_BOARD_SCENE_TEMPLATE = """根据文本执行任务。以下任务信息
 {scene_content}
 """
 
-# 03-故事场景生成.txt
+# 03-故事场景生成 `scene_monologue_context`.txt
 STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE = """根据下面人物对话分析这里关于{user_id}今天发生了什么，编写一个独白信息，使用第一人称描述。
 
 
@@ -57,7 +57,7 @@ STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE = """根据下面人物对话分析这里�
 """
 
 
-# 05-剧情总结.txt
+# 05-剧情总结 `evolutionary_step`.txt
 EDREAMS_EVOLUTIONARY_TEMPLATE = """作为一个社会学研究学者，尝试通过社会学研究相关内容总结下方的对话
 社会学研究相关内容分成如下步骤
 研究交流媒介领域的语义信息
@@ -73,7 +73,7 @@ EDREAMS_EVOLUTIONARY_TEMPLATE = """作为一个社会学研究学者，尝试通
 {story_board_summary_context}
 """
 
-# 05-性格分析.txt
+# 05-性格分析 `dreams_personality_context`.txt
 EDREAMS_PERSONALITY_TEMPLATE = """作为一个社会学研究学者，您已经查阅了《作为激情的爱情》卢曼编写的书籍，尝试通过参考文献中定义的爱情语义学总结下方片段
 社会学研究相关内容分成如下步骤
 研究交流媒介领域的语义信息
