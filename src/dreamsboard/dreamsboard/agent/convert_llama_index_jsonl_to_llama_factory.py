@@ -10,7 +10,7 @@ def parse_jsonl_file(jsonl_file):
 
 def main():
     #     获取jsonl文件
-    jsonl_file = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/dreamsboard/dreamsboard/agent/finetuning_events_192q.jsonl"
+    jsonl_file = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/src/dreamsboard/dreamsboard/agent/gemini_finetuning_events_168q.jsonl"
     jsonl_data = parse_jsonl_file(jsonl_file)
 
     # 转换为json格式
@@ -26,7 +26,7 @@ def main():
         json_data.append(line)
 
     # 写入json文件
-    with open("finetuning_events_192q.json", "w") as f:
+    with open("geminifinetuning_events_192q.json", "w") as f:
         json.dump(json_data, f, indent=4, ensure_ascii=False)
 
 

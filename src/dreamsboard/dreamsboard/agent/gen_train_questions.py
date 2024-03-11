@@ -40,5 +40,5 @@ if __name__ == '__main__':
                                                                                   int(total_questions * 0.8):]
     # 获取当前文件路径
     root_dir = os.path.dirname(os.path.abspath(__file__))
-    save_questions(train_questions, os.path.join(root_dir, f"train_questions_{int(total_questions * 0.8)}q.txt"))
-    save_questions(eval_questions, os.path.join(root_dir, f"eval_questions_{int(total_questions * 0.2)}q.txt"))
+    save_questions(train_questions, os.path.join(root_dir, f"gemini_train_questions_{int(total_questions * 0.8)}q.txt"))
+    save_questions(eval_questions, os.path.join(root_dir, f"gemini_eval_questions_{int(total_questions * 0.2)}q.txt"))
