@@ -1,8 +1,8 @@
 from __future__ import annotations
 from kor.extraction import create_extraction_chain
 from kor.nodes import Object, Text, Number
-from langchain import LLMChain
-from langchain.chat_models import ChatOpenAI
+from langchain.chains import LLMChain
+from langchain_community.chat_models import ChatOpenAI
 from langchain.schema.language_model import BaseLanguageModel
 
 

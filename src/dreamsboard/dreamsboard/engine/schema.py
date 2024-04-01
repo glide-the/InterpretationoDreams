@@ -94,7 +94,7 @@ class BaseNode(BaseComponent):
     """
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
 
     id_: str = Field(
         default_factory=lambda: str(uuid.uuid4()), description="Unique ID of the node."

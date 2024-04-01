@@ -1,4 +1,4 @@
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
 import logging
 import langchain

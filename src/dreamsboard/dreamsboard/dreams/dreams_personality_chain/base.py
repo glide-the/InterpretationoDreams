@@ -3,7 +3,7 @@ from abc import ABC
 from typing import Any, Dict
 from langchain.chains import LLMChain
 from langchain.chains.base import Chain
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts  import PromptTemplate
 from langchain.chains import SequentialChain
 from langchain.schema.language_model import BaseLanguageModel
 from langchain_core.output_parsers import StrOutputParser

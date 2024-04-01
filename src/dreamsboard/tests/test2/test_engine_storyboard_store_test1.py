@@ -1,6 +1,6 @@
 import logging
 
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard

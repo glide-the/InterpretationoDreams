@@ -3,7 +3,7 @@ from typing import List, Optional
 from langchain.schema.language_model import BaseLanguageModel
 
 from langchain.chains import StuffDocumentsChain, LLMChain
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts  import PromptTemplate
 from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, MapReduceDocumentsChain
 
 import sys

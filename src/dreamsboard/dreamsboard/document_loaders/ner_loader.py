@@ -1,9 +1,9 @@
 from __future__ import annotations
 from kor.extraction import create_extraction_chain
 from kor.nodes import Object, Text, Number
-from langchain import LLMChain
+from langchain.chains import LLMChain
 from langchain.chains.ernie_functions import create_structured_output_runnable
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.schema.language_model import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
 

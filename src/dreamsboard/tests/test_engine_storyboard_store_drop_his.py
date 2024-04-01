@@ -1,6 +1,6 @@
 import logging
 
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
 from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
