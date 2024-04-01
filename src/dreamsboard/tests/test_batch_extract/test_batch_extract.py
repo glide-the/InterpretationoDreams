@@ -9,7 +9,6 @@ import langchain
 import os
 import json
 from pathlib import Path
-from bs4 import BeautifulSoup
 import shutil
 from tqdm import tqdm
 import time
@@ -41,17 +40,17 @@ def check_and_convert_special_characters(text):
 
 def test_batch_extract(setup_log) -> None:
 
-    data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv'
-    save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_storage_2024_02_19"
+    data_folder = 'D:\\project\\msg_extract_csv'
+    save_folder = "D:\\project\\msg_extract_storage_infini"
     ds_path = Path(save_folder)
     if ds_path.exists() is False:
         ds_path.mkdir()
     txt_files = load_csv(data_folder)
     logger.info("获取数据，成功{}".format(len(txt_files)))
     llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
-        model="glm-4",
-        openai_api_key="sk-4ftOuS6xQ3he1MKZD8E7BeA295D04a33A7Ad3544857e70C6",
+        openai_api_base='https://cloud.infini-ai.com/maas/llama-2-70b-chat/nvidia',
+        model="llama-2-70b-chat",
+        openai_api_key="sk-c7balko7z4266rye",
         verbose=True
     )
 
@@ -64,17 +63,18 @@ def test_batch_extract(setup_log) -> None:
     #     top_p=0.9,
     # )
     guidance_llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
-        model="glm-3-turbo",
-        openai_api_key="glm-4",
+        openai_api_base='https://cloud.infini-ai.com/maas/llama-2-70b-chat/nvidia',
+        model="llama-2-70b-chat",
+        openai_api_key="sk-c7balko7z4266rye",
         verbose=True,
         temperature=0.95,
         top_p=0.70,
     )
     personality_llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
-        model="glm-3-turbo",
-        openai_api_key="glm-4",
+
+        openai_api_base='https://cloud.infini-ai.com/maas/llama-2-70b-chat/nvidia',
+        model="llama-2-70b-chat",
+        openai_api_key="sk-c7balko7z4266rye",
         verbose=True,
         temperature=0.95,
         top_p=0.70,
@@ -157,9 +157,9 @@ def test_batch_extract(setup_log) -> None:
                                                                                       )
                         code_gen_builder = storyboard_executor.loader_cosplay_builder(
                             engine_template_render_data={
-                                'model_name': 'glm-4',
-                                'OPENAI_API_BASE': 'http://127.0.0.1:30000/v1',
-                                'OPENAI_API_KEY': 'glm-4',
+                                'model_name': 'llama-2-70b-chat',
+                                'OPENAI_API_BASE': 'https://cloud.infini-ai.com/maas/llama-2-70b-chat/nvidia',
+                                'OPENAI_API_KEY': 'sk-c7balko7z4266rye',
                             })
 
                         executor = code_gen_builder.build_executor()
