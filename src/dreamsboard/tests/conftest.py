@@ -3,7 +3,7 @@ import os
 import pytest
 import logging
 from dreamsboard.utils import get_config_dict, get_log_file, get_timestamp_ms
-
+import logging.config
 
 @pytest.fixture
 def setup_log():
