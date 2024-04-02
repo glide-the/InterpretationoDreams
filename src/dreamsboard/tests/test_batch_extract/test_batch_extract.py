@@ -48,8 +48,8 @@ def test_batch_extract(setup_log) -> None:
         txt_files = load_csv(data_folder)
         logger.info("获取数据，成功{}".format(len(txt_files)))
         llm = ChatOpenAI(
-            openai_api_base='https://cloud.infini-ai.com/maas/qwen-72b-chat/nvidia',
-            model="qwen-72b-chat",
+            openai_api_base='https://cloud.infini-ai.com/maas/qwen1.5-72b-chat/nvidia',
+            model="qwen1.5-72b-chat",
             openai_api_key="sk-c7balko7z4266rye",
             verbose=True
         )
@@ -63,8 +63,8 @@ def test_batch_extract(setup_log) -> None:
         #     top_p=0.9,
         # )
         guidance_llm = ChatOpenAI(
-            openai_api_base='https://cloud.infini-ai.com/maas/qwen-72b-chat/nvidia',
-            model="qwen-72b-chat",
+            openai_api_base='https://cloud.infini-ai.com/maas/qwen1.5-72b-chat/nvidia',
+            model="qwen1.5-72b-chat",
             openai_api_key="sk-c7balko7z4266rye",
             verbose=True,
             temperature=0.95,
@@ -72,8 +72,8 @@ def test_batch_extract(setup_log) -> None:
         )
         personality_llm = ChatOpenAI(
 
-            openai_api_base='https://cloud.infini-ai.com/maas/qwen-72b-chat/nvidia',
-            model="qwen-72b-chat",
+            openai_api_base='https://cloud.infini-ai.com/maas/qwen1.5-72b-chat/nvidia',
+            model="qwen1.5-72b-chat",
             openai_api_key="sk-c7balko7z4266rye",
             verbose=True,
             temperature=0.95,
@@ -157,8 +157,8 @@ def test_batch_extract(setup_log) -> None:
                                                                                           )
                             code_gen_builder = storyboard_executor.loader_cosplay_builder(
                                 engine_template_render_data={
-                                    'model_name': 'qwen-72b-chat',
-                                    'OPENAI_API_BASE': 'https://cloud.infini-ai.com/maas/qwen-72b-chat/nvidia',
+                                    'model_name': 'qwen1.5-72b-chat',
+                                    'OPENAI_API_BASE': 'https://cloud.infini-ai.com/maas/qwen1.5-72b-chat/nvidia',
                                     'OPENAI_API_KEY': 'sk-c7balko7z4266rye',
                                 })
 

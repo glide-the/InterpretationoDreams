@@ -121,7 +121,7 @@ class BaseProgramGenerator(CodeGenerator):
             if render_data is None:
                 render_data = {}
             # 读取模板文件
-            with open(code_file, 'r') as template_file:
+            with open(code_file, 'r', encoding='utf-8') as template_file:
                 base_template_content = template_file.read()
 
             super().__init__(exec_data=render_data, base_template_content=base_template_content)
