@@ -95,7 +95,14 @@ class DreamsPersonalityNode(BaseNode, ABC):
 
     def class_name(self) -> str:
         """Get class name."""
-        return self.__name__
+        if hasattr(self, "__class_getitem__"):
+            return self.__class__.__name__
+        elif hasattr(self, "__orig_class__"):
+            return self.__orig_class__.__name__
+        elif hasattr(self, "__name__"):
+            return self.__name__
+        else:
+            return "心里分析信息节点"
 
     @property
     def template_content(self) -> str:

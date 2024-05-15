@@ -193,9 +193,9 @@ class StructuredDreamsStoryboard:
                 "render_data": {
                     'model_name': 'gpt-3.5-turbo' if engine_template_render_data.get(
                         'model_name') is None else engine_template_render_data.get('model_name'),
-                    'OPENAI_API_BASE': None if engine_template_render_data.get(
+                    'OPENAI_API_BASE': "" if engine_template_render_data.get(
                         'OPENAI_API_BASE') is None else engine_template_render_data.get('OPENAI_API_BASE'),
-                    'OPENAI_API_KEY': None if engine_template_render_data.get(
+                    'OPENAI_API_KEY': "" if engine_template_render_data.get(
                         'OPENAI_API_KEY') is None else engine_template_render_data.get('OPENAI_API_KEY'),
                 },
             }))
