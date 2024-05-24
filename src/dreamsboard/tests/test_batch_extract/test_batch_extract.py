@@ -40,16 +40,16 @@ def check_and_convert_special_characters(text):
 
 def test_batch_extract(setup_log) -> None:
     with wandb_tracing_enabled():
-        data_folder = 'D:\\project\\msg_extract_csv'
-        save_folder = "D:\\project\\msg_extract_storage_infini"
+        data_folder = '/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv'
+        save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_storage_deepseek"
         ds_path = Path(save_folder)
         if ds_path.exists() is False:
             ds_path.mkdir()
         txt_files = load_csv(data_folder)
         logger.info("获取数据，成功{}".format(len(txt_files)))
         llm = ChatOpenAI(
-            openai_api_base='http://127.0.0.1:20000/google/v1',
-            model="gemini-pro",
+            openai_api_base='http://127.0.0.1:20000/deepseek/v1',
+            model="deepseek-chat",
             openai_api_key="sk-c7balko7z4266rye",
             verbose=True
         )
@@ -63,8 +63,8 @@ def test_batch_extract(setup_log) -> None:
         #     top_p=0.9,
         # )
         guidance_llm = ChatOpenAI(
-            openai_api_base='http://127.0.0.1:20000/google/v1',
-            model="gemini-pro",
+            openai_api_base='http://127.0.0.1:20000/deepseek/v1',
+            model="deepseek-chat",
             openai_api_key="sk-c7balko7z4266rye",
             verbose=True,
             temperature=0.95,
@@ -72,8 +72,8 @@ def test_batch_extract(setup_log) -> None:
         )
         personality_llm = ChatOpenAI(
 
-            openai_api_base='http://127.0.0.1:20000/google/v1',
-            model="gemini-pro",
+            openai_api_base='http://127.0.0.1:20000/deepseek/v1',
+            model="deepseek-chat",
             openai_api_key="sk-c7balko7z4266rye",
             verbose=True,
             temperature=0.95,
@@ -157,8 +157,8 @@ def test_batch_extract(setup_log) -> None:
                                                                                           )
                             code_gen_builder = storyboard_executor.loader_cosplay_builder(
                                 engine_template_render_data={
-                                    'model_name': 'gemini-pro',
-                                    'OPENAI_API_BASE': 'http://127.0.0.1:20000/google/v1',
+                                    'model_name': 'deepseek-chat',
+                                    'OPENAI_API_BASE': 'http://127.0.0.1:20000/deepseek/v1',
                                     'OPENAI_API_KEY': 'sk-c7balko7z4266rye',
                                 })
 

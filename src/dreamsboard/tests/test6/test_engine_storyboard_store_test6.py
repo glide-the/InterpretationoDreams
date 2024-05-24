@@ -30,15 +30,15 @@ logger.addHandler(handler)
 
 def test_structured_dreams_storyboard_store_test6(setup_log) -> None:
     llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
-        model="glm-4",
-        openai_api_key="glm-4",
+        openai_api_base='http://127.0.0.1:20000/deepseek/v1',
+        model="deepseek-chat",
+        openai_api_key="deepseek-chat",
         verbose=True
     )
     guidance_llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
+        openai_api_base='http://127.0.0.1:20000/deepseek/v1',
         model="glm-3-turbo",
-        openai_api_key="glm-4",
+        openai_api_key="deepseek-chat",
         verbose=True,
         temperature=0.95,
         top_p=0.70,
@@ -94,26 +94,22 @@ def test_structured_dreams_storyboard_store_test6(setup_log) -> None:
                                                                       )
         code_gen_builder = storyboard_executor.loader_cosplay_builder(
             engine_template_render_data={
-                'model_name': 'glm-4',
-                'OPENAI_API_BASE': 'http://127.0.0.1:30000/v1',
-                'OPENAI_API_KEY': 'glm-4',
+                'model_name': 'deepseek-chat',
+                'OPENAI_API_BASE': 'http://127.0.0.1:20000/deepseek/v1',
+                'OPENAI_API_KEY': 'deepseek-chat',
             })
 
         # persist index to disk
         code_gen_builder.storage_context.dreams_analysis_store = dreams_analysis_store
         code_gen_builder.storage_context.persist(persist_dir="./storage_ieAkpNXB_keyframe")
 
+
     _dreams_render_data = {
-        'cosplay_role': '我在想',
-        'message': '''给他推荐下，摩天轮 '''
-    }
-    code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-        "query_code_file": "query_template.py-tpl",
-        "render_data": _dreams_render_data,
-    }))
-    _dreams_render_data = {
-        'cosplay_role': '宝宝',
-        'message': '''好吧'''
+        'cosplay_role': '心理咨询工作者',
+        'message': '''五一假期
+        宝宝去了北京的北海公园，路过了鼓楼看了一个爵士乐与中国戏曲结合的演出
+        你尝试下用你之前的语气，给宝宝报备一个一模一样的生活，让对方感受到你的生活，
+        然后再给对方一个反馈，看看对方的反应。'''
     }
     code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
         "query_code_file": "query_template.py-tpl",
@@ -123,8 +119,8 @@ def test_structured_dreams_storyboard_store_test6(setup_log) -> None:
     code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
         "engine_code_file": "simple_engine_template.py-tpl",
         "render_data": {
-            'model_name': 'glm-4',
-            'OPENAI_API_BASE': 'http://127.0.0.1:30000/v1',
+            'model_name': 'deepseek-chat',
+            'OPENAI_API_BASE': 'http://127.0.0.1:20000/deepseek/v1',
             'OPENAI_API_KEY': 'glm',
         },
     }))
@@ -156,34 +152,3 @@ def test_structured_dreams_storyboard_store_test6(setup_log) -> None:
     assert True
 
 
-def test_1():
-    llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
-        model="glm-4",
-        openai_api_key="glm-4",
-        verbose=True
-    )
-    chain = (
-            PromptTemplate.from_template(
-                """Given the user question below, classify it as either being about `LangChain`, `Anthropic`, or `Other`.
-        
-        Do not respond with more than one word.
-        
-        <question>
-        {question}
-        </question>
-        
-        Classification:"""
-            )
-            | llm
-            | StrOutputParser()
-    )
-
-    def story_s(x: dict) -> str:
-        return x["story_scenario_context"]
-
-    full_chain = ({"topic": chain, "question": lambda x: x["question"]} | {"full_chain": RunnableLambda(lambda x: x["topic"].lower())}
-    | RunnableLambda(lambda x: x["full_chain"].lower())
-                  )
-    out = full_chain.invoke({"question": "how do I use Anthropic?"})
-    print(out)

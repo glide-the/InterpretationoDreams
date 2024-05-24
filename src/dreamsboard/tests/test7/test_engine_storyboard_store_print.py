@@ -1,16 +1,7 @@
 import logging
 
-from langchain_community.chat_models import ChatOpenAI
+from dreamsboard.dreams.coplay_analysis_md.base import CosplayAnalysisMD
 
-from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
-from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
-import langchain
-
-from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator, AIProgramGenerator
-from dreamsboard.engine.loading import load_store_from_storage
-from dreamsboard.engine.storage.storage_context import StorageContext
-
-langchain.verbose = True
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -22,7 +13,14 @@ logger.addHandler(handler)
 
 
 def test_structured_dreams_storyboard_store_print() -> None:
-    storage_context = StorageContext.from_defaults(persist_dir="./storage_ieAjskDr_keyframe")
+    analysis = CosplayAnalysisMD(
+        cosplay_role="阿七",
+        source_url="https://v.douyin.com/ieA2E1F7/",
+        keyframe="ieA2E1F7_keyframe.csv",
+        keyframe_path="./ieA2E1F7_keyframe.csv",
+        storage_keyframe="storage_ieA2E1F7_keyframe",
+        storage_keyframe_path="./storage_ieA2E1F7_keyframe",
+    )
 
-    logger.info(    storage_context.dreams_analysis_store)
-    assert True
+    out = analysis.write_md(output_path="./07_报告今天发工资啦啦啦啦_阿七.md")
+    print(out.text)

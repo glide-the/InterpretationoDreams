@@ -1,16 +1,7 @@
 import logging
 
-from langchain_community.chat_models import ChatOpenAI
+from dreamsboard.dreams.coplay_analysis_md.base import CosplayAnalysisMD
 
-from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
-from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
-import langchain
-
-from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator, AIProgramGenerator
-from dreamsboard.engine.loading import load_store_from_storage
-from dreamsboard.engine.storage.storage_context import StorageContext
-
-langchain.verbose = True
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -22,8 +13,14 @@ logger.addHandler(handler)
 
 
 def test_structured_dreams_storyboard_store_print() -> None:
-    storage_context = StorageContext.from_defaults(persist_dir="./storage")
-    code_gen_builder = load_store_from_storage(storage_context)
-    executor = code_gen_builder.build_executor()
-    logger.info(executor.executor_code)
-    assert True
+    analysis = CosplayAnalysisMD(
+        cosplay_role="辰夕",
+        source_url="https://v.douyin.com/ieAjskDr/",
+        keyframe="ieAjskDr_keyframe.csv",
+        keyframe_path="./ieAjskDr_keyframe.csv",
+        storage_keyframe="storage_ieAjskDr_keyframe",
+        storage_keyframe_path="./storage_ieAjskDr_keyframe",
+    )
+
+    out = analysis.write_md(output_path="./04_心里闷闷的可能就是有点想你_辰夕.md")
+    print(out.text)

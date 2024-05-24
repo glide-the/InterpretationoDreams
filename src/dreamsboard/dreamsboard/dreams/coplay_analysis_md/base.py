@@ -69,7 +69,7 @@ class CosplayAnalysisMD:
                 "keyframe": self.keyframe,
                 "keyframe_path": self.keyframe_path,
                 "storage_keyframe": self.storage_keyframe,
-                "storage_keyframe_path":  self.storage_keyframe_path,
+                "storage_keyframe_path": self.storage_keyframe_path,
                 **analysis.to_dict()
             }
 
@@ -80,3 +80,10 @@ class CosplayAnalysisMD:
 
         out = chain.invoke({})
         return out
+
+    def write_md(self, output_path: str) -> StringPromptValue:
+        md = self.format_md()
+        with open(output_path, "w") as f:
+            f.write(md.text)
+        logger.info(f"Write MD to {output_path}")
+        return md

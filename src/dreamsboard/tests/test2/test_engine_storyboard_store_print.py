@@ -1,16 +1,7 @@
 import logging
 
-from langchain_community.chat_models import ChatOpenAI
+from dreamsboard.dreams.coplay_analysis_md.base import CosplayAnalysisMD
 
-from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
-from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
-import langchain
-
-from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator, AIProgramGenerator
-from dreamsboard.engine.loading import load_store_from_storage
-from dreamsboard.engine.storage.storage_context import StorageContext
-
-langchain.verbose = True
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -22,8 +13,13 @@ logger.addHandler(handler)
 
 
 def test_structured_dreams_storyboard_store_print() -> None:
-    storage_context = StorageContext.from_defaults(persist_dir="./storage")
-    code_gen_builder = load_store_from_storage(storage_context)
-    executor = code_gen_builder.build_executor()
-    logger.info(executor.executor_code)
-    assert True
+    analysis = CosplayAnalysisMD(
+        cosplay_role="今天要吃三碗饭",
+        source_url="https://v.douyin.com/ieDRHjmD/",
+        keyframe="ieDRHjmD_keyframe.csv",
+        keyframe_path="./ieDRHjmD_keyframe.csv",
+        storage_keyframe="storage_ieDRHjmD_keyframe",
+        storage_keyframe_path="./storage_ieDRHjmD_keyframe",
+    )
+    out = analysis.write_md(output_path="./02_尊嘟假嘟呀_今天要吃三碗饭.md")
+    print(out.text)

@@ -20,6 +20,6 @@ def setup_log():
     # wandb documentation to configure wandb using env variables
     # https://docs.wandb.ai/guides/track/advanced/environment-variables
     # here we are configuring the wandb project name
-    os.environ["WANDB_PROJECT"] = "msg_extract_storage_2024_04_01_infini"
+    os.environ["WANDB_PROJECT"] = "msg_extract_storage_2024_05_09_deepseek-chat"
     os.environ["WANDB_API_KEY"] = "974207f7173417ef95d2ebad4cbe7f2f9668a093"
     # os.environ["WANDB_BASE_URL"] = "http://localhost:8080"
