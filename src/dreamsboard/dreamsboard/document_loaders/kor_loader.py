@@ -85,25 +85,21 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
         :return:
         """
         schema = Object(
-            id="script",
-            description="性格信息",
+            id="personality_script",
+            description="性格信息(personality,subj)",
             attributes=[
                 Text(
                     id="personality",
-                    description='''文本中包含的性格评价，例如：“率真和直接、愿意与人互动并享受社交乐趣、对预期之外的情况敏感” ''',
+                    description='''包含的性格评价，例如：“率真和直接、愿意与人互动并享受社交乐趣、对预期之外的情况敏感” ''',
                 ),
                 Text(
                     id="subj",
-                    description='''文本中包含的特定人物，例如：“张毛峰” ''',
+                    description='''包含的特定人物，例如：“张毛峰” ''',
                 )
             ],
             examples=[
                 (
-                    """Please output the extracted information in CSV format in Excel dialect. Please use a | as the delimiter. 
- Do NOT add any clarifying information. Output MUST follow the schema above. Do NOT add any additional columns that do not appear in the schema.
- 不要包含"```plaintext"或"```"。
- 
- 
+                    """
  根据您提供的信息，您的性格特点可以总结如下：
         
 1. 热情和温柔：您在描述天气和气氛时使用了"温柔长裙风"这样的形容词，表现出您对温暖和舒适的情感。

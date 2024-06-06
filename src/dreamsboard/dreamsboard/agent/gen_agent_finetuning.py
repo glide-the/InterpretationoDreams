@@ -16,11 +16,14 @@ from llama_index.core import Settings
 from dreamsboard.agent.react_agent_build_query_engine_tools import build_query_docs, build_query_docs_index_store, \
     build_query_engine_tools
 from dreamsboard.agent.react_tools_utils import save_questions, load_questions
+from llama_index.llms.openai.utils import GPT4_MODELS
+
 
 if __name__ == '__main__':
-    llm = OpenAI(model="gpt-4", temperature=0.99, api_key="sk-ApUK41y73g8qMbrz36A81641752946449f10BbBe32Ff2b7c",
-                 api_base="http://localhost:3000/v1")
-    embeddings = OpenAIEmbedding(api_key="EMPTY", api_base="http://127.0.0.1:9997/v1")
+
+    llm = OpenAI(model="glm-4", temperature=0.99, api_key="a9733a59370d34ef51d261bd461251a5.YD9PU7sAqUwgD8Sk",
+                 api_base="https://open.bigmodel.cn/api/paas/v4/")
+    embeddings = OpenAIEmbedding(api_key="EMPTY",  model="text-embedding-3-large", api_base="http://127.0.0.1:9997/v1")
     query_docs = build_query_docs()
     index_store = build_query_docs_index_store(query_docs, embeddings)
     query_engine_tools = build_query_engine_tools(llm, index_store)
@@ -34,8 +37,8 @@ if __name__ == '__main__':
     callback_manager = CallbackManager([finetuning_handler])
     # limit the context window artifically to test refine process
     Settings.context_window = 4096
-    agent_llm = OpenAI(model="gpt-4", temperature=0.01, api_key="sk-ApUK41y73g8qMbrz36A81641752946449f10BbBe32Ff2b7c",
-                       api_base="http://localhost:3000/v1")
+    agent_llm = OpenAI(model="glm-4", temperature=0.01, api_key="a9733a59370d34ef51d261bd461251a5.YD9PU7sAqUwgD8Sk",
+                       api_base="https://open.bigmodel.cn/api/paas/v4/")
     gpt4_agent = ReActAgent.from_tools(
         query_engine_tools,
         llm=agent_llm,
