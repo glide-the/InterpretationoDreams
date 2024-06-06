@@ -112,8 +112,8 @@ class StructuredDreamsStoryboard:
         response = self.kor_dreams_personality_chain.run(self.dreams_personality_context)
 
         personality = ""
-        if response.get('data') is not None and response.get('data').get('script') is not None:
-            personality_list = response.get('data').get('script')
+        if response.get('data') is not None and response.get('data').get('personality_script') is not None:
+            personality_list = response.get('data').get('personality_script')
             # [{'personality': '具有情感表达和期待、注重个体快感、善于运用语义信息、对社会行为产生兴趣'}]},
             # 拼接personality 成一个字符串
             for item in personality_list:
