@@ -164,3 +164,9 @@ class StoryBoardDreamsGenerationChain(ABC):
             {"scene_content": scene_content,
              "story_board_summary_context": story_board_summary_context,
              "user_id": self.user_id})
+    
+    def invoke_dreams_guidance_chain(self, input: Dict[str, Any]) -> Dict[str, Any]:
+        return self.dreams_guidance_chain.invoke(input)
+    
+    def invoke_dreams_personality_chain(self, input: Dict[str, Any]) -> Dict[str, Any]:
+        return self.dreams_personality_chain.invoke(input)

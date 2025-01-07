@@ -1,5 +1,5 @@
 from dreamsboard.engine.constants import DATA_KEY, TYPE_KEY
-from dreamsboard.engine.entity.dreams_personality.dreams_personality import DreamsPersonalityNode
+from dreamsboard.engine.entity.task_step.task_step import TaskStepNode
 from dreamsboard.engine.schema import (
     BaseNode,
 )
@@ -12,14 +12,16 @@ def analysis_to_json(doc: BaseNode) -> dict:
     }
 
 
-def json_to_analysis(analysis_dict: dict) -> DreamsPersonalityNode:
+def json_to_analysis(analysis_dict: dict) -> TaskStepNode:
     analysis_type = analysis_dict[TYPE_KEY]
     data_dict = analysis_dict[DATA_KEY]
-    doc: DreamsPersonalityNode
-
-    if analysis_type == DreamsPersonalityNode.get_type():
-        doc = DreamsPersonalityNode.model_validate(data_dict)
+    doc: TaskStepNode
+ 
+    if analysis_type == TaskStepNode.get_type():
+        doc = TaskStepNode.model_validate(data_dict)
     else:
         raise ValueError(f"Unknown doc type: {analysis_type}")
 
     return doc
+
+ 

@@ -7,7 +7,7 @@ from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStorybo
 from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
 import langchain
 
-from dreamsboard.engine.dreams_personality.dreams_personality import DreamsPersonalityNode
+from dreamsboard.engine.entity.dreams_personality.dreams_personality import DreamsPersonalityNode
 from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator, AIProgramGenerator
 from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_store import SimpleDreamsAnalysisStore

@@ -166,3 +166,121 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
         )
         chain = create_extraction_chain(llm, schema)
         return chain
+
+
+    @classmethod
+    def form_kor_dreams_task_step_builder(cls,
+                                            llm: BaseLanguageModel) -> LLMChain:
+        """
+        生成任务步骤的抽取链
+        :param llm:
+        :return:
+        """
+        # @title 长的prompt
+        schema = Object(
+            id="script",
+            description="Adapted from the novel into script",
+            attributes=[
+                Text(
+                    id="task_step_name",
+                    description='''提取步骤的名称，例如"分析近几年研究领域的技术框架与方法论"、"基于规则的方法"、"研究论文中采用的主要框架"、"Transformer"等''',
+                ),
+                Text(
+                    id="task_step_description",
+                    description="""提取每个步骤的具体建议和问题，例如"Text2SQL 是将自然语言查询（NLQ）转换为结构化查询语言（SQL）的任务，近年来在数据库和自然语言处理（NLP）领域受到广泛关注。主要技术框架和方法论包括："等""",
+                ),
+                Text(
+                    id="task_step_level",
+                    description="""提取步骤的层级编号，只有root>child层级，例如"0"、"0>1"、"0>2"、"1"、"1>1"、"1>2"等""",
+                )
+            ],
+            examples=[
+                (
+                    """### Text2SQL 研究现状与挑战
+
+#### 1. 分析近几年研究领域的技术框架与方法论
+
+Text2SQL 是将自然语言查询（NLQ）转换为结构化查询语言（SQL）的任务，近年来在数据库和自然语言处理（NLP）领域受到广泛关注。主要技术框架和方法论包括：
+
+- **基于规则的方法**：早期方法依赖于手工编写的规则和模板，将自然语言映射到 SQL。这种方法在小规模、特定领域的数据库上表现良好，但缺乏泛化能力。
+- **基于统计的方法**：随着机器学习的发展，统计模型（如序列到序列模型）被引入，通过学习大量标注数据来生成 SQL 查询。
+- **基于深度学习的方法**：近年来，深度学习模型（如 Transformer、BERT、GPT）在 Text2SQL 任务中取得了显著进展。这些模型通过预训练和微调，能够更好地理解自然语言和数据库模式之间的关系。
+
+#### 2. 研究论文中采用的主要框架（如 Transformer、GAN、BERT等）在不同任务中的应用与变体
+
+- **Transformer**：Transformer 模型在 Text2SQL 任务中表现出色，特别是在处理长文本和复杂查询时。通过自注意力机制，Transformer 能够捕捉自然语言和数据库模式之间的复杂关系。
+- **BERT**：BERT 及其变体（如 RoBERTa、ALBERT）通过预训练语言模型，显著提升了模型对自然语言的理解能力。在 Text2SQL 任务中，BERT 通常用于编码自然语言查询和数据库模式。
+- **GAN**：生成对抗网络（GAN）在 Text2SQL 任务中的应用较少，但在数据增强和生成多样化查询方面具有潜力。
+
+#### 3. 评估学术界的技术进步与局限性
+
+- **技术进步**：
+- **模型性能提升**：深度学习模型在标准数据集（如 WikiSQL、Spider）上的表现显著提升，特别是在复杂查询和跨领域任务中。
+- **多模态学习**：一些研究开始探索将文本和数据库模式的多模态信息结合起来，以提升模型的理解能力。
+
+- **局限性**：
+- **模型偏差**：模型在处理未见过的数据库模式或复杂查询时，仍然存在偏差和错误。
+- **数据依赖**：模型的性能高度依赖于标注数据的质量和数量，缺乏泛化能力。
+
+#### 4. 探讨计算模型在不同数据集与应用场景下的适用性与泛化能力
+
+- **数据集**：WikiSQL、Spider 等标准数据集为 Text2SQL 研究提供了基准，但这些数据集通常局限于特定领域和简单查询。
+- **应用场景**：模型在现实应用中的表现仍然有限，特别是在多领域、多模态的数据场景下，模型的泛化能力不足。
+
+#### 5. 分析最新算法的稳定性与容错性
+
+- **稳定性**：深度学习模型在复杂、动态环境下的稳定性仍然是一个挑战，特别是在处理大规模数据和复杂查询时。
+- **容错性**：模型在面对噪声数据和错误查询时的容错性较差，容易生成错误的 SQL 查询。
+
+#### 6. 评估论文中提出的未来研究方向与挑战
+
+- **未来研究方向**：
+- **跨领域泛化**：研究如何提升模型在跨领域任务中的泛化能力。
+- **多模态学习**：探索将文本、图像和数据库模式结合起来的多模态学习方法。
+- **自监督学习**：利用自监督学习方法减少对标注数据的依赖。
+
+- **挑战**：
+- **复杂查询处理**：如何有效处理复杂查询和嵌套查询仍然是一个挑战。
+- **数据稀缺**：在缺乏标注数据的情况下，如何提升模型的性能是一个重要问题。
+- **模型解释性**：提升模型的可解释性，使其生成的 SQL 查询更容易理解和调试。
+
+### 总结
+
+Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模型的引入和应用方面。然而，模型在处理复杂查询、跨领域任务和现实应用中的表现仍然存在局限性。未来的研究需要关注跨领域泛化、多模态学习和自监督学习等方向，以应对现有挑战并推动该领域的进一步发展。""",
+                    [
+                        {
+                            "task_step_description": "Text2SQL 是将自然语言查询（NLQ）转换为结构化查询语言（SQL）的任务，近年来在数据库和自然语言处理（NLP）领域受到广泛关注。主要技术框架和方法论包括：",
+                            "task_step_name": "Text2SQL 研究现状与挑战",
+                            "task_step_level": "0"
+                        },
+                        {
+                            "task_step_description": "早期方法依赖于手工编写的规则和模板，将自然语言映射到 SQL。这种方法在小规模、特定领域的数据库上表现良好，但缺乏泛化能力。",
+                            "task_step_name": "基于规则的方法",
+                            "task_step_level": "0>1"
+                        },
+                        {
+                            "task_step_description": "随着机器学习的发展，统计模型（如序列到序列模型）被引入，通过学习大量标注数据来生成 SQL 查询。",
+                            "task_step_name": "基于统计的方法",
+                            "task_step_level": "0>2"
+                        },
+                        {
+                            "task_step_description": "Transformer 模型在 Text2SQL 任务中表现出色，特别是在处理长文本和复杂查询时。通过自注意力机制，Transformer 能够捕捉自然语言和数据库模式之间的复杂关系。",
+                            "task_step_name": "研究论文中采用的主要框架",
+                            "task_step_level": "1"
+                        },
+                        {
+                            "task_step_description": "BERT 及其变体（如 RoBERTa、ALBERT）通过预训练语言模型，显著提升了模型对自然语言的理解能力。在 Text2SQL 任务中，BERT 通常用于编码自然语言查询和数据库模式。",
+                            "task_step_name": "BERT",
+                            "task_step_level": "1>1"
+                        }
+                    ]
+                )
+            ],
+            many=True
+        )
+
+
+        chain = create_extraction_chain(llm, schema)
+        return chain
+
+

@@ -25,17 +25,17 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def test_structured_dreams_storyboard_store_test2(setup_log) -> None:
+def test_structured_dreams_storyboard_store_test1(setup_log) -> None:
     llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-4",
-        openai_api_key="glm-4",
+        openai_api_key="4d6c5f8ad43b8fff94480b95a5a6c5d0.ouFQYxQ8pIVKO7J8",
         verbose=True
     )
     guidance_llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-3-turbo",
-        openai_api_key="glm-4",
+        openai_api_key="4d6c5f8ad43b8fff94480b95a5a6c5d0.ouFQYxQ8pIVKO7J8",
         verbose=True,
         temperature=0.95,
         top_p=0.70,
@@ -92,8 +92,8 @@ def test_structured_dreams_storyboard_store_test2(setup_log) -> None:
         code_gen_builder = storyboard_executor.loader_cosplay_builder(
             engine_template_render_data={
                 'model_name': 'glm-4',
-                'OPENAI_API_BASE': 'http://127.0.0.1:30000/v1',
-                'OPENAI_API_KEY': 'glm-4',
+                'OPENAI_API_BASE': 'https://open.bigmodel.cn/api/paas/v4',
+                'OPENAI_API_KEY': '4d6c5f8ad43b8fff94480b95a5a6c5d0.ouFQYxQ8pIVKO7J8',
             })
 
         # persist index to disk
@@ -103,7 +103,8 @@ def test_structured_dreams_storyboard_store_test2(setup_log) -> None:
 
     _dreams_render_data = {
         'cosplay_role': '心理咨询工作者',
-        'message': '''今天你去了户外踏青，外面还是很冷，看到了摩天轮，你骑车在公路上远远的往摩天轮那里开去，终于，你到了摩天轮的下面。这里有好多露营的大帐篷
+        'message': '''今天是元旦跨年夜，宝宝今天没能跟你在一起。
+        他准备了鸡尾酒、苹果、砂糖橘、在电脑桌前面摆的满满当当与你分享这些有趣的事情
         你尝试下用你之前的语气，给宝宝报备一个一模一样的生活，让对方感受到你的生活，
         然后再给对方一个反馈，看看对方的反应。'''
     }
@@ -116,8 +117,8 @@ def test_structured_dreams_storyboard_store_test2(setup_log) -> None:
         "engine_code_file": "simple_engine_template.py-tpl",
         "render_data": {
             'model_name': 'glm-4',
-            'OPENAI_API_BASE': 'http://127.0.0.1:30000/v1',
-            'OPENAI_API_KEY': 'glm',
+            'OPENAI_API_BASE': 'https://open.bigmodel.cn/api/paas/v4',
+            'OPENAI_API_KEY': '4d6c5f8ad43b8fff94480b95a5a6c5d0.ouFQYxQ8pIVKO7J8',
         },
     }))
 
@@ -139,11 +140,7 @@ def test_structured_dreams_storyboard_store_test2(setup_log) -> None:
     }
     code_gen_builder.add_generator(AIProgramGenerator.from_config(cfg={
         "ai_code_file": "ai_template.py-tpl",
-        "render_data": {
-            'model_name': 'glm-4',
-            'OPENAI_API_BASE': 'http://127.0.0.1:30000/v1',
-            'OPENAI_API_KEY': 'glm',
-        },
+        "render_data": _ai_render_data,
     }))
 
     # persist index to disk

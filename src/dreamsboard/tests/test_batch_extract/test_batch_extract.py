@@ -14,7 +14,7 @@ from tqdm import tqdm
 import time
 import re
 
-from dreamsboard.engine.dreams_personality.dreams_personality import DreamsPersonalityNode
+from dreamsboard.engine.entity.dreams_personality.dreams_personality import DreamsPersonalityNode
 from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_store import SimpleDreamsAnalysisStore
 from dreamsboard.engine.storage.storage_context import StorageContext

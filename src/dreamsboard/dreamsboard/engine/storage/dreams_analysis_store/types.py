@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import DataClassJsonMixin
 from typing import Any, Dict, List, Optional, Sequence
 
-from dreamsboard.engine.dreams_personality.dreams_personality import DreamsPersonalityNode
+from dreamsboard.engine.entity.dreams_personality.dreams_personality import DreamsPersonalityNode
 
 DEFAULT_PERSIST_FNAME = "dreams_analysis_store.json"
 DEFAULT_PERSIST_DIR = "./storage"

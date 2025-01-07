@@ -1,4 +1,4 @@
-from dreamsboard.engine.dreams_personality.dreams_personality import DreamsPersonalityNode
+from dreamsboard.engine.entity.dreams_personality.dreams_personality import DreamsPersonalityNode
 from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_store import SimpleDreamsAnalysisStore
 import logging
 import langchain
