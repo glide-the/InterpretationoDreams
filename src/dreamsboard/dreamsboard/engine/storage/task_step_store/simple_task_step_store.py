@@ -3,8 +3,8 @@ from typing import Optional
 
 import fsspec
 
-from dreamsboard.engine.storage.dreams_analysis_store.keyval_dreams_analysis_store import KVDreamsAnalysisStore
-from dreamsboard.engine.storage.dreams_analysis_store.types import (
+from dreamsboard.engine.storage.task_step_store.keyval_task_step_store import KVTaskStepStore
+from dreamsboard.engine.storage.task_step_store.types import (
     DEFAULT_PERSIST_DIR, DEFAULT_PERSIST_FNAME, DEFAULT_PERSIST_PATH
 )
 from dreamsboard.engine.storage.kvstore.simple_kvstore import SimpleKVStore
@@ -12,14 +12,14 @@ from dreamsboard.engine.storage.kvstore.types import BaseInMemoryKVStore
 from dreamsboard.engine.utils import concat_dirs
 
 
-class SimpleDreamsAnalysisStore(KVDreamsAnalysisStore):
-    """Simple DreamsAnalysis (Node) store.
+class SimpleTaskStepStore(KVTaskStepStore):
+    """Simple TaskStep (Node) store.
 
-    An in-memory store for DreamsAnalysis and Node objects.
+    An in-memory store for TaskStep and Node objects.
 
     Args:
         simple_kvstore (SimpleKVStore): simple key-value store
-        namespace (str): namespace for the template_store
+        namespace (str): namespace for the task_step_store
 
     """
 
@@ -28,7 +28,7 @@ class SimpleDreamsAnalysisStore(KVDreamsAnalysisStore):
         simple_kvstore: Optional[SimpleKVStore] = None,
         namespace: Optional[str] = None,
     ) -> None:
-        """Init a SimpleDreamsAnalysisStore."""
+        """Init a SimpleTaskStepStore."""
         simple_kvstore = simple_kvstore or SimpleKVStore()
         super().__init__(simple_kvstore, namespace)
 
@@ -38,12 +38,12 @@ class SimpleDreamsAnalysisStore(KVDreamsAnalysisStore):
         persist_dir: str = DEFAULT_PERSIST_DIR,
         namespace: Optional[str] = None,
         fs: Optional[fsspec.AbstractFileSystem] = None,
-    ) -> "SimpleDreamsAnalysisStore":
-        """Create a SimpleDreamsAnalysisStore from a persist directory.
+    ) -> "SimpleTaskStepStore":
+        """Create a SimpleTaskStepStore from a persist directory.
 
         Args:
             persist_dir (str): directory to persist the store
-            namespace (Optional[str]): namespace for the template_store
+            namespace (Optional[str]): namespace for the task_step_store
             fs (Optional[fsspec.AbstractFileSystem]): filesystem to use
 
         """
@@ -60,12 +60,12 @@ class SimpleDreamsAnalysisStore(KVDreamsAnalysisStore):
         persist_path: str,
         namespace: Optional[str] = None,
         fs: Optional[fsspec.AbstractFileSystem] = None,
-    ) -> "SimpleDreamsAnalysisStore":
-        """Create a SimpleDreamsAnalysisStore from a persist path.
+    ) -> "SimpleTaskStepStore":
+        """Create a SimpleTaskStepStore from a persist path.
 
         Args:
             persist_path (str): Path to persist the store
-            namespace (Optional[str]): namespace for the template_store
+            namespace (Optional[str]): namespace for the task_step_store
             fs (Optional[fsspec.AbstractFileSystem]): filesystem to use
 
         """
@@ -85,7 +85,7 @@ class SimpleDreamsAnalysisStore(KVDreamsAnalysisStore):
     @classmethod
     def from_dict(
         cls, save_dict: dict, namespace: Optional[str] = None
-    ) -> "SimpleDreamsAnalysisStore":
+    ) -> "SimpleTaskStepStore":
         simple_kvstore = SimpleKVStore.from_dict(save_dict)
         return cls(simple_kvstore, namespace)
 
@@ -95,4 +95,4 @@ class SimpleDreamsAnalysisStore(KVDreamsAnalysisStore):
 
 
 # alias for backwards compatibility
-DreamsAnalysisStore = SimpleDreamsAnalysisStore
+TaskStepStore = SimpleTaskStepStore

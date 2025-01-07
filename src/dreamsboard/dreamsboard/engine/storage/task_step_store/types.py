@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from dataclasses_json import DataClassJsonMixin
 from typing import Any, Dict, List, Optional, Sequence
 
-from dreamsboard.engine.entity.dreams_personality.dreams_personality import DreamsPersonalityNode
+from dreamsboard.engine.entity.task_step.task_step import TaskStepNode
 
 DEFAULT_PERSIST_FNAME = "task_step_store.json"
 DEFAULT_PERSIST_DIR = "./storage"
@@ -14,7 +14,7 @@ DEFAULT_PERSIST_PATH = os.path.join(DEFAULT_PERSIST_DIR, DEFAULT_PERSIST_FNAME)
 
 @dataclass
 class RefTaskStepInfo(DataClassJsonMixin):
-    """Dataclass to represent ingested analyses."""
+    """Dataclass to represent ingested task steps."""
 
     node_ids: List = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
