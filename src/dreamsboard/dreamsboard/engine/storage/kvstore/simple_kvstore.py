@@ -72,6 +72,12 @@ class SimpleKVStore(BaseInMemoryKVStore):
         """Load a SimpleKVStore from a persist path and filesystem."""
         fs = fs or fsspec.filesystem("file")
         logger.debug(f"Loading {__name__} from {persist_path}.")
+        # create the file if not exists check the folder and in `{}` to file 
+        if not fs.exists(persist_path):
+            fs.makedirs(os.path.dirname(persist_path))
+            with fs.open(persist_path, "w") as f:
+                f.write("{}")
+
         with fs.open(persist_path, "rb") as f:
             data = json.load(f)
         return cls(data)
