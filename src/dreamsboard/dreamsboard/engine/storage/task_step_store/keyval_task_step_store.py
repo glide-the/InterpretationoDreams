@@ -91,7 +91,7 @@ class KVTaskStepStore(BaseTaskStepStore):
 
             # update analysis_collection if needed
             metadata = {"task_step_hash": node.hash}
-            if isinstance(node, CodeGenerator) and node.ref_task_step_id is not None:
+            if isinstance(node, TaskStepNode) and node.ref_task_step_id is not None:
                 ref_task_step_info = self.get_ref_task_step_info(node.ref_task_step_id) or RefTaskStepInfo()
                 ref_task_step_info.node_ids.append(node.node_id)
                 if not ref_task_step_info.metadata:

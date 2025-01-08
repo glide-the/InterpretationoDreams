@@ -81,7 +81,7 @@ class StructuredTaskStepStoryboard:
                 
             task_step = TaskStepNode.from_config(cfg={
                 "start_task_context": self.start_task_context,
-                "aemo_representation_context": result.get('aemo_representation_context').get('aemo_representation_context'),
+                "aemo_representation_context": result.get('aemo_representation_context'),
                 "task_step_name": task_step.task_step_name,
                 "task_step_description": task_step.task_step_description,
                 "task_step_level": task_step.task_step_level

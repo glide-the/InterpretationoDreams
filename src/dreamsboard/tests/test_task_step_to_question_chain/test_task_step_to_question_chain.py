@@ -1,0 +1,47 @@
+ 
+  
+from dreamsboard.dreams.task_step_to_question_chain.base import TaskStepToQuestionChain
+from dreamsboard.engine.storage.task_step_store.simple_task_step_store import SimpleTaskStepStore
+from langchain_community.chat_models import ChatOpenAI
+from dreamsboard.engine.utils import concat_dirs
+import logging
+import os
+import json
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# 控制台打印
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+
+logger.addHandler(handler)
+
+"""
+#### 场景加载模块
+
+编写符合计算机科学领域的 故事情境提示词，生成研究情境（story_scenario_context），替换现有的langchain会话模板，
+对每个子任务指令转换为子问题
+召回问题前3条,存入task_step_question_context
+调用llm，生成task_step_question_answer
+"""
+
+
+def test_invoke_task_step_to_question():
+    
+
+    llm = ChatOpenAI(
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
+        model="glm-4-plus",
+        openai_api_key="5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN",
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    )  
+     
+    task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
+    task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
+        llm=llm, 
+        task_step_store=task_step_store
+    )
+    task_step_to_question_chain.invoke_task_step_to_question()
+    assert task_step_store.task_step_all is not None

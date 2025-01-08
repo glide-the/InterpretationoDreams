@@ -1,8 +1,5 @@
 # 任务引擎构建器核心类，用于构建任务引擎
-# 1、对任务按照提示词要求进行扩写，将扩写任务步骤收集 （src/dreamsboard/dreamsboard/engine/entity/task_step、src/dreamsboard/tests/test_kor/test_kor3.py）
-
-# 2、收集每个任务后存储到磁盘（src/dreamsboard/dreamsboard/engine/storage/task_step_store）
-
+ 
 # 3、对每个子任务载入会话场景，然后按照扩写任务步骤构建，MCTS任务
 
 from langchain.chains import LLMChain
@@ -20,7 +17,7 @@ class TaskEngineBuilder:
                  task_step_store: BaseTaskStepStore,
                  task_step_id: str
     ):
-        """执行资源
+        """执行会话场景资源初始化，构建MCTS任务
         AEMORepresentationChain 
         task_step_store[task_step_id]
 

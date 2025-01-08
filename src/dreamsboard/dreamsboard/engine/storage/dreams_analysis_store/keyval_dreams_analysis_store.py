@@ -91,7 +91,7 @@ class KVDreamsAnalysisStore(BaseDreamsAnalysisStore):
 
             # update analysis_collection if needed
             metadata = {"analysis_hash": node.hash}
-            if isinstance(node, CodeGenerator) and node.ref_analysis_id is not None:
+            if isinstance(node, DreamsPersonalityNode) and node.ref_analysis_id is not None:
                 ref_analysis_info = self.get_ref_analysis_info(node.ref_analysis_id) or RefAnalysisInfo()
                 ref_analysis_info.node_ids.append(node.node_id)
                 if not ref_analysis_info.metadata:

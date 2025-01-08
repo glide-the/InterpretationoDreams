@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABC
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, List
 
 import logging
 
@@ -37,6 +37,19 @@ class TaskStepNode(BaseNode, ABC):
     task_step_level: Optional[str] = Field(
         default="", description="任务步骤层级"
     )
+    task_step_question: Optional[str] = Field(
+        default="", description="任务步骤问题"
+    )
+    task_step_question_context: Optional[List[str]] = Field(
+        default=[], description="任务步骤问题上下文"
+    )
+
+    task_step_question_answer: Optional[str] = Field(
+        default="", description="任务步骤答案"
+    )
+    ref_task_step_id: Optional[str] = Field(
+        default="", description="ref_task_step_id",
+    )
 
     def __init__(self,
                  start_task_context: str = None,
@@ -44,6 +57,10 @@ class TaskStepNode(BaseNode, ABC):
                  task_step_name: str = None,
                  task_step_description: str = None,
                  task_step_level: str = None,
+                 task_step_question: str = None,
+                 task_step_question_context: List[str] = None,
+                 task_step_question_answer: str = None,
+                 ref_task_step_id: str = None,
                  **kwargs):
         super().__init__(**kwargs)
         self.start_task_context = start_task_context
@@ -51,7 +68,10 @@ class TaskStepNode(BaseNode, ABC):
         self.task_step_name = task_step_name
         self.task_step_description = task_step_description
         self.task_step_level = task_step_level
-
+        self.task_step_question = task_step_question
+        self.task_step_question_context = task_step_question_context
+        self.task_step_question_answer = task_step_question_answer
+        self.ref_task_step_id = ref_task_step_id
     @classmethod
     def from_config(cls, cfg=None):
         if cfg is None:
@@ -61,12 +81,21 @@ class TaskStepNode(BaseNode, ABC):
         task_step_name = cfg.get("task_step_name", "")
         task_step_description = cfg.get("task_step_description", "")
         task_step_level = cfg.get("task_step_level", "")
+        task_step_question = cfg.get("task_step_question", "")
+        task_step_question_context = cfg.get("task_step_question_context", [])
+        task_step_question_answer = cfg.get("task_step_question_answer", "")
+        ref_task_step_id = cfg.get("ref_task_step_id", "")
         return cls(
             start_task_context=start_task_context,
             aemo_representation_context=aemo_representation_context,
             task_step_name=task_step_name,
             task_step_description=task_step_description,
-            task_step_level=task_step_level)
+            task_step_level=task_step_level,
+            task_step_question=task_step_question,
+            task_step_question_context=task_step_question_context,
+            task_step_question_answer=task_step_question_answer,
+            ref_task_step_id=ref_task_step_id
+        )
 
     @classmethod
     def get_type(cls) -> str:
@@ -90,7 +119,11 @@ class TaskStepNode(BaseNode, ABC):
                f"aemo_representation_context: {self.aemo_representation_context}, " \
                f"task_step_name: {self.task_step_name}, " \
                f"task_step_description: {self.task_step_description}, " \
-               f"task_step_level: {self.task_step_level}"
+               f"task_step_level: {self.task_step_level}, " \
+               f"task_step_question: {self.task_step_question}, " \
+               f"task_step_question_context: {self.task_step_question_context}, " \
+               f"task_step_question_answer: {self.task_step_question_answer}, " \
+               f"ref_task_step_id: {self.ref_task_step_id}"
 
     @template_content.setter
     def template_content(self, _template_content) -> None:

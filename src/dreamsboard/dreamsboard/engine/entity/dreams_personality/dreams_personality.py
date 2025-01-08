@@ -46,6 +46,9 @@ class DreamsPersonalityNode(BaseNode, ABC):
     dreams_personality_context: Optional[str] = Field(
         default="", description="性格信息dreams_personality_context",
     )
+    ref_analysis_id: Optional[str] = Field(
+        default="", description="ref_analysis_id",
+    )
 
     def __init__(self,
                  story_scenario_context: str = None,
@@ -55,7 +58,9 @@ class DreamsPersonalityNode(BaseNode, ABC):
                  story_board_summary_context: str = None,
                  dreams_guidance_context: str = None,
                  evolutionary_step: str = None,
-                 dreams_personality_context=None, **kwargs):
+                 dreams_personality_context=None,
+                 ref_analysis_id: str = None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.story_scenario_context = story_scenario_context
         self.scene_monologue_context = scene_monologue_context
@@ -65,7 +70,7 @@ class DreamsPersonalityNode(BaseNode, ABC):
         self.evolutionary_step = evolutionary_step
         self.dreams_guidance_context = dreams_guidance_context
         self.dreams_personality_context = dreams_personality_context
-
+        self.ref_analysis_id = ref_analysis_id
     @classmethod
     def from_config(cls, cfg=None):
         if cfg is None:
@@ -78,6 +83,7 @@ class DreamsPersonalityNode(BaseNode, ABC):
         evolutionary_step = cfg.get("evolutionary_step", "")
         dreams_guidance_context = cfg.get("dreams_guidance_context", "")
         dreams_personality_context = cfg.get("dreams_personality_context", "")
+        ref_analysis_id = cfg.get("ref_analysis_id", "")
         return cls(
             story_scenario_context=story_scenario_context,
             scene_monologue_context=scene_monologue_context,
@@ -86,7 +92,9 @@ class DreamsPersonalityNode(BaseNode, ABC):
             story_board_summary_context=story_board_summary_context,
             evolutionary_step=evolutionary_step,
             dreams_guidance_context=dreams_guidance_context,
-            dreams_personality_context=dreams_personality_context)
+            dreams_personality_context=dreams_personality_context,
+            ref_analysis_id=ref_analysis_id
+        )
 
     @classmethod
     def get_type(cls) -> str:
@@ -113,7 +121,8 @@ class DreamsPersonalityNode(BaseNode, ABC):
                f"story_board_summary_context: {self.story_board_summary_context}, " \
                f"dreams_guidance_context: {self.dreams_guidance_context}, " \
                f"evolutionary_step: {self.evolutionary_step}, " \
-               f"dreams_personality_context: {self.dreams_personality_context}"
+               f"dreams_personality_context: {self.dreams_personality_context}, " \
+               f"ref_analysis_id: {self.ref_analysis_id}"
 
     @template_content.setter
     def template_content(self, _template_content) -> None:
