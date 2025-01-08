@@ -31,12 +31,22 @@ from pandas import DataFrame
 
 # 定义链表节点类
 class LinkedListNode:
-    def __init__(self, shot_number, scene_number, time_point, description, remark):
+    def __init__(self, 
+                shot_number: int, 
+                scene_number: str, 
+                start_task_context: str=None, 
+                aemo_representation_context: str=None,
+                task_step_name: str=None, 
+                task_step_description: str=None, 
+                task_step_level: str=None
+        ):
         self.shot_number = shot_number
         self.scene_number = scene_number
-        self.time_point = time_point
-        self.description = description
-        self.remark = remark
+        self.start_task_context = start_task_context
+        self.aemo_representation_context = aemo_representation_context
+        self.task_step_name = task_step_name
+        self.task_step_description = task_step_description
+        self.task_step_level = task_step_level
         self.head: LinkedListNode = None
         self.prev: LinkedListNode = None
         self.next: LinkedListNode = None
@@ -51,9 +61,9 @@ class StructuredStoryboard:
 
     def __init__(self, json_data: List[Dict[str, Any]]):
         """Initialize with  json_data."""
-        self.parse_dialogue(json_data)
+        self._parse_dialogue(json_data)
 
-    def parse_dialogue(self, json_data: List[Dict[str, Any]]) -> None:
+    def _parse_dialogue(self, json_data: List[Dict[str, Any]]) -> None:
         """
         解析JSON数组并创建链表
         """
@@ -64,11 +74,13 @@ class StructuredStoryboard:
 
         for index, data in enumerate(json_data):
             scene_number = "story_board" + str(index)
-            time_point = data["time_point_len"]
-            description = None
-            remark = None
+            start_task_context = data["start_task_context"]
+            aemo_representation_context = data["aemo_representation_context"]
+            task_step_name = data["task_step_name"]
+            task_step_description = data["task_step_description"]
+            task_step_level = data["task_step_level"]
 
-            node = LinkedListNode(shot_number, scene_number, time_point, description, remark)
+            node = LinkedListNode(shot_number, scene_number, start_task_context, aemo_representation_context, task_step_name, task_step_description, task_step_level)
             if self.prev_node:
                 self.prev_node.next = node
                 node.prev = self.prev_node
@@ -83,7 +95,7 @@ class StructuredStoryboard:
     def parse_table(self) -> DataFrame:
         """
         输出格式为
-            分镜编号	场景编号	时间点	描述	备注
+            分镜编号	场景编号    开始任务	任务总体描述	任务步骤名称	任务步骤描述	任务步骤层级
         :return: DataFrame
         """
         table_data = []
@@ -92,14 +104,16 @@ class StructuredStoryboard:
             row = [
                 current_parse_node.shot_number,
                 current_parse_node.scene_number,
-                current_parse_node.time_point,
-                current_parse_node.description,
-                current_parse_node.remark
+                current_parse_node.start_task_context,
+                current_parse_node.aemo_representation_context,
+                current_parse_node.task_step_name,
+                current_parse_node.task_step_description,
+                current_parse_node.task_step_level
             ]
             table_data.append(row)
             current_parse_node = current_parse_node.next
 
-        table = pd.DataFrame(table_data, columns=["shot_number", "scene_number", "time_point", "description", "remark"])
+        table = pd.DataFrame(table_data, columns=["shot_number", "scene_number", "start_task_context", "aemo_representation_context", "task_step_name", "task_step_description", "task_step_level"])
         return table
 
 
@@ -119,9 +133,11 @@ class StructuredStoryboardLoader(BaseLoader, ABC):
             raw_transcript_with_meta_info = (
                 f"scene_number: {row.scene_number},"
                 f"shot_number: {row.shot_number}\n\n"
-                f"time_point: {row.time_point}\n\n"
-                f"description: {row.description}\n\n"
-                f"remark: {row.remark}\n\n"
+                f"start_task_context: {row.start_task_context}\n\n"
+                f"aemo_representation_context: {row.aemo_representation_context}\n\n"
+                f"task_step_name: {row.task_step_name}\n\n"
+                f"task_step_description: {row.task_step_description}\n\n"
+                f"task_step_level: {row.task_step_level}\n\n"
             )
 
             structured_storyboard_json = row.to_json(orient='records',  indent=4)

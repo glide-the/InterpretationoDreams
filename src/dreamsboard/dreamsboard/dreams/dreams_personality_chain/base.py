@@ -17,8 +17,9 @@ from dreamsboard.dreams.dreams_personality_chain.prompts import (
     DREAMS_GEN_TEMPLATE,
 )
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder
-
+import os
 import logging
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -61,14 +62,18 @@ class StoryBoardDreamsGenerationChain(ABC):
         # 03-故事场景生成 `scene_monologue_context`.txt
         prompt_template2 = PromptTemplate(input_variables=["story_board_summary_context",
                                                            "user_id"],
-                                          template=STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE)
+                                          template=os.environ.get(
+                                "STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE", STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE
+                            ))
         review_chain2 = (prompt_template2 | llm | StrOutputParser())
         # 04-情感情景引导.txt
         prompt_template = PromptTemplate(input_variables=["story_board_summary_context",
                                                           "story_scenario_context",
                                                           "scene_monologue_context",
                                                           "user_id"],
-                                         template=DREAMS_GEN_TEMPLATE)
+                                         template=os.environ.get(
+                                "DREAMS_GEN_TEMPLATE", DREAMS_GEN_TEMPLATE
+                            ))
         social_chain = (prompt_template | llm | StrOutputParser())
 
         def wrapper_guidance_unit(_dict):
@@ -111,11 +116,15 @@ class StoryBoardDreamsGenerationChain(ABC):
 
         # 05-剧情总结 `evolutionary_step`.txt
         prompt_template04 = PromptTemplate(input_variables=["story_board_summary_context"],
-                                           template=EDREAMS_EVOLUTIONARY_TEMPLATE)
+                                           template=os.environ.get(
+                                "EDREAMS_EVOLUTIONARY_TEMPLATE", EDREAMS_EVOLUTIONARY_TEMPLATE
+                            ))
         evolutionary_chain = prompt_template04 | llm | StrOutputParser()
         # 05-性格分析 `dreams_personality_context`.txt
         prompt_template05 = PromptTemplate(input_variables=["evolutionary_step"],
-                                           template=EDREAMS_PERSONALITY_TEMPLATE)
+                                           template=os.environ.get(
+                                "EDREAMS_PERSONALITY_TEMPLATE", EDREAMS_PERSONALITY_TEMPLATE
+                            ))
         personality_chain = prompt_template05 | llm | StrOutputParser()
 
         def wrapper_personality_unit(_dict):

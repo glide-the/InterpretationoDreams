@@ -120,3 +120,5 @@ wandb
 /社会交流步骤分析.tar.gz
 /docker/data
 storage
+storage*
+*_keyframe
