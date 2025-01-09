@@ -22,6 +22,8 @@ fastapi = "^0.108"
 uvicorn = "0.25.0"
 orjson = "^3.9.10"
 
+json-repair = "^0.26.0"
+
 [tool.poetry.group.test.dependencies]
 # The only dependencies that should be added are
 # dependencies used for running tests (e.g., pytest, freezegun, response).

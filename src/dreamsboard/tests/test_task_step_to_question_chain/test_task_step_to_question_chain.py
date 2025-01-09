@@ -4,6 +4,9 @@ from dreamsboard.dreams.task_step_to_question_chain.base import TaskStepToQuesti
 from dreamsboard.engine.storage.task_step_store.simple_task_step_store import SimpleTaskStepStore
 from langchain_community.chat_models import ChatOpenAI
 from dreamsboard.engine.utils import concat_dirs
+from dreamsboard.dreams.task_step_to_question_chain.weaviate.context_collections import init_context_connect
+
+from sentence_transformers import CrossEncoder
 import logging
 import os
 import json
@@ -36,12 +39,45 @@ def test_invoke_task_step_to_question():
         verbose=True,
         temperature=0.1,
         top_p=0.9,
-    )  
-     
+    )   
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
+    client = init_context_connect()
+
+    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
         llm=llm, 
-        task_step_store=task_step_store
+        task_step_store=task_step_store,
+        client=client,
+        cross_encoder_path=cross_encoder_path
     )
     task_step_to_question_chain.invoke_task_step_to_question()
+    assert task_step_store.task_step_all is not None
+
+
+def test_invoke_task_step_question_context():
+    
+
+    llm = ChatOpenAI(
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
+        model="glm-4-plus",
+        openai_api_key="5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN",
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    )   
+    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
+    client = init_context_connect()
+
+    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+
+    task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
+        llm=llm, 
+        task_step_store=task_step_store,
+        client=client,
+        cross_encoder_path=cross_encoder_path
+    )
+
+    task_step_to_question_chain.invoke_task_step_question_context()
     assert task_step_store.task_step_all is not None

@@ -9,7 +9,7 @@ from pydantic import Field
 
 from dreamsboard.engine.schema import BaseNode, ObjectTemplateType
 from dreamsboard.templates import get_template_path
-
+from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -19,6 +19,10 @@ handler.setLevel(logging.INFO)
 
 logger.addHandler(handler)
 
+class TaskStepContext(BaseModel):
+    ref_id: str = Field(default="", description="ref_id")
+    score: float = Field(default=0.0, description="score")
+    text: str = Field(default="", description="text")
 
 class TaskStepNode(BaseNode, ABC):
     """任务步骤节点"""
@@ -40,7 +44,7 @@ class TaskStepNode(BaseNode, ABC):
     task_step_question: Optional[str] = Field(
         default="", description="任务步骤问题"
     )
-    task_step_question_context: Optional[List[str]] = Field(
+    task_step_question_context: Optional[List[TaskStepContext]] = Field(
         default=[], description="任务步骤问题上下文"
     )
 
@@ -58,7 +62,7 @@ class TaskStepNode(BaseNode, ABC):
                  task_step_description: str = None,
                  task_step_level: str = None,
                  task_step_question: str = None,
-                 task_step_question_context: List[str] = None,
+                 task_step_question_context: List[TaskStepContext] = None,
                  task_step_question_answer: str = None,
                  ref_task_step_id: str = None,
                  **kwargs):
