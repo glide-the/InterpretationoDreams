@@ -19,7 +19,7 @@ def test_structured_storyboard_csv_builder() -> None:
         csv_file_path="/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv/msg-1_1_keyframe.csv")
     builder.load()  # 替换为你的CSV文件路径
     selected_columns = ["story_board_role", "story_board_text", "story_board"]
-    formatted_text = builder.build_text(selected_columns)
+    formatted_text = builder.build_text("0", selected_columns)
     logger.info("formatted_text:" + formatted_text)
     assert formatted_text is not None
 

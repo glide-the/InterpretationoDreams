@@ -5,6 +5,7 @@ from dreamsboard.engine.storage.task_step_store.simple_task_step_store import Si
 from langchain_community.chat_models import ChatOpenAI
 from dreamsboard.engine.utils import concat_dirs
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.context_collections import init_context_connect
+from dreamsboard.document_loaders.csv_structured_storyboard_loader import StructuredStoryboardCSVBuilder
 
 from sentence_transformers import CrossEncoder
 import logging
@@ -41,6 +42,8 @@ def test_invoke_task_step_to_question():
         top_p=0.9,
     )   
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
+    
+    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
     client = init_context_connect()
 
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
@@ -51,7 +54,9 @@ def test_invoke_task_step_to_question():
         client=client,
         cross_encoder_path=cross_encoder_path
     )
-    task_step_to_question_chain.invoke_task_step_to_question()
+    
+    task_step_id = list(task_step_store.task_step_all.keys())[0]
+    task_step_to_question_chain.invoke_task_step_to_question(task_step_id)
     assert task_step_store.task_step_all is not None
 
 
@@ -78,6 +83,44 @@ def test_invoke_task_step_question_context():
         client=client,
         cross_encoder_path=cross_encoder_path
     )
-
-    task_step_to_question_chain.invoke_task_step_question_context()
+    task_step_id = list(task_step_store.task_step_all.keys())[0]
+    task_step_to_question_chain.invoke_task_step_question_context(task_step_id)
     assert task_step_store.task_step_all is not None
+
+
+def test_export_csv_file_path():
+    
+
+    llm = ChatOpenAI(
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
+        model="glm-4-plus",
+        openai_api_key="5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN",
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    )   
+    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
+    client = init_context_connect()
+
+    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+
+    task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
+        llm=llm, 
+        task_step_store=task_step_store,
+        client=client,
+        cross_encoder_path=cross_encoder_path
+    )
+    task_step_id = list(task_step_store.task_step_all.keys())[0]
+    csv_file_path = task_step_to_question_chain.export_csv_file_path(task_step_id)
+    logger.info("csv_file_path:" + csv_file_path)
+    assert csv_file_path is not None
+
+    builder = StructuredStoryboardCSVBuilder(
+        csv_file_path=csv_file_path
+    )
+    builder.load()  # 替换为你的CSV文件路径
+    selected_columns = ["story_board_role", "story_board_text", "story_board"]
+    formatted_text = builder.build_text(task_step_id, selected_columns)
+    logger.info("formatted_text:" + formatted_text)
+    assert formatted_text is not None

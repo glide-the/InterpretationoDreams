@@ -40,7 +40,7 @@ from typing import List
 import logging
 import os
 import re
-
+import pandas as pd
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -141,19 +141,19 @@ class TaskStepToQuestionChain(ABC):
                    client=client,
                    cross_encoder=cross_encoder)
 
-    def invoke_task_step_to_question(self) -> None:
+    def invoke_task_step_to_question(self, task_step_id: str) -> None:
         """
         对开始任务进行抽取，得到任务步骤
         :return:
         """ 
 
-        task_step_all = self.task_step_store.task_step_all
-        for task_step_id, task_step_node in task_step_all.items():
-            result = self.task_step_to_question_chain.invoke(task_step_node.__dict__)
-            task_step_node.task_step_question = result["task_step_question_context"]
-            self.task_step_store.add_task_step([task_step_node])
-            # 每处理一个任务步骤，就持久化一次
-            self.task_step_store.persist()
+        task_step_node = self.task_step_store.get_task_step(task_step_id)
+        result = self.task_step_to_question_chain.invoke(task_step_node.__dict__)
+        task_step_node.task_step_question = result["task_step_question_context"]
+        self.task_step_store.add_task_step([task_step_node])
+        # 每处理一个任务步骤，就持久化一次
+        self.task_step_store.persist()
+
 
     def _retrieve_task_step_question_context(self, task_step_id: str, collection_name_context: str, task_step_node: TaskStepNode) -> tuple[List[str], str, str]:
         """基于概念路径检索方法"""
@@ -225,75 +225,109 @@ class TaskStepToQuestionChain(ABC):
 
         return refIds
 
-    def invoke_task_step_question_context(self) -> None:
+    def invoke_task_step_question_context(self, task_step_id: str) -> None:
         """
         对任务步骤进行抽取，得到任务步骤的上下文
         """
 
-        task_step_all = self.task_step_store.task_step_all
-        for task_step_id, task_step_node in task_step_all.items():
-            if task_step_node.task_step_question_context is not None:
-                continue
-             # task_step_id  - 转换为下划线
-            task_step_id = task_step_id.replace("-", "_")
-            collection_name, collection_name_context = init_context_collections(self.client, task_step_id)
+        task_step_node = self.task_step_store.get_task_step(task_step_id)
+        if task_step_node.task_step_question_context is not None:
+            return
+            # task_step_id  - 转换为下划线
+        task_step_id = task_step_id.replace("-", "_")
+        collection_name, collection_name_context = init_context_collections(self.client, task_step_id)
 
-            top_k =100  # 可选参数，默认查询返回前 5 个结果
-            properties_list = exe_query(task_step_node.task_step_question,top_k)
-            # 插入数据到数据库 
-            insert_into_database(self.client, collection_name, 'ref_id', properties_list)
+        top_k =100  # 可选参数，默认查询返回前 5 个结果
+        properties_list = exe_query(task_step_node.task_step_question,top_k)
+        # 插入数据到数据库 
+        insert_into_database(self.client, collection_name, 'ref_id', properties_list)
 
-            context_properties_list = [{
-                "refId": item.get('ref_id'),
-                "paperId": item.get('paper_id'),
-                "chunkId": item.get('chunk_id'),
-                "chunkText": item.get('chunk_text')
-            } for item in properties_list]
+        context_properties_list = [{
+            "refId": item.get('ref_id'),
+            "paperId": item.get('paper_id'),
+            "chunkId": item.get('chunk_id'),
+            "chunkText": item.get('chunk_text')
+        } for item in properties_list]
 
-            insert_into_database(self.client, collection_name_context, 'refId', context_properties_list)
-            retrieve_ids = []
-            try:
-                retrieve_ids = self._retrieve_task_step_question_context(task_step_id, collection_name_context, task_step_node)
-            except Exception as e:
-                logger.error(f"Error retrieving task step question context: {e}")
-                
-            if len(retrieve_ids) == 0:
-                
-                collection = self.client.collections.get(collection_name) 
-
-                vector_names = ["chunk_text"]
-                response = collection.query.hybrid(
-                    query=task_step_node.task_step_question,  
-                    target_vector=vector_names,  # Specify the target vector for named vector collections
-                    limit=1,
-                    alpha=0.1,
-                    query_properties=["chunk_text"],  
-                    return_metadata=MetadataQuery(score=True, explain_score=True, distance=True),
-                )
-            else:
-                # 对refIds进行编码
-                collection = self.client.collections.get(collection_name)
-                response = collection.query.fetch_objects(
-                    filters=Filter.by_property("ref_id").contains_any(retrieve_ids), 
-                    return_metadata=MetadataQuery(score=True, explain_score=True, distance=True),
-                )
-
-            chunk_texts = []
-            ref_ids = []
-            for o in response.objects:  
-                chunk_texts.append(o.properties['chunk_text'])
-                ref_ids.append(o.properties['ref_id'])
+        insert_into_database(self.client, collection_name_context, 'refId', context_properties_list)
+        retrieve_ids = []
+        try:
+            retrieve_ids = self._retrieve_task_step_question_context(task_step_id, collection_name_context, task_step_node)
+        except Exception as e:
+            logger.error(f"Error retrieving task step question context: {e}")
             
-            rankings = self.cross_encoder.rank(task_step_node.task_step_question, chunk_texts, return_documents=True, convert_to_tensor=True)
-                        
-            task_step_question_context = []
-            # 召回问题前3条，存入task_step_question_context
-            for i, ranking in enumerate(rankings[:3]):
-                logger.info(f"ref_ids: {ref_ids[i]}, Score: {ranking['score']:.4f}, Text: {ranking['text']}")
-                task_step_question_context.append(TaskStepContext(ref_id=ref_ids[i], score=ranking['score'], text=ranking['text']))
+        if len(retrieve_ids) == 0:
+            
+            collection = self.client.collections.get(collection_name) 
 
-            # rankingscorpus_id 的索引与ref_ids的索引一致 
-            task_step_node.task_step_question_context = task_step_question_context
-            self.task_step_store.add_task_step([task_step_node])
-            # 每处理一个任务步骤，就持久化一次
-            self.task_step_store.persist()
+            vector_names = ["chunk_text"]
+            response = collection.query.hybrid(
+                query=task_step_node.task_step_question,  
+                target_vector=vector_names,  # Specify the target vector for named vector collections
+                limit=1,
+                alpha=0.1,
+                query_properties=["chunk_text"],  
+                return_metadata=MetadataQuery(score=True, explain_score=True, distance=True),
+            )
+        else:
+            # 对refIds进行编码
+            collection = self.client.collections.get(collection_name)
+            response = collection.query.fetch_objects(
+                filters=Filter.by_property("ref_id").contains_any(retrieve_ids), 
+                return_metadata=MetadataQuery(score=True, explain_score=True, distance=True),
+            )
+
+        chunk_texts = []
+        ref_ids = []
+        for o in response.objects:  
+            chunk_texts.append(o.properties['chunk_text'])
+            ref_ids.append(o.properties['ref_id'])
+        
+        rankings = self.cross_encoder.rank(task_step_node.task_step_question, chunk_texts, return_documents=True, convert_to_tensor=True)
+                    
+        task_step_question_context = []
+        # 召回问题前3条，存入task_step_question_context
+        for i, ranking in enumerate(rankings[:3]):
+            logger.info(f"ref_ids: {ref_ids[i]}, Score: {ranking['score']:.4f}, Text: {ranking['text']}")
+            task_step_question_context.append(TaskStepContext(ref_id=ref_ids[i], score=ranking['score'], text=ranking['text']))
+
+        # rankingscorpus_id 的索引与ref_ids的索引一致 
+        task_step_node.task_step_question_context = task_step_question_context
+        self.task_step_store.add_task_step([task_step_node])
+        # 每处理一个任务步骤，就持久化一次
+        self.task_step_store.persist()
+
+
+    def export_csv_file_path(self, task_step_id: str) -> str:
+        """
+        3、对召回内容与问题 导出csv文件
+        """ 
+        task_step_node = self.task_step_store.get_task_step(task_step_id)
+            
+        table_data = []  
+        row = [
+            task_step_id,
+            task_step_node.task_step_name,
+            task_step_node.task_step_level
+        ]
+        
+        table_data.append(row) 
+        row2 = [
+            task_step_id,
+            task_step_node.task_step_question,
+            task_step_node.task_step_level
+        ]
+        table_data.append(row2)
+        for context in task_step_node.task_step_question_context:
+            row3 = [
+                task_step_id,
+                f"ref_ids: {context['ref_id']}, Score: {context['score']:.4f}, Text: {context['text']}",
+                task_step_node.task_step_level
+            ]
+            table_data.append(row3)
+
+        table = pd.DataFrame(table_data, columns=["角色", "内容", "分镜"])
+
+        table.to_csv(f"./storage/{task_step_id}.csv", index=False)
+
+        return f"./storage/{task_step_id}.csv"

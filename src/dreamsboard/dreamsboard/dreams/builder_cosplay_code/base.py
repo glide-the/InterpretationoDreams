@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
 
 from dreamsboard.document_loaders.ner_loader import NerLoader
 from dreamsboard.document_loaders.protocol.ner_protocol import DreamsStepInfo, Personality
@@ -149,8 +149,11 @@ class StructuredDreamsStoryboard:
 
         return messages
 
-    def loader_cosplay_builder(self, engine_template_render_data: dict = {}) -> CodeGeneratorBuilder:
-        code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[])
+    def loader_cosplay_builder(self, 
+                               storage_context: Optional[StorageContext] = None,
+                               engine_template_render_data: dict = {}
+                               ) -> CodeGeneratorBuilder:
+        code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=storage_context)
 
         # 创建一个字典，用于按照story_board组织内容和角色
         export_role = self.builder.export_role()

@@ -74,7 +74,7 @@ class SimpleKVStore(BaseInMemoryKVStore):
         logger.debug(f"Loading {__name__} from {persist_path}.")
         # create the file if not exists check the folder and in `{}` to file 
         if not fs.exists(persist_path):
-            fs.makedirs(os.path.dirname(persist_path))
+            fs.makedirs(os.path.dirname(persist_path), exist_ok=True)
             with fs.open(persist_path, "w") as f:
                 f.write("{}")
 

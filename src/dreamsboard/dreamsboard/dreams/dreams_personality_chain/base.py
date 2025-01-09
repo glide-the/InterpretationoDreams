@@ -162,7 +162,7 @@ class StoryBoardDreamsGenerationChain(ABC):
         # 对传入的剧本台词转换成 scene_content
         self.builder.load()
         selected_columns = ["story_board_role", "story_board_text", "story_board"]
-        scene_content = self.builder.build_text(selected_columns)
+        scene_content = self.builder.build_text(self.user_id, selected_columns)
         story_board_summary_context = self.builder.build_msg()
 
         dreams_guidance_personality_map_chain = RunnableParallel(

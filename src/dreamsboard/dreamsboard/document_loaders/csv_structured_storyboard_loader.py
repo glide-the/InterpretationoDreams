@@ -89,15 +89,19 @@ class StructuredStoryboardCSVBuilder(ABC):
                     # 添加到数据列表
                     self.data.append(structured_storyboard)
 
-    def build_text(self, columns_to_select) -> str:
+    def build_text(self, user_id: str, columns_to_select) -> str:
+        """
+        根据传入的列名列表筛选数据
+        """
         # 根据传入的列名列表筛选数据
         selected_data = []
         for item in self.data:
-            selected_item = {}
-            for column in columns_to_select:
-                if hasattr(item, column):
-                    selected_item[column] = getattr(item, column).name
-            selected_data.append(selected_item)
+            if item.story_board_role.name == user_id:
+                selected_item = {}
+                for column in columns_to_select:
+                    if hasattr(item, column):
+                        selected_item[column] = getattr(item, column).name
+                selected_data.append(selected_item)
 
         # 获取列名对应的标签
         metadatas = []
