@@ -80,11 +80,13 @@ def test_builder_task_step():
     task_engine_builder = builder.loader_task_step_iter_builder(engine_template_render_data=engine_template_render_data, allow_init=False)
     while not task_engine_builder.empty():
         task_engine = task_engine_builder.get()
-        task_engine.init_task_engine()
-        task_engine.init_task_engine_dreams()
-        task_engine.init_task_engine_storyboard_executor()
+        if not task_engine.check_engine_init():
+            task_engine.init_task_engine()
+            task_engine.init_task_engine_dreams()
+            task_engine.init_task_engine_storyboard_executor()
+            
         code_gen_builder = task_engine.storyboard_code_gen_builder()
-        
+            
         # persist index to disk
         code_gen_builder.storage_context.persist(persist_dir=f"./storage/{task_engine.task_step_id}")
 

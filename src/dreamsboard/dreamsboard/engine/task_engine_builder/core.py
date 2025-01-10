@@ -70,7 +70,35 @@ class TaskEngineBuilder:
         self.task_step_to_question_chain = None
         self.csv_file_path = None
         self.storyboard_executor = None
-        self.storage_context = None
+        self.storage_context = StorageContext.from_defaults(
+            persist_dir=f"./storage/{self.task_step_id}"
+        )
+        self.storage_context.task_step_store = self.task_step_store
+
+    def check_engine_init(self):
+        """
+        检查引擎是否初始化
+        """
+        try:
+            storage_context = StorageContext.from_defaults(
+                persist_dir=f"./storage/{self.task_step_id}"
+            )
+            if storage_context.task_step_store is None:
+                return False
+            if storage_context.dreams_analysis_store is None:
+                return False
+            if storage_context.template_store is None:
+                return False
+            if storage_context.index_store is None:
+                return False
+            
+            code_gen_builder = load_store_from_storage(storage_context=storage_context)
+            if code_gen_builder is None:
+                return False
+            else:
+                return True
+        except:
+            return False
 
     def init_task_engine(self):
         """
@@ -96,10 +124,7 @@ class TaskEngineBuilder:
         self.task_step_to_question_chain.invoke_task_step_to_question(self.task_step_id)
         self.task_step_to_question_chain.invoke_task_step_question_context(self.task_step_id)
         self.csv_file_path = self.task_step_to_question_chain.export_csv_file_path(self.task_step_id)
-        self.storage_context = StorageContext.from_defaults(
-            persist_dir=f"./storage/{self.task_step_id}"
-        )
-        self.storage_context.task_step_store = self.task_step_store
+   
  
     def init_task_engine_dreams(self, allow_init: bool = True) -> None:
         """
