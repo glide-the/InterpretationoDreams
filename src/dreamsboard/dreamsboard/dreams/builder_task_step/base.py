@@ -115,6 +115,10 @@ class StructuredTaskStepStoryboard:
                     "task_step_description": task_step.task_step_description,
                     "task_step_level": task_step.task_step_level
                 })
+                      
+                
+                self.task_step_store.add_task_step([task_step])
+                self.task_step_store.persist()
                 task_step_id = task_step.node_id 
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm=self.llm,

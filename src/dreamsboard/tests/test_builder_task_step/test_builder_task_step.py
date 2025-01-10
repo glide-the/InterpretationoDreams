@@ -235,7 +235,7 @@ def test_builder_task_step_mctsr():
             'OPENAI_API_BASE': 'https://open.bigmodel.cn/api/paas/v4',
             'OPENAI_API_KEY': os.environ.get("ZHIPUAI_API_KEY"),
         }
-    task_engine_builder = builder.loader_task_step_iter_builder(engine_template_render_data=engine_template_render_data, allow_init=False)
+    task_engine_builder = builder.loader_task_step_iter_builder(engine_template_render_data=engine_template_render_data, allow_init=True)
     while not task_engine_builder.empty():
         task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
@@ -255,6 +255,7 @@ def test_builder_task_step_mctsr():
 
 
         task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
+        task_step.task_step_question_answer = answer
         task_step_store.add_task_step([task_step])
         task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
         task_step_store.persist(persist_path=task_step_store_path) 

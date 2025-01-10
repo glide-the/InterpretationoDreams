@@ -102,7 +102,7 @@ task_step_level: {task_step_level}
 
 # 响应格式  
 
-thought: 有表格，则输出原始表格。优化答案不超过150字
+thought: 有表格，则输出原始表格。优化答案不超过500字
 answer: 表示问题答案的浮点数。
  
 """,
