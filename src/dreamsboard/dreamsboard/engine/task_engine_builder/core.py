@@ -3,28 +3,28 @@
 # 3、对每个子任务载入会话场景，然后按照扩写任务步骤构建，MCTS任务
 
 from langchain.schema.language_model import BaseLanguageModel
-from langchain.chains import LLMChain
-from dreamsboard.document_loaders.protocol.ner_protocol import TaskStepNode
-from dreamsboard.engine.storage.storage_context import BaseTaskStepStore
+from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
 
 from dreamsboard.dreams.task_step_to_question_chain.base import TaskStepToQuestionChain
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.context_collections import init_context_connect
 
-from langchain_community.chat_models import ChatOpenAI
-
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
 from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
-import langchain
+from dreamsboard.document_loaders.structured_storyboard_loader import StructuredStoryboard
 
 from dreamsboard.engine.entity.dreams_personality.dreams_personality import DreamsPersonalityNode
-from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator, AIProgramGenerator
+from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator
 from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_store import SimpleDreamsAnalysisStore
 from dreamsboard.engine.storage.storage_context import StorageContext
 from dreamsboard.engine.utils import concat_dirs
 import logging 
+from dreamsboard.engine.memory.mctsr.mctsr import MCTSNode, MCTSrStoryboard
+from langchain.schema import AIMessage
+from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -206,3 +206,103 @@ class TaskEngineBuilder:
         code_gen_builder.storage_context.persist(persist_dir=f"./storage/{self.task_step_id}")
 
         return code_gen_builder
+    
+    def generate_step_answer(self, code_gen_builder: CodeGeneratorBuilder) -> str:
+        """
+        生成当前任务的答案
+        """
+        task_step = self.task_step_store.get_task_step(self.task_step_id)
+        ai_message = self._get_ai_message(
+            user_prompt=task_step.task_step_question,
+            code_gen_builder=code_gen_builder, 
+            engine_template_render_data=self.engine_template_render_data, 
+        )
+        logger.info(ai_message.content)
+        task_step.task_step_question_answer = ai_message.content
+        self.task_step_store.add_task_step([task_step])
+        # 每处理一个任务步骤，就持久化一次
+        task_step_store_path = concat_dirs(dirname=f"./storage/{self.task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+        self.task_step_store.persist(persist_path=task_step_store_path) 
+        return ai_message.content
+    
+    def _get_ai_message(self, 
+                        user_prompt: str,
+                        code_gen_builder: CodeGeneratorBuilder,
+                        engine_template_render_data: dict
+        ) -> AIMessage:
+        """
+        获取AI消息
+        """
+                 
+        code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
+            "query_code_file": "query_template.py-tpl",
+            "render_data": {
+                'cosplay_role': 'user',
+                'message': user_prompt
+            },
+        }))
+
+        code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
+            "engine_code_file": "simple_engine_template.py-tpl",
+            "render_data": engine_template_render_data
+        }))
+
+        executor = code_gen_builder.build_executor()
+        logger.info(executor.executor_code)
+
+        executor.execute()
+        _ai_message = executor.chat_run()
+
+        logger.info(executor._ai_message)
+        assert executor._ai_message is not None
+        
+        code_gen_builder.remove_last_generator()
+        code_gen_builder.remove_last_generator()
+
+        return _ai_message
+
+
+    def get_mcts_node(self, code_gen_builder: CodeGeneratorBuilder) -> MCTSrStoryboard:
+        """
+        构建MCTS树, 初始化当前任务相关的MCTS节点，并返回MCTS执行器
+        """
+        task_step_all = self.task_step_store.task_step_all
+        structured_storyboard = StructuredStoryboard(json_data=list(task_step_all.values())) 
+        linked_list_node = structured_storyboard.get_task_step_node(self.task_step_id)
+        
+        mcts_node = MCTSNode(
+            answer=linked_list_node.task_step_question_answer,
+            linked_list_node=linked_list_node,
+            code_gen_builder=code_gen_builder, 
+            engine_template_render_data=self.engine_template_render_data,
+            parent=None, 
+            children=[], 
+            visits=0, 
+            Q=0, 
+            reward_samples=[]
+        )
+        # 构建MCTS树, 初始化当前节点的顶层节点
+        while linked_list_node is not None and linked_list_node.prev is not None:
+            linked_list_node = linked_list_node.prev
+            parent_node = MCTSNode(
+                answer=linked_list_node.task_step_question_answer, 
+                linked_list_node=linked_list_node,
+                code_gen_builder=code_gen_builder, 
+                engine_template_render_data=self.engine_template_render_data,
+                parent=None, 
+                children=[], 
+                visits=0, 
+                Q=0, 
+                reward_samples=[]
+            )
+            mcts_node.parent = parent_node
+
+            
+        task_step = self.task_step_store.get_task_step(self.task_step_id)
+        mctsr = MCTSrStoryboard(
+            problem=task_step.task_step_question, 
+            max_rollouts=10
+        )
+        mctsr.initialize(mcts_node)
+        mctsr.print()
+        return mctsr

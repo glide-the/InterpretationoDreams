@@ -4,7 +4,6 @@ from langchain_community.chat_models import ChatOpenAI
 from dreamsboard.dreams.builder_task_step.base import StructuredTaskStepStoryboard
 import logging
 import os
-import json
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -84,10 +83,72 @@ def test_builder_task_step():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()
             task_engine.init_task_engine_storyboard_executor()
-            
+
         code_gen_builder = task_engine.storyboard_code_gen_builder()
             
         # persist index to disk
         code_gen_builder.storage_context.persist(persist_dir=f"./storage/{task_engine.task_step_id}")
 
-        
+
+
+def test_builder_task_step_answer():
+    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    llm = ChatOpenAI(
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
+        model="glm-4-plus",
+        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    )
+    kor_dreams_task_step_llm = ChatOpenAI(
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
+        model="glm-4-plus",
+        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        verbose=True,
+        temperature=0.95,
+        top_p=0.70,
+    )
+    from tests.test_builder_task_step.prompts import (
+        AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
+        STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
+        STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE as STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST,
+        EDREAMS_EVOLUTIONARY_TEMPLATE as EDREAMS_EVOLUTIONARY_TEMPLATE_TEST,
+        EDREAMS_PERSONALITY_TEMPLATE as EDREAMS_PERSONALITY_TEMPLATE_TEST,
+        DREAMS_GEN_TEMPLATE as DREAMS_GEN_TEMPLATE_TEST,
+    ) 
+    os.environ["AEMO_REPRESENTATION_PROMPT_TEMPLATE"] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
+    os.environ["STORY_BOARD_SCENE_TEMPLATE"] = STORY_BOARD_SCENE_TEMPLATE_TEST
+    os.environ["STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE"] = STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST
+    os.environ["EDREAMS_EVOLUTIONARY_TEMPLATE"] = EDREAMS_EVOLUTIONARY_TEMPLATE_TEST
+    os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
+    os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
+
+
+    # 存储
+    task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
+    builder = StructuredTaskStepStoryboard.form_builder(
+        llm=llm,
+        kor_dreams_task_step_llm=kor_dreams_task_step_llm,
+        start_task_context="多模态大模型的技术发展路线是什么样的？", 
+        task_step_store=task_step_store
+    )
+    # 初始化任务引擎
+    engine_template_render_data = {
+            'model_name': "glm-4-plus",
+            'OPENAI_API_BASE': 'https://open.bigmodel.cn/api/paas/v4',
+            'OPENAI_API_KEY': os.environ.get("ZHIPUAI_API_KEY"),
+        }
+    task_engine_builder = builder.loader_task_step_iter_builder(engine_template_render_data=engine_template_render_data, allow_init=False)
+    while not task_engine_builder.empty():
+        task_engine = task_engine_builder.get()
+        if not task_engine.check_engine_init():
+            task_engine.init_task_engine()
+            task_engine.init_task_engine_dreams()
+            task_engine.init_task_engine_storyboard_executor()
+
+        code_gen_builder = task_engine.storyboard_code_gen_builder()
+        if task_engine.task_step_store.get_task_step(task_engine.task_step_id).task_step_question_answer is None:
+            task_engine.generate_step_answer(code_gen_builder)
+        # persist index to disk
+        code_gen_builder.storage_context.persist(persist_dir=f"./storage/{task_engine.task_step_id}")

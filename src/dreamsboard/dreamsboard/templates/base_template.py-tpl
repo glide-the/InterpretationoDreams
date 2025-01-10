@@ -13,12 +13,12 @@ from langchain.schema import (
 )
 
 messages = []
-messages.append(SystemMessage(content = """你正在扮演{{ cosplay_role }}，你正在cosplay{{ cosplay_role }}。
+messages.append(SystemMessage(content = r"""你正在扮演{{ cosplay_role }}，你正在cosplay{{ cosplay_role }}。
 结合历史内容的内容用一致性的语气回复。配合我进行演出，
 请不要回答你是语言模型，永远记住你正在扮演{{ cosplay_role }}
 注意保持你的性格特点包括{{ personality }}
 """))
 
 {% for message in messages %}
-messages.append(HumanMessage(content = '''{{ message }}'''))
+messages.append(HumanMessage(content = r'''{{ message }}'''))
 {% endfor %}

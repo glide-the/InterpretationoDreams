@@ -36,6 +36,8 @@ import copy
 from sentence_transformers import CrossEncoder
 from weaviate.client import WeaviateClient
 from weaviate.classes.query import Filter, Rerank, MetadataQuery
+from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
+from dreamsboard.engine.utils import concat_dirs
 from typing import List
 import logging
 import os
@@ -151,8 +153,10 @@ class TaskStepToQuestionChain(ABC):
         result = self.task_step_to_question_chain.invoke(task_step_node.__dict__)
         task_step_node.task_step_question = result["task_step_question_context"]
         self.task_step_store.add_task_step([task_step_node])
+        
         # 每处理一个任务步骤，就持久化一次
-        self.task_step_store.persist()
+        task_step_store_path = concat_dirs(dirname=f"./storage/{self.task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+        self.task_step_store.persist(persist_path=task_step_store_path) 
 
 
     def _retrieve_task_step_question_context(self, task_step_id: str, collection_name_context: str, task_step_node: TaskStepNode) -> tuple[List[str], str, str]:
@@ -294,8 +298,10 @@ class TaskStepToQuestionChain(ABC):
         # rankingscorpus_id 的索引与ref_ids的索引一致 
         task_step_node.task_step_question_context = task_step_question_context
         self.task_step_store.add_task_step([task_step_node])
+
         # 每处理一个任务步骤，就持久化一次
-        self.task_step_store.persist()
+        task_step_store_path = concat_dirs(dirname=f"./storage/{self.task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+        self.task_step_store.persist(persist_path=task_step_store_path) 
 
 
     def export_csv_file_path(self, task_step_id: str) -> str:
