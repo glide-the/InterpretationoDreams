@@ -304,7 +304,7 @@ class TaskEngineBuilder:
         task_step = self.task_step_store.get_task_step(self.task_step_id)
         mctsr = MCTSrStoryboard(
             problem=task_step.task_step_name, 
-            max_rollouts=10
+            max_rollouts=2
         )
         mctsr.initialize(mcts_node)
         mctsr.print()

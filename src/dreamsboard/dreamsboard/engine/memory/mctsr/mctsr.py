@@ -65,9 +65,11 @@ from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, Eng
 from langchain.schema import AIMessage
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
 from dreamsboard.engine.memory.mctsr.prompt import GLM_JSON_RESPONSE_PREFIX, GLM_JSON_RESPONSE_SUFFIX
+from langchain.prompts import PromptTemplate
 import numpy as np
 import logging
 import re
+import os
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -273,26 +275,63 @@ class MCTSrStoryboard(MCTSr):
         """
         自我反思
         """
-  
-        user_prompt = gpt_prompt_config.critic_system_prompt + "\n\n" + "\n\n".join(
-                        [
-                            f"<problem>\n{self.problem}\n</problem>",
-                            f"<current_answer>\n{node.answer}\n</current_answer>",
-                        ]
-                    )
+
+        critic_system_prompt_template =  PromptTemplate(
+            input_variables=[
+                "problem", 
+                "current_answer",
+                "start_task_context",
+                "aemo_representation_context",
+                "task_step_name",
+                "task_step_description",
+                "task_step_level"
+            ],
+            template=os.environ.get(
+                "critic_system_prompt", gpt_prompt_config.critic_system_prompt 
+            )
+        )
+        user_prompt = critic_system_prompt_template.format(
+            problem=self.problem,
+            current_answer=node.answer,
+            start_task_context=node.linked_list_node.start_task_context,
+            aemo_representation_context=node.linked_list_node.aemo_representation_context,
+            task_step_name=node.linked_list_node.task_step_name,
+            task_step_description=node.linked_list_node.task_step_description,
+            task_step_level=node.linked_list_node.task_step_level
+        ) 
         _ai_message = self._get_ai_message(user_prompt, node)
         assert _ai_message.content is not None
         critique = _ai_message.content
         assert critique is not None
         self.critiques.append(critique)
-  
-        user_prompt = GLM_JSON_RESPONSE_PREFIX + gpt_prompt_config.refine_system_prompt + "\n\n" + "\n\n".join(
-                        [
-                            f"<problem>\n{self.problem}\n</problem>",
-                            f"<current_answer>\n{node.answer}\n</current_answer>",
-                            f"<critique>\n{critique}\n</critique>",
-                        ]
-                    ) + GLM_JSON_RESPONSE_SUFFIX
+   
+        refine_system_prompt_template = PromptTemplate(
+            input_variables=[
+                "problem", 
+                "current_answer",
+                "critique",
+                "start_task_context",
+                "aemo_representation_context",
+                "task_step_name",
+                "task_step_description",
+                "task_step_level"
+            ],
+            template=os.environ.get(
+                "refine_system_prompt", gpt_prompt_config.refine_system_prompt 
+            )
+        )
+        refine_system_prompt = refine_system_prompt_template.format(
+            problem=self.problem,
+            current_answer=node.answer,
+            critique=critique,
+            start_task_context=node.linked_list_node.start_task_context,
+            aemo_representation_context=node.linked_list_node.aemo_representation_context,
+            task_step_name=node.linked_list_node.task_step_name,
+            task_step_description=node.linked_list_node.task_step_description,
+            task_step_level=node.linked_list_node.task_step_level
+        )
+
+        user_prompt = GLM_JSON_RESPONSE_PREFIX + refine_system_prompt +  GLM_JSON_RESPONSE_SUFFIX
         _refined_answer_response_message = self._get_ai_message(user_prompt, node)
         assert _refined_answer_response_message.content is not None
             
@@ -327,16 +366,35 @@ class MCTSrStoryboard(MCTSr):
         """
         评估答案
         """ 
-        user_prompt = gpt_prompt_config.evaluate_system_prompt + "\n\n" + "\n\n".join(
-            [
-                f"<problem>\n{self.problem}\n</problem>",
-                f"<answer>\n{node.answer}\n</answer>",
-            ]
+ 
+        evaluate_system_prompt_template = PromptTemplate(
+            input_variables=[
+                "problem", 
+                "answer",
+                "start_task_context",
+                "aemo_representation_context",
+                "task_step_name",
+                "task_step_description",
+                "task_step_level"
+            ],
+            template=os.environ.get(
+                "evaluate_system_prompt", gpt_prompt_config.evaluate_system_prompt 
+            )
+        )
+
+        user_prompt = evaluate_system_prompt_template.format(
+            problem=self.problem,
+            answer=node.answer,
+            start_task_context=node.linked_list_node.start_task_context,
+            aemo_representation_context=node.linked_list_node.aemo_representation_context,
+            task_step_name=node.linked_list_node.task_step_name,
+            task_step_description=node.linked_list_node.task_step_description,
+            task_step_level=node.linked_list_node.task_step_level
         )
         
         for attempt in range(3):
             try:
-                _ai_message = self._get_ai_message(user_prompt, node, remove_context=False) 
+                _ai_message = self._get_ai_message(user_prompt, node) 
                 assert _ai_message.content is not None
                 return int(_ai_message.content)
             except ValueError: 
@@ -345,7 +403,7 @@ class MCTSrStoryboard(MCTSr):
                 if attempt == 2:
                     raise
     
-    def _get_ai_message(self, user_prompt: str, node: MCTSNode, remove_context: bool = True) -> AIMessage:
+    def _get_ai_message(self, user_prompt: str, node: MCTSNode) -> AIMessage:
         """
         获取AI消息
         """
@@ -372,11 +430,8 @@ class MCTSrStoryboard(MCTSr):
         logger.info(executor._ai_message)
         assert executor._ai_message is not None
         # 删除上下文
-        if remove_context:
-            node.code_gen_builder.remove_last_generator()
-            node.code_gen_builder.remove_last_generator()
-        else:
-            node.code_gen_builder.remove_last_generator()
+        node.code_gen_builder.remove_last_generator()
+        node.code_gen_builder.remove_last_generator()
 
         return _ai_message
 

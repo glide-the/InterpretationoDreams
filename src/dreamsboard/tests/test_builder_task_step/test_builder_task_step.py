@@ -249,6 +249,8 @@ def test_builder_task_step_mctsr():
             task_engine.generate_step_answer(code_gen_builder)
         mcts_node = task_engine.get_mcts_node(code_gen_builder)
         answer = mcts_node.run()
+        
+        mcts_node.print()
         print(answer)
 
 
