@@ -81,7 +81,9 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-PATTERN = re.compile(r"```(?:json\s+)?(\W.*?)```", re.DOTALL)
+PATTERN = re.compile(r"thought:\s*(.*?)\nanswer:\s*([\d.]+)", re.DOTALL)
+
+PLAINTEXT_PATTERN = re.compile(r"```plaintext?([\s\S]*?)```", re.DOTALL)
 
 ROOT_UCT_SCORE = 10_000
 
@@ -330,20 +332,53 @@ class MCTSrStoryboard(MCTSr):
             task_step_description=node.linked_list_node.task_step_description,
             task_step_level=node.linked_list_node.task_step_level
         )
-
-        user_prompt = GLM_JSON_RESPONSE_PREFIX + refine_system_prompt +  GLM_JSON_RESPONSE_SUFFIX
-        _refined_answer_response_message = self._get_ai_message(user_prompt, node)
+ 
+        _refined_answer_response_message = self._get_ai_message(refine_system_prompt, node)
         assert _refined_answer_response_message.content is not None
             
-        action_match = PATTERN.search(_refined_answer_response_message.content)
-        if action_match is not None:
-            json_text, json_object = try_parse_json_object(action_match.group(1).strip())
+        json_object = {}
+        try: 
+            # 如果直接解析失败，尝试使用正则表达式
+            action_match = PATTERN.search(_refined_answer_response_message.content)
+            if action_match is not None:
+                thought_content = action_match.group(1).strip()
+                try:
+                    answer_value = float(action_match.group(2))
+                    json_object = {
+                        "thought": thought_content,
+                        "answer": answer_value
+                    }
+                except ValueError:
+                    logger.error("无法将答案转换为浮点数")
+                    raise
+            else:
+                action_match = PLAINTEXT_PATTERN.search(_refined_answer_response_message.content)
+                if action_match is not None:
+                    thought_content = action_match.group(1).strip()
+                            
+                    # 去掉 ```plaintext , 后```
+                    thought_content = thought_content.replace("```plaintext", "").replace("```", "")
+                    json_object = {
+                        "thought": thought_content,
+                        "answer": 100
+                    }
+                else:
+                        
+                    logger.error("无法从响应中提取思考过程和答案")
+                    raise ValueError("响应格式无效")
 
-            logger.info("\033[1;32m" + f"json_text: {json_text}" + "\033[0m")
-            logger.info("\033[1;32m" + f"json_object: {json_object}" + "\033[0m")
+            logger.info("\033[1;32m" + f"解析后的 JSON 对象: {json_object}" + "\033[0m")
 
-        refined_answer = RefineResponse.model_validate_json(
-            json_text
+        except Exception as e:
+            logger.error(f"解析响应时出错: {str(e)}")
+            # 提供一个默认响应
+            json_object = {
+                "thought": "解析响应失败",
+                "answer": 0.0
+            }
+
+        refined_answer = RefineResponse.model_validate(
+            json_object
         )
         self.refinements.append(refined_answer)
 
@@ -370,12 +405,7 @@ class MCTSrStoryboard(MCTSr):
         evaluate_system_prompt_template = PromptTemplate(
             input_variables=[
                 "problem", 
-                "answer",
-                "start_task_context",
-                "aemo_representation_context",
-                "task_step_name",
-                "task_step_description",
-                "task_step_level"
+                "answer"
             ],
             template=os.environ.get(
                 "evaluate_system_prompt", gpt_prompt_config.evaluate_system_prompt 
@@ -422,12 +452,10 @@ class MCTSrStoryboard(MCTSr):
         }))
 
         executor = node.code_gen_builder.build_executor()
-        logger.info(executor.executor_code)
 
         executor.execute()
         _ai_message = executor.chat_run()
 
-        logger.info(executor._ai_message)
         assert executor._ai_message is not None
         # 删除上下文
         node.code_gen_builder.remove_last_generator()
