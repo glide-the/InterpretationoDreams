@@ -231,7 +231,7 @@ class TaskStepToQuestionChain(ABC):
         """
 
         task_step_node = self.task_step_store.get_task_step(task_step_id)
-        if task_step_node.task_step_question_context is not None:
+        if task_step_node.task_step_question_context is not None and len(task_step_node.task_step_question_context) > 0:
             return
             # task_step_id  - 转换为下划线
         task_step_id = task_step_id.replace("-", "_")
