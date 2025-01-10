@@ -46,6 +46,7 @@ class TaskEngineBuilder:
     按照扩写任务步骤构建MCTS任务
     
     """
+    cross_encoder_path: str
     storage_context: StorageContext
     task_step_store: BaseTaskStepStore
     task_step_id: str
@@ -56,6 +57,7 @@ class TaskEngineBuilder:
 
     def __init__(self,
                 llm: BaseLanguageModel,
+                cross_encoder_path: str,
                 start_task_context: str,
                 task_step_store: BaseTaskStepStore,
                 task_step_id: str,
@@ -66,6 +68,7 @@ class TaskEngineBuilder:
         self.task_step_id = task_step_id
         self.llm = llm
         self.engine_template_render_data = engine_template_render_data
+        self.cross_encoder_path = cross_encoder_path
         self.client = None
         self.task_step_to_question_chain = None
         self.csv_file_path = None
@@ -113,13 +116,12 @@ class TaskEngineBuilder:
               
         client = init_context_connect()
 
-        cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
 
         self.task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
             llm=self.llm, 
             task_step_store=self.task_step_store,
             client=client,
-            cross_encoder_path=cross_encoder_path
+            cross_encoder_path=self.cross_encoder_path
         )
         self.task_step_to_question_chain.invoke_task_step_to_question(self.task_step_id)
         self.task_step_to_question_chain.invoke_task_step_question_context(self.task_step_id)
@@ -267,7 +269,8 @@ class TaskEngineBuilder:
         构建MCTS树, 初始化当前任务相关的MCTS节点，并返回MCTS执行器
         """
         task_step_all = self.task_step_store.task_step_all
-        structured_storyboard = StructuredStoryboard(json_data=list(task_step_all.values())) 
+        task_step_all_list = [val.__dict__ for val in list(task_step_all.values())]
+        structured_storyboard = StructuredStoryboard(json_data=task_step_all_list) 
         linked_list_node = structured_storyboard.get_task_step_node(self.task_step_id)
         
         mcts_node = MCTSNode(
@@ -300,7 +303,7 @@ class TaskEngineBuilder:
             
         task_step = self.task_step_store.get_task_step(self.task_step_id)
         mctsr = MCTSrStoryboard(
-            problem=task_step.task_step_question, 
+            problem=task_step.task_step_name, 
             max_rollouts=10
         )
         mctsr.initialize(mcts_node)

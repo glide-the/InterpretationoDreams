@@ -14,7 +14,7 @@ import logging
 
 from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.storage_context import StorageContext
-
+from dreamsboard.engine.storage.task_step_store.simple_task_step_store import SimpleTaskStepStore
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -37,11 +37,15 @@ class StructuredTaskStepStoryboard:
         3、对每个子任务载入会话场景，然后按照扩写任务步骤构建，MCTS任务
         导出代码
     """ 
+    task_step_store: BaseTaskStepStore
     start_task_context: str
+    cross_encoder_path: str
+    llm: BaseLanguageModel
     aemo_representation_chain: AEMORepresentationChain
 
     def __init__(self,
                  llm: BaseLanguageModel,
+                 cross_encoder_path: str,
                  start_task_context: str,
                  aemo_representation_chain: AEMORepresentationChain,
                  task_step_store: BaseTaskStepStore,
@@ -52,6 +56,7 @@ class StructuredTaskStepStoryboard:
         :param aemo_representation_chain: 情感表征链
         """
         self.llm = llm
+        self.cross_encoder_path = cross_encoder_path
         self.start_task_context = start_task_context
         self.aemo_representation_chain = aemo_representation_chain
         self.task_step_store = task_step_store
@@ -59,6 +64,7 @@ class StructuredTaskStepStoryboard:
     @classmethod
     def form_builder(cls,
                      llm: BaseLanguageModel,
+                     cross_encoder_path: str,
                      start_task_context: str, 
                      kor_dreams_task_step_llm: BaseLanguageModel = None,
                      task_step_store: BaseTaskStepStore = None,
@@ -69,6 +75,7 @@ class StructuredTaskStepStoryboard:
             kor_dreams_task_step_llm=kor_dreams_task_step_llm
         )
         return cls(llm=llm,
+                   cross_encoder_path=cross_encoder_path,
                    start_task_context=start_task_context,
                    aemo_representation_chain=aemo_representation_chain,
                    task_step_store=task_step_store)
@@ -83,10 +90,13 @@ class StructuredTaskStepStoryboard:
         if not allow_init: 
             for task_step_id, task_step in self.task_step_store.task_step_all.items():
                 task_step_id = task_step.node_id
+                
+                task_step_store = SimpleTaskStepStore.from_persist_dir(f"./storage/{task_step_id}")
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm=self.llm,
+                    cross_encoder_path=self.cross_encoder_path,
                     start_task_context=self.start_task_context,
-                    task_step_store=self.task_step_store,
+                    task_step_store=task_step_store,
                     task_step_id=task_step_id,
                     engine_template_render_data=engine_template_render_data
                 ))
@@ -105,10 +115,10 @@ class StructuredTaskStepStoryboard:
                     "task_step_description": task_step.task_step_description,
                     "task_step_level": task_step.task_step_level
                 })
-                self.task_step_store.add_task_step([task_step])
-                task_step_id = task_step.node_id
+                task_step_id = task_step.node_id 
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm=self.llm,
+                    cross_encoder_path=self.cross_encoder_path,
                     start_task_context=self.start_task_context,
                     task_step_store=self.task_step_store,
                     task_step_id=task_step_id,

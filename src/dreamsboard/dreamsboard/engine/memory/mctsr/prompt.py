@@ -2,11 +2,9 @@ from pydantic import BaseModel, Field
 
 
 class PromptConfig(BaseModel):
-    model: str
     critic_system_prompt: str
     refine_system_prompt: str
     evaluate_system_prompt: str
-    base_url: str | None = None
  
 
 class RefineResponse(BaseModel):
@@ -14,21 +12,34 @@ class RefineResponse(BaseModel):
     answer: float = Field(..., description="The answer to the problem.")
 
 
+GLM_JSON_RESPONSE_PREFIX = """You should always follow the instructions and output a valid JSON object.
+The structure of the JSON object you can found in the instructions, use {"answer": "$your_answer"} as the default structure
+if you are not sure about the structure.
+
+And you should always end the block with a "```" to indicate the end of the JSON object.
+
+<instructions>
+"""
+
+GLM_JSON_RESPONSE_SUFFIX = """Output:
+</instructions>
+
+"""
+
 gpt_prompt_config = PromptConfig(
-    model="gpt-4o",
     critic_system_prompt="Provide a detailed and constructive critique to improve the answer. "
     "Highlight specific areas that need refinement or correction.",
-    refine_system_prompt="""# Instruction
-Refine the answer based on the critique. Your refined answer should be a direct and concise solution to the problem.
+    refine_system_prompt="""根据批评意见优化答案。优化后的答案应直接且简洁地解决问题。
 
-## Additional guidelines
-- Your response should not refer to or discuss the criticisms.
-- Do not repeat the problem statement.
+## 补充指南  
+- 不应提及或讨论批评内容。  
+- 不要重复问题描述。  
 
-# JSON Response format
+# JSON 响应格式  
+```json  
 {
-    "thought": "The thought process behind the answer.",
-    "answer": "A float representing the answer to the problem."
+    "thought": "对答案的思考过程。",
+    "answer": "表示问题答案的浮点数。"
 }
 """,
     evaluate_system_prompt="Provide a reward score between -100 and 100 for the answer quality, using very strict standards. "

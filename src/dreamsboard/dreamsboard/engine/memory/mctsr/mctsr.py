@@ -63,8 +63,11 @@ from dreamsboard.document_loaders.structured_storyboard_loader import LinkedList
 
 from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator
 from langchain.schema import AIMessage
+from dreamsboard.common.try_parse_json_object import try_parse_json_object
+from dreamsboard.engine.memory.mctsr.prompt import GLM_JSON_RESPONSE_PREFIX, GLM_JSON_RESPONSE_SUFFIX
 import numpy as np
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -76,6 +79,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
+PATTERN = re.compile(r"```(?:json\s+)?(\W.*?)```", re.DOTALL)
 
 ROOT_UCT_SCORE = 10_000
 
@@ -95,7 +99,7 @@ class MCTSNode(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-        
+
     def add_child(self, child_node: MCTSNode):
         self.children.append(child_node)
 
@@ -270,80 +274,82 @@ class MCTSrStoryboard(MCTSr):
         自我反思
         """
   
-        user_prompt = "\n\n".join(
+        user_prompt = gpt_prompt_config.critic_system_prompt + "\n\n" + "\n\n".join(
                         [
                             f"<problem>\n{self.problem}\n</problem>",
                             f"<current_answer>\n{node.answer}\n</current_answer>",
                         ]
                     )
-        _ai_message = self._get_ai_message('system', gpt_prompt_config.critic_system_prompt, user_prompt, node)
+        _ai_message = self._get_ai_message(user_prompt, node)
         assert _ai_message.content is not None
         critique = _ai_message.content
         assert critique is not None
         self.critiques.append(critique)
   
-        user_prompt = "\n\n".join(
+        user_prompt = GLM_JSON_RESPONSE_PREFIX + gpt_prompt_config.refine_system_prompt + "\n\n" + "\n\n".join(
                         [
                             f"<problem>\n{self.problem}\n</problem>",
                             f"<current_answer>\n{node.answer}\n</current_answer>",
                             f"<critique>\n{critique}\n</critique>",
                         ]
-                    )
-        _refined_answer_response_message = self._get_ai_message('system', gpt_prompt_config.refine_system_prompt, user_prompt, node)
+                    ) + GLM_JSON_RESPONSE_SUFFIX
+        _refined_answer_response_message = self._get_ai_message(user_prompt, node)
         assert _refined_answer_response_message.content is not None
+            
+        action_match = PATTERN.search(_refined_answer_response_message.content)
+        if action_match is not None:
+            json_text, json_object = try_parse_json_object(action_match.group(1).strip())
+
+            logger.info("\033[1;32m" + f"json_text: {json_text}" + "\033[0m")
+            logger.info("\033[1;32m" + f"json_object: {json_object}" + "\033[0m")
 
         refined_answer = RefineResponse.model_validate_json(
-            _refined_answer_response_message.content
+            json_text
         )
         self.refinements.append(refined_answer)
 
         # persist index to disk
         node.code_gen_builder.storage_context.persist(persist_dir=f"./storage/{node.linked_list_node.task_step_id}")
-        
+ 
         return MCTSNode(
             answer=f"# Thought {refined_answer.thought}\n\n# Answer\n{refined_answer.answer}",
+            linked_list_node=node.linked_list_node,
+            code_gen_builder=node.code_gen_builder,
+            engine_template_render_data=node.engine_template_render_data,
             parent=node,
+            children=[],
+            visits=0,
+            Q=0,
+            reward_samples=[]
         )
 
     def _evaluate_answer(self, node: MCTSNode) -> int:
         """
         评估答案
-        """
-        role = 'system'
-
-        system_prompt = gpt_prompt_config.evaluate_system_prompt
-        user_prompt = "\n\n".join(
+        """ 
+        user_prompt = gpt_prompt_config.evaluate_system_prompt + "\n\n" + "\n\n".join(
             [
                 f"<problem>\n{self.problem}\n</problem>",
                 f"<answer>\n{node.answer}\n</answer>",
             ]
         )
+        
         for attempt in range(3):
             try:
-                _ai_message = self._get_ai_message(role, system_prompt, user_prompt, node, remove_context=False) 
+                _ai_message = self._get_ai_message(user_prompt, node, remove_context=False) 
                 assert _ai_message.content is not None
                 return int(_ai_message.content)
-            except ValueError:
-                role = 'assistant'
-                system_prompt =  _ai_message.content
-                user_prompt = "Failed to parse reward as an integer."
+            except ValueError: 
+                user_prompt = f"{_ai_message.content}\n\nFailed to parse reward as an integer."
                
                 if attempt == 2:
                     raise
     
-    def _get_ai_message(self, role: str, system_prompt: str, user_prompt: str, node: MCTSNode, remove_context: bool = True) -> AIMessage:
+    def _get_ai_message(self, user_prompt: str, node: MCTSNode, remove_context: bool = True) -> AIMessage:
         """
         获取AI消息
         """
-                
-        node.code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-            "query_code_file": "query_template.py-tpl",
-            "render_data": {
-                'cosplay_role': role,
-                'message': system_prompt
-            }
-        }))
-
+                 
         node.code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
             "query_code_file": "query_template.py-tpl",
             "render_data": {
@@ -367,7 +373,6 @@ class MCTSrStoryboard(MCTSr):
         assert executor._ai_message is not None
         # 删除上下文
         if remove_context:
-            node.code_gen_builder.remove_last_generator()
             node.code_gen_builder.remove_last_generator()
             node.code_gen_builder.remove_last_generator()
         else:

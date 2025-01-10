@@ -89,7 +89,7 @@ class StructuredStoryboard:
 
         for index, data in enumerate(json_data):
             scene_number = "story_board" + str(index)
-            task_step_id = data["task_step_id"]
+            task_step_id = data["id_"]
             start_task_context = data["start_task_context"]
             aemo_representation_context = data["aemo_representation_context"]
             task_step_name = data["task_step_name"]

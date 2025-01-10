@@ -30,7 +30,7 @@ from dreamsboard.dreams.task_step_to_question_chain.weaviate.init_networkx_conce
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.init_networkx_concept import create_interactive_graph
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.init_networkx_concept import find_simple_path
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.init_networkx_concept import create_G
-from dreamsboard.common.try_parse_json_object import try_parse_json_object
+
 import json
 import copy
 from sentence_transformers import CrossEncoder
