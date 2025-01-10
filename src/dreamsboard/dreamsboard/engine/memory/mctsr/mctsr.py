@@ -166,6 +166,10 @@ class MCTSr(BaseModel):
     def backpropagate(self, node: MCTSNode):
         parent = node.parent
         while parent:
+            if parent.children is None or len(parent.children) == 0:
+                parent = parent.parent
+                continue
+
             best_child_Q = max(child.Q for child in parent.children)
             parent.Q = (parent.Q + best_child_Q) / 2
             parent.visits += 1
@@ -344,6 +348,8 @@ class MCTSrStoryboard(MCTSr):
                 thought_content = action_match.group(1).strip()
                 try:
                     answer_value = float(action_match.group(2))
+                    if answer_value <= 1:
+                        answer_value = answer_value * 100
                     json_object = {
                         "thought": thought_content,
                         "answer": answer_value
