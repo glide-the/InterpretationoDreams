@@ -78,12 +78,9 @@ def test_builder_task_step():
         cross_encoder_path=cross_encoder_path
     )
     # 初始化任务引擎
-    engine_template_render_data = {
-            'model_name': "glm-4-plus",
-            'OPENAI_API_BASE': 'https://open.bigmodel.cn/api/paas/v4',
-            'OPENAI_API_KEY': os.environ.get("ZHIPUAI_API_KEY"),
-        }
-    task_engine_builder = builder.loader_task_step_iter_builder(engine_template_render_data=engine_template_render_data, allow_init=False)
+    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
+    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
     while not task_engine_builder.empty():
         task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
@@ -147,12 +144,9 @@ def test_builder_task_step_answer():
         cross_encoder_path=cross_encoder_path
     )
     # 初始化任务引擎
-    engine_template_render_data = {
-            'model_name': "glm-4-plus",
-            'OPENAI_API_BASE': 'https://open.bigmodel.cn/api/paas/v4',
-            'OPENAI_API_KEY': os.environ.get("ZHIPUAI_API_KEY"),
-        }
-    task_engine_builder = builder.loader_task_step_iter_builder(engine_template_render_data=engine_template_render_data, allow_init=False)
+    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
+    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
     while not task_engine_builder.empty():
         task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
@@ -230,12 +224,9 @@ def test_builder_task_step_mctsr():
         cross_encoder_path=cross_encoder_path
     )
     # 初始化任务引擎
-    engine_template_render_data = {
-            'model_name': "glm-4-plus",
-            'OPENAI_API_BASE': 'https://open.bigmodel.cn/api/paas/v4',
-            'OPENAI_API_KEY': os.environ.get("ZHIPUAI_API_KEY"),
-        }
-    task_engine_builder = builder.loader_task_step_iter_builder(engine_template_render_data=engine_template_render_data, allow_init=True)
+    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
+    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
     while not task_engine_builder.empty():
         task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
@@ -243,19 +234,23 @@ def test_builder_task_step_mctsr():
             task_engine.init_task_engine_dreams()
             task_engine.init_task_engine_storyboard_executor()
 
-        code_gen_builder = task_engine.storyboard_code_gen_builder()
-        task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
-        if task_step.task_step_question_answer is None or len(task_step.task_step_question_answer) == 0:
-            task_engine.generate_step_answer(code_gen_builder)
-        mcts_node = task_engine.get_mcts_node(code_gen_builder)
-        answer = mcts_node.run()
-        
-        mcts_node.print()
-        print(answer)
+        try:
+            code_gen_builder = task_engine.storyboard_code_gen_builder()
+            task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
+            if task_step.task_step_question_answer is None or len(task_step.task_step_question_answer) == 0:
+                task_engine.generate_step_answer(code_gen_builder)
+            mcts_node = task_engine.get_mcts_node(code_gen_builder)
+            answer = mcts_node.run()
+            
+            mcts_node.print()
+            print(answer)
 
 
-        task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
-        task_step.task_step_question_answer = answer
-        task_step_store.add_task_step([task_step])
-        task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
-        task_step_store.persist(persist_path=task_step_store_path) 
+            task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
+            task_step.task_step_question_answer = answer
+            task_step_store.add_task_step([task_step])
+            task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
+            task_step_store.persist(persist_path=task_step_store_path) 
+
+        except:
+            logger.error("场景加载失败")

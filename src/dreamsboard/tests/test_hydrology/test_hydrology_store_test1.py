@@ -89,12 +89,7 @@ def test_structured_dreams_storyboard_store_test1(setup_log) -> None:
                                                                       dreams_personality_context=dreams_personality_context,
                                                                       guidance_llm=guidance_llm
                                                                       )
-        code_gen_builder = storyboard_executor.loader_cosplay_builder(
-            engine_template_render_data={
-                'model_name': 'glm-4',
-                'OPENAI_API_BASE': 'https://open.bigmodel.cn/api/paas/v4',
-                'OPENAI_API_KEY': '4d6c5f8ad43b8fff94480b95a5a6c5d0.ouFQYxQ8pIVKO7J8',
-            })
+        code_gen_builder = storyboard_executor.loader_cosplay_builder()
 
         # persist index to disk
         code_gen_builder.storage_context.dreams_analysis_store = dreams_analysis_store

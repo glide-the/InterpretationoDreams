@@ -7,6 +7,9 @@ from dreamsboard.engine.generate.code_executor import CodeExecutor
 from dreamsboard.engine.generate.code_generate import CodeGenerator
 from dreamsboard.engine.generate.run_generate import CodeGeneratorHandler, CodeGeneratorChain
 from typing import Any, Dict, List, Generic, TypeVar, Sequence, Type, Optional
+from langchain.schema import BaseMessage
+
+from langchain.schema.language_model import BaseLanguageModel
 from abc import ABC, abstractmethod
 
 from dreamsboard.engine.storage.template_store.types import BaseTemplateStore
@@ -213,11 +216,11 @@ class CodeGeneratorBuilder(BaseEngineBuilder[IndexDict]):
         self._template_store.delete_template(self._code_gen_chain.chain_tail.generator.node_id, raise_error=False)
         self._code_gen_chain.remove_last_generator()
 
-    def build_executor(self, render_data: dict = {}) -> CodeExecutor:
+    def build_executor(self, chat_function: BaseLanguageModel, messages: List[BaseMessage] = [], render_data: dict = {}) -> CodeExecutor:
         if self._code_gen_chain.chain_head is None:
             raise RuntimeError("chain_head is None.")
 
         executor_code = self._code_gen_chain.generate(render_data)
         self.summary = executor_code
-        executor = CodeExecutor(executor_code=executor_code)
+        executor = CodeExecutor(executor_code=executor_code, chat_function=chat_function, messages=messages)
         return executor

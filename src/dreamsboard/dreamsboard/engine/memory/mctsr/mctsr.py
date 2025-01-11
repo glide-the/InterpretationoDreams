@@ -66,6 +66,7 @@ from langchain.schema import AIMessage
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
 from dreamsboard.engine.memory.mctsr.prompt import GLM_JSON_RESPONSE_PREFIX, GLM_JSON_RESPONSE_SUFFIX
 from langchain.prompts import PromptTemplate
+from langchain.schema.language_model import BaseLanguageModel
 import numpy as np
 import logging
 import re
@@ -94,7 +95,6 @@ class MCTSNode(BaseModel):
     """当前任务的会话信息""" 
     code_gen_builder: CodeGeneratorBuilder
     """当前任务的会话执行者""" 
-    engine_template_render_data: dict = {}
     parent: MCTSNode | None = None
     children: list[MCTSNode] = []
     visits: int = 0
@@ -128,6 +128,8 @@ class SelectionPolicy(Enum):
 
 
 class MCTSr(BaseModel):
+    
+    llm: BaseLanguageModel
     problem: str
     max_rollouts: int
     exploration_constant: float = 1.0
@@ -395,7 +397,6 @@ class MCTSrStoryboard(MCTSr):
             answer=f"# Thought {refined_answer.thought}\n\n# Answer\n{refined_answer.answer}",
             linked_list_node=node.linked_list_node,
             code_gen_builder=node.code_gen_builder,
-            engine_template_render_data=node.engine_template_render_data,
             parent=node,
             children=[],
             visits=0,
@@ -452,19 +453,16 @@ class MCTSrStoryboard(MCTSr):
             },
         }))
 
-        node.code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
-            "engine_code_file": "simple_engine_template.py-tpl",
-            "render_data": node.engine_template_render_data
-        }))
-
-        executor = node.code_gen_builder.build_executor()
+        executor = node.code_gen_builder.build_executor(
+            chat_function=self.llm,
+            messages=[]
+        )
 
         executor.execute()
         _ai_message = executor.chat_run()
 
         assert executor._ai_message is not None
         # 删除上下文
-        node.code_gen_builder.remove_last_generator()
         node.code_gen_builder.remove_last_generator()
 
         return _ai_message

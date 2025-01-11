@@ -1,28 +1,30 @@
 from typing import List
 
-from langchain_community.chat_models import ChatOpenAI
 from langchain.schema import (
     AIMessage,
     BaseMessage,
-    SystemMessage
+    SystemMessage,
 )
 
+from langchain.schema.language_model import BaseLanguageModel
 
 # 创建一个代码执行器
 class CodeExecutor:
     executor_code: str
     _messages: List[BaseMessage] = []
-    _chat_function: ChatOpenAI
+    _chat_function: BaseLanguageModel
     _ai_message: AIMessage
 
-    def __init__(self, executor_code: str):
+    def __init__(self, executor_code: str, chat_function: BaseLanguageModel, messages: List[BaseMessage] = []):
         self.executor_code = executor_code
+        self._chat_function = chat_function
+        self._messages = messages
 
     def execute(self):
         # 创建变量字典
         variables = {
-            'messages': None,  # type: list[BaseMessage]
-            'chat': None,  # type: ChatOpenAI
+            'messages': self._messages,  # type: list[BaseMessage]
+            'chat': self._chat_function,  # type: BaseLanguageModel
         }
 
         exec(self.executor_code, variables)

@@ -47,6 +47,7 @@ class StructuredDreamsStoryboard:
                  kor_dreams_personality_chain: LLMChain,
                  ner_dreams_personality_chain: LLMChain,
                  user_id: str = None,
+                 llm: BaseLanguageModel = None,
                  ):
         """
 
@@ -61,7 +62,7 @@ class StructuredDreamsStoryboard:
         self.kor_dreams_personality_chain = kor_dreams_personality_chain
         self.ner_dreams_personality_chain = ner_dreams_personality_chain
         self.user_id = user_id
-
+        self.llm = llm
     @classmethod
     def form_builder(cls,
                      llm: BaseLanguageModel,
@@ -86,7 +87,8 @@ class StructuredDreamsStoryboard:
                    kor_dreams_guidance_chain=kor_dreams_guidance_chain,
                    kor_dreams_personality_chain=kor_dreams_personality_chain,
                    ner_dreams_personality_chain=ner_dreams_personality_chain,
-                   user_id=user_id)
+                   user_id=user_id,
+                   llm=llm)
 
     def kor_dreams_guidance_context(self) -> List[DreamsStepInfo]:
         """
@@ -151,7 +153,6 @@ class StructuredDreamsStoryboard:
 
     def loader_cosplay_builder(self, 
                                storage_context: Optional[StorageContext] = None,
-                               engine_template_render_data: dict = {}
                                ) -> CodeGeneratorBuilder:
         code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=storage_context)
 
@@ -190,24 +191,15 @@ class StructuredDreamsStoryboard:
             code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
                 "query_code_file": "dreams_query_template.py-tpl",
                 "render_data": _dreams_render_data,
-            }))
-            code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
-                "engine_code_file": "engine_template.py-tpl",
-                "render_data": {
-                    'model_name': 'gpt-3.5-turbo' if engine_template_render_data.get(
-                        'model_name') is None else engine_template_render_data.get('model_name'),
-                    'OPENAI_API_BASE': "" if engine_template_render_data.get(
-                        'OPENAI_API_BASE') is None else engine_template_render_data.get('OPENAI_API_BASE'),
-                    'OPENAI_API_KEY': "" if engine_template_render_data.get(
-                        'OPENAI_API_KEY') is None else engine_template_render_data.get('OPENAI_API_KEY'),
-                },
-            }))
-            executor = code_gen_builder.build_executor()
+            })) 
+            executor = code_gen_builder.build_executor(
+                chat_function=self.llm,
+                messages=[]
+            )
             executor.execute()
             _ai_message = executor.chat_run()
 
             logger.info(f'{guidance_question.step_description}:{_ai_message}')
-            code_gen_builder.remove_last_generator()
 
             _ai_render_data = {
                 'ai_message_content': _ai_message.content

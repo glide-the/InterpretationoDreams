@@ -155,7 +155,7 @@ class TaskStepToQuestionChain(ABC):
         self.task_step_store.add_task_step([task_step_node])
         
         # 每处理一个任务步骤，就持久化一次
-        task_step_store_path = concat_dirs(dirname=f"./storage/{self.task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+        task_step_store_path = concat_dirs(dirname=f"./storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
         self.task_step_store.persist(persist_path=task_step_store_path) 
 
 
@@ -300,7 +300,7 @@ class TaskStepToQuestionChain(ABC):
         self.task_step_store.add_task_step([task_step_node])
 
         # 每处理一个任务步骤，就持久化一次
-        task_step_store_path = concat_dirs(dirname=f"./storage/{self.task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+        task_step_store_path = concat_dirs(dirname=f"./storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
         self.task_step_store.persist(persist_path=task_step_store_path) 
 
 

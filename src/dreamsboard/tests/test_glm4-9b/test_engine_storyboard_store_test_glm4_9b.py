@@ -101,12 +101,7 @@ def test_structured_dreams_storyboard_store_test_glm4_9b(setup_log) -> None:
                                                                       dreams_personality_context=dreams_personality_context,
                                                                       guidance_llm=guidance_llm
                                                                       )
-        code_gen_builder = storyboard_executor.loader_cosplay_builder(
-            engine_template_render_data={
-                'model_name': 'glm-4',
-                'OPENAI_API_BASE': 'http://0.0.0.0:8000/v1',
-                'OPENAI_API_KEY': 'glm-4',
-            })
+        code_gen_builder = storyboard_executor.loader_cosplay_builder()
 
         # persist index to disk
         code_gen_builder.storage_context.dreams_analysis_store = dreams_analysis_store

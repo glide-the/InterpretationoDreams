@@ -53,7 +53,6 @@ class TaskEngineBuilder:
     csv_file_path: str
     dreams_analysis_store: SimpleDreamsAnalysisStore
     storyboard_executor: StructuredDreamsStoryboard
-    engine_template_render_data: dict = {}
 
     def __init__(self,
                 llm: BaseLanguageModel,
@@ -61,13 +60,11 @@ class TaskEngineBuilder:
                 start_task_context: str,
                 task_step_store: BaseTaskStepStore,
                 task_step_id: str,
-                engine_template_render_data: dict = {}
     ):
         self.start_task_context = start_task_context
         self.task_step_store = task_step_store
         self.task_step_id = task_step_id
         self.llm = llm
-        self.engine_template_render_data = engine_template_render_data
         self.cross_encoder_path = cross_encoder_path
         self.client = None
         self.task_step_to_question_chain = None
@@ -198,7 +195,6 @@ class TaskEngineBuilder:
         except:
             code_gen_builder = self.storyboard_executor.loader_cosplay_builder(
                 storage_context=self.storage_context, 
-                engine_template_render_data=self.engine_template_render_data
             )
             
         code_gen_builder.storage_context.dreams_analysis_store = self.storage_context.dreams_analysis_store
@@ -217,7 +213,6 @@ class TaskEngineBuilder:
         ai_message = self._get_ai_message(
             user_prompt=task_step.task_step_question,
             code_gen_builder=code_gen_builder, 
-            engine_template_render_data=self.engine_template_render_data, 
         )
         logger.info(ai_message.content)
         task_step.task_step_question_answer = ai_message.content
@@ -230,7 +225,6 @@ class TaskEngineBuilder:
     def _get_ai_message(self, 
                         user_prompt: str,
                         code_gen_builder: CodeGeneratorBuilder,
-                        engine_template_render_data: dict
         ) -> AIMessage:
         """
         获取AI消息
@@ -242,14 +236,11 @@ class TaskEngineBuilder:
                 'cosplay_role': 'user',
                 'message': user_prompt
             },
-        }))
-
-        code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
-            "engine_code_file": "simple_engine_template.py-tpl",
-            "render_data": engine_template_render_data
-        }))
-
-        executor = code_gen_builder.build_executor()
+        })) 
+        executor = code_gen_builder.build_executor(
+            chat_function=self.llm,
+            messages=[]
+        )
         logger.info(executor.executor_code)
 
         executor.execute()
@@ -277,7 +268,6 @@ class TaskEngineBuilder:
             answer=linked_list_node.task_step_question_answer,
             linked_list_node=linked_list_node,
             code_gen_builder=code_gen_builder, 
-            engine_template_render_data=self.engine_template_render_data,
             parent=None, 
             children=[], 
             visits=0, 
@@ -291,7 +281,6 @@ class TaskEngineBuilder:
                 answer=linked_list_node.task_step_question_answer, 
                 linked_list_node=linked_list_node,
                 code_gen_builder=code_gen_builder, 
-                engine_template_render_data=self.engine_template_render_data,
                 parent=None, 
                 children=[], 
                 visits=0, 
@@ -303,6 +292,7 @@ class TaskEngineBuilder:
             
         task_step = self.task_step_store.get_task_step(self.task_step_id)
         mctsr = MCTSrStoryboard(
+            llm=self.llm,
             problem=task_step.task_step_name, 
             max_rollouts=2
         )

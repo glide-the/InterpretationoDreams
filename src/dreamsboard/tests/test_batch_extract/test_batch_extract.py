@@ -155,14 +155,12 @@ def test_batch_extract(setup_log) -> None:
                                                                                           personality_llm=personality_llm,
                                                                                           user_id=role
                                                                                           )
-                            code_gen_builder = storyboard_executor.loader_cosplay_builder(
-                                engine_template_render_data={
-                                    'model_name': 'deepseek-chat',
-                                    'OPENAI_API_BASE': 'http://127.0.0.1:20000/deepseek/v1',
-                                    'OPENAI_API_KEY': 'sk-c7balko7z4266rye',
-                                })
+                            code_gen_builder = storyboard_executor.loader_cosplay_builder()
 
-                            executor = code_gen_builder.build_executor()
+                            executor = code_gen_builder.build_executor(
+                                chat_function=llm,
+                                messages=[]
+                            )
                             logger.info(executor.executor_code)
 
                             # persist index to disk

@@ -81,7 +81,7 @@ class StructuredTaskStepStoryboard:
                    task_step_store=task_step_store)
 
 
-    def loader_task_step_iter_builder(self, engine_template_render_data: dict = {}, allow_init: bool = True) -> queue.Queue[TaskEngineBuilder]:
+    def loader_task_step_iter_builder(self, allow_init: bool = True) -> queue.Queue[TaskEngineBuilder]:
         """
         加载任务步骤迭代器
         :param allow_init: 是否初始化
@@ -98,7 +98,6 @@ class StructuredTaskStepStoryboard:
                     start_task_context=self.start_task_context,
                     task_step_store=task_step_store,
                     task_step_id=task_step_id,
-                    engine_template_render_data=engine_template_render_data
                 ))
 
         else:
@@ -126,7 +125,6 @@ class StructuredTaskStepStoryboard:
                     start_task_context=self.start_task_context,
                     task_step_store=self.task_step_store,
                     task_step_id=task_step_id,
-                    engine_template_render_data=engine_template_render_data
                 ))
 
         return iter_builder_queue

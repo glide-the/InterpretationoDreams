@@ -6,6 +6,6 @@
     "python.testing.pytestArgs": [],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "python.testing.cwd": "${workspaceFolder}",
+    "python.testing.cwd": "${cwd}",
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
 }
