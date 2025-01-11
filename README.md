@@ -42,6 +42,120 @@
 - 》TaskEngineBuilder 场景加载模块、执行会话场景资源初始化，构建MCTS任务
 - 》StructuredTaskStepStoryboard 对任务进行规划，生成段落之间组成一个动态上下文，  扩写任务步骤构建MCTS任务
 
+
+## 使用
+
+### 构建任务
+
+- 初始化任务引擎 StructuredTaskStepStoryboard传入需要的任务
+
+- loader_task_step_iter_builder 构建任务的子任务，完成后SimpleTaskStepStore可获取子任务信息
+
+- init_task_engine_dreams 初始化场景加载资源，对子任务进行规划，获取会话的资源信息
+
+```
+
+    os.environ["AEMO_REPRESENTATION_PROMPT_TEMPLATE"] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
+    os.environ["STORY_BOARD_SCENE_TEMPLATE"] = STORY_BOARD_SCENE_TEMPLATE_TEST
+    os.environ["STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE"] = STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST
+    os.environ["EDREAMS_EVOLUTIONARY_TEMPLATE"] = EDREAMS_EVOLUTIONARY_TEMPLATE_TEST
+    os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
+    os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
+```
+
+- init_task_engine_storyboard_executor 构建会话场景执行器，初始化一个会话
+
+- storyboard_code_gen_builder 构建会话场景执行器, 对会话存储进行加载，加载失败重新构建
+
+- generate_step_answer 通过会话场景 获取任务的答案
+
+
+
+
+
+```
+def test_builder_task_step():
+    os.environ["ZHIPUAI_API_KEY"] = "key"
+    
+    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
+    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+    llm = ChatOpenAI(
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
+        model="glm-4-plus",
+        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    )
+    kor_dreams_task_step_llm = ChatOpenAI(
+        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
+        model="glm-4-plus",
+        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        verbose=True,
+        temperature=0.95,
+        top_p=0.70,
+    )
+    from tests.test_builder_task_step.prompts import (
+        AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
+        STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
+        STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE as STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST,
+        EDREAMS_EVOLUTIONARY_TEMPLATE as EDREAMS_EVOLUTIONARY_TEMPLATE_TEST,
+        EDREAMS_PERSONALITY_TEMPLATE as EDREAMS_PERSONALITY_TEMPLATE_TEST,
+        DREAMS_GEN_TEMPLATE as DREAMS_GEN_TEMPLATE_TEST,
+    ) 
+    os.environ["AEMO_REPRESENTATION_PROMPT_TEMPLATE"] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
+    os.environ["STORY_BOARD_SCENE_TEMPLATE"] = STORY_BOARD_SCENE_TEMPLATE_TEST
+    os.environ["STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE"] = STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST
+    os.environ["EDREAMS_EVOLUTIONARY_TEMPLATE"] = EDREAMS_EVOLUTIONARY_TEMPLATE_TEST
+    os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
+    os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
+
+
+    # 存储
+    task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
+    
+    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    builder = StructuredTaskStepStoryboard.form_builder(
+        base_path="./",
+        llm=llm,
+        kor_dreams_task_step_llm=kor_dreams_task_step_llm,
+        start_task_context="多模态大模型的技术发展路线是什么样的？", 
+        task_step_store=task_step_store,
+        cross_encoder_path=cross_encoder_path
+    )
+    # 初始化任务引擎
+    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
+    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
+    while not task_engine_builder.empty():
+        task_engine = task_engine_builder.get()
+        if not task_engine.check_engine_init():
+            task_engine.init_task_engine()
+            task_engine.init_task_engine_dreams()
+            task_engine.init_task_engine_storyboard_executor()
+
+        try:
+            code_gen_builder = task_engine.storyboard_code_gen_builder()
+            task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
+            if task_step.task_step_question_answer is None or len(task_step.task_step_question_answer) == 0:
+                task_engine.generate_step_answer(code_gen_builder)
+            mcts_node = task_engine.get_mcts_node(code_gen_builder)
+            answer = mcts_node.run()
+            
+            mcts_node.print()
+            print(answer)
+
+
+            task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
+            task_step.task_step_question_answer = answer
+            task_step_store.add_task_step([task_step])
+            task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
+            task_step_store.persist(persist_path=task_step_store_path) 
+
+        except:
+            logger.error("场景加载失败")
+```
+
 ### 模块说明
 
 #### 任务规划模块设计方案
