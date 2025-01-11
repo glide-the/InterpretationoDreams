@@ -28,15 +28,16 @@ logger.addHandler(handler)
 class StructuredTaskStepStoryboard:
     """
     对任务进行规划，生成段落之间组成一个动态上下文
-    任务二 需求：
+    任务：
 
-        11、对任务按照提示词要求进行扩写，将扩写任务步骤收集 （src/dreamsboard/dreamsboard/engine/entity/task_step、src/dreamsboard/tests/test_kor/test_kor3.py）
+        1、对任务按照提示词要求进行扩写，将扩写任务步骤收集 （src/dreamsboard/dreamsboard/engine/entity/task_step、src/dreamsboard/tests/test_kor/test_kor3.py）
 
         2、收集每个任务后存储到磁盘（src/dreamsboard/dreamsboard/engine/storage/task_step_store）
 
-        3、对每个子任务载入会话场景，然后按照扩写任务步骤构建，MCTS任务
-        导出代码
+        3、对每个子任务载入会话场景，然后按照扩写任务步骤构建，MCTS任务 loader_task_step_iter_builder
+ 
     """ 
+    base_path: str
     task_step_store: BaseTaskStepStore
     start_task_context: str
     cross_encoder_path: str
@@ -44,6 +45,7 @@ class StructuredTaskStepStoryboard:
     aemo_representation_chain: AEMORepresentationChain
 
     def __init__(self,
+                 base_path: str,
                  llm: BaseLanguageModel,
                  cross_encoder_path: str,
                  start_task_context: str,
@@ -52,9 +54,11 @@ class StructuredTaskStepStoryboard:
                  ):
         """
 
+        :param base_path: 基础路径
         :param start_task_context: 开始任务
         :param aemo_representation_chain: 情感表征链
         """
+        self.base_path = base_path
         self.llm = llm
         self.cross_encoder_path = cross_encoder_path
         self.start_task_context = start_task_context
@@ -63,6 +67,7 @@ class StructuredTaskStepStoryboard:
 
     @classmethod
     def form_builder(cls,
+                     base_path: str,
                      llm: BaseLanguageModel,
                      cross_encoder_path: str,
                      start_task_context: str, 
@@ -74,7 +79,8 @@ class StructuredTaskStepStoryboard:
             start_task_context=start_task_context,
             kor_dreams_task_step_llm=kor_dreams_task_step_llm
         )
-        return cls(llm=llm,
+        return cls(base_path=base_path,
+                   llm=llm,
                    cross_encoder_path=cross_encoder_path,
                    start_task_context=start_task_context,
                    aemo_representation_chain=aemo_representation_chain,
@@ -91,13 +97,14 @@ class StructuredTaskStepStoryboard:
             for task_step_id, task_step in self.task_step_store.task_step_all.items():
                 task_step_id = task_step.node_id
                 
-                task_step_store = SimpleTaskStepStore.from_persist_dir(f"./storage/{task_step_id}")
+                task_step_store = SimpleTaskStepStore.from_persist_dir(f"{self.base_path}/storage/{task_step_id}")
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm=self.llm,
                     cross_encoder_path=self.cross_encoder_path,
                     start_task_context=self.start_task_context,
                     task_step_store=task_step_store,
                     task_step_id=task_step_id,
+                    base_path=self.base_path
                 ))
 
         else:
@@ -125,6 +132,7 @@ class StructuredTaskStepStoryboard:
                     start_task_context=self.start_task_context,
                     task_step_store=self.task_step_store,
                     task_step_id=task_step_id,
+                    base_path=self.base_path
                 ))
 
         return iter_builder_queue

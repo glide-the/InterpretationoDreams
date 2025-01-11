@@ -65,17 +65,20 @@ PATTERN = re.compile(r"```graphql?([\s\S]*?)```", re.DOTALL)
 """Regex pattern to parse the output."""
 
 class TaskStepToQuestionChain(ABC):
+    base_path: str
     task_step_to_question_chain: Chain
     task_step_store: BaseTaskStepStore
     task_step_question_to_graphql_chain: Chain
     client: WeaviateClient
     cross_encoder: CrossEncoder
     def __init__(self,
+                 base_path: str,
                  task_step_store: BaseTaskStepStore,
                  task_step_to_question_chain: Chain,
                  task_step_question_to_graphql_chain: Chain,
                  client: WeaviateClient,
                  cross_encoder: CrossEncoder):
+        self.base_path = base_path
         self.task_step_store = task_step_store
         self.task_step_to_question_chain = task_step_to_question_chain
         self.task_step_question_to_graphql_chain = task_step_question_to_graphql_chain
@@ -85,6 +88,7 @@ class TaskStepToQuestionChain(ABC):
     @classmethod
     def from_task_step_to_question_chain(
             cls,
+            base_path: str,
             llm: BaseLanguageModel,
             task_step_store: BaseTaskStepStore,
             client: WeaviateClient,
@@ -137,11 +141,14 @@ class TaskStepToQuestionChain(ABC):
             automodel_args={"torch_dtype": "auto"},
             trust_remote_code=True,
         )
-        return cls(task_step_store=task_step_store,
-                   task_step_to_question_chain=task_step_to_question_chain,
-                   task_step_question_to_graphql_chain=task_step_question_to_graphql_chain,
-                   client=client,
-                   cross_encoder=cross_encoder)
+        return cls(
+            base_path=base_path,
+            task_step_store=task_step_store,
+            task_step_to_question_chain=task_step_to_question_chain,
+            task_step_question_to_graphql_chain=task_step_question_to_graphql_chain,
+            client=client,
+            cross_encoder=cross_encoder
+        )
 
     def invoke_task_step_to_question(self, task_step_id: str) -> None:
         """
@@ -155,7 +162,7 @@ class TaskStepToQuestionChain(ABC):
         self.task_step_store.add_task_step([task_step_node])
         
         # 每处理一个任务步骤，就持久化一次
-        task_step_store_path = concat_dirs(dirname=f"./storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+        task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
         self.task_step_store.persist(persist_path=task_step_store_path) 
 
 
@@ -199,7 +206,7 @@ class TaskStepToQuestionChain(ABC):
             root_nodes_with_concept=root_nodes,
             high_outdegree_concepts=high_outdegree_concepts,
             high_indegree_concepts=high_indegree_concepts,
-            filename=f"./storage/{task_step_id}_semantic_path_interactive.html"
+            filename=f"{self.base_path}/storage/{task_step_id}_semantic_path_interactive.html"
         )
 
         G = create_G(data_list_copy,  root_nodes_with_concept=root_nodes,
@@ -300,7 +307,7 @@ class TaskStepToQuestionChain(ABC):
         self.task_step_store.add_task_step([task_step_node])
 
         # 每处理一个任务步骤，就持久化一次
-        task_step_store_path = concat_dirs(dirname=f"./storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+        task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
         self.task_step_store.persist(persist_path=task_step_store_path) 
 
 
@@ -334,6 +341,6 @@ class TaskStepToQuestionChain(ABC):
 
         table = pd.DataFrame(table_data, columns=["角色", "内容", "分镜"])
 
-        table.to_csv(f"./storage/{task_step_id}.csv", index=False)
+        table.to_csv(f"{self.base_path}/storage/{task_step_id}.csv", index=False)
 
-        return f"./storage/{task_step_id}.csv"
+        return f"{self.base_path}/storage/{task_step_id}.csv"

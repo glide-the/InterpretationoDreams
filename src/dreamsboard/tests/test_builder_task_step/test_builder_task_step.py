@@ -34,6 +34,9 @@ logger.addHandler(handler)
 
 def test_builder_task_step():
     os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    
+    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
+    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     llm = ChatOpenAI(
         openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-4-plus",
@@ -71,6 +74,7 @@ def test_builder_task_step():
     
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     builder = StructuredTaskStepStoryboard.form_builder(
+        base_path="./",
         llm=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
         start_task_context="多模态大模型的技术发展路线是什么样的？", 
@@ -80,7 +84,7 @@ def test_builder_task_step():
     # 初始化任务引擎
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
-    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
     while not task_engine_builder.empty():
         task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
@@ -101,6 +105,8 @@ def test_builder_task_step():
 
 def test_builder_task_step_answer():
     os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
+    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     llm = ChatOpenAI(
         openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-4-plus",
@@ -137,6 +143,7 @@ def test_builder_task_step_answer():
     task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     builder = StructuredTaskStepStoryboard.form_builder(
+        base_path="./",
         llm=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
         start_task_context="多模态大模型的技术发展路线是什么样的？", 
@@ -217,6 +224,7 @@ def test_builder_task_step_mctsr():
     task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     builder = StructuredTaskStepStoryboard.form_builder(
+        base_path="./",
         llm=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
         start_task_context="多模态大模型的技术发展路线是什么样的？", 

@@ -75,7 +75,7 @@ def test_structured_dreams_storyboard_store_test_glm4_9b(setup_log) -> None:
             dreams_generation.update(output.get("dreams_guidance_context"))
             dreams_generation.update(output.get("dreams_personality_context"))
 
-            dreams_analysis_store = SimpleDreamsAnalysisStore()
+            dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(persist_dir="./ieAjabk1_keyframe")
             dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
             dreams.metadata = {
                 "source_url": dreams_guidance_context,

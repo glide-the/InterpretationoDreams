@@ -49,6 +49,7 @@ def test_invoke_task_step_to_question():
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
 
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
+        base_path="./",
         llm=llm, 
         task_step_store=task_step_store,
         client=client,
@@ -78,6 +79,7 @@ def test_invoke_task_step_question_context():
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
 
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
+        base_path="./",
         llm=llm, 
         task_step_store=task_step_store,
         client=client,
@@ -106,6 +108,7 @@ def test_export_csv_file_path():
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
 
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
+        base_path="./",
         llm=llm, 
         task_step_store=task_step_store,
         client=client,

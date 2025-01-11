@@ -90,6 +90,7 @@ ROOT_UCT_SCORE = 10_000
 
 
 class MCTSNode(BaseModel):
+    base_path: str
     answer: str
     linked_list_node: LinkedListNode
     """当前任务的会话信息""" 
@@ -391,9 +392,10 @@ class MCTSrStoryboard(MCTSr):
         self.refinements.append(refined_answer)
 
         # persist index to disk
-        node.code_gen_builder.storage_context.persist(persist_dir=f"./storage/{node.linked_list_node.task_step_id}")
+        node.code_gen_builder.storage_context.persist(persist_dir=f"{node.base_path}/storage/{node.linked_list_node.task_step_id}")
  
         return MCTSNode(
+            base_path=node.base_path,
             answer=f"# Thought {refined_answer.thought}\n\n# Answer\n{refined_answer.answer}",
             linked_list_node=node.linked_list_node,
             code_gen_builder=node.code_gen_builder,

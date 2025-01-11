@@ -134,7 +134,9 @@ def test_batch_extract(setup_log) -> None:
                                 dreams_generation.update(output.get("dreams_guidance_context"))
                                 dreams_generation.update(output.get("dreams_personality_context"))
 
-                                dreams_analysis_store = SimpleDreamsAnalysisStore()
+                                dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(
+                                    persist_dir=f"{save_folder}/{check_and_convert_special_characters(role)}/storage_{file_name}"
+                                )
                                 dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
                                 dreams_analysis_store.add_analysis([dreams])
                                 logger.info(dreams_analysis_store.analysis_all)

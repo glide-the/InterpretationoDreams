@@ -73,7 +73,7 @@ def test_structured_dreams_storyboard_store_test1(setup_log) -> None:
         dreams_generation.update(output.get("dreams_guidance_context"))
         dreams_generation.update(output.get("dreams_personality_context"))
 
-        dreams_analysis_store = SimpleDreamsAnalysisStore()
+        dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(persist_dir="./storage_iRMa9DMW_keyframe")
         dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
         dreams_analysis_store.add_analysis([dreams])
         logger.info(dreams_analysis_store.analysis_all)

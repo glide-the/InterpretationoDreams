@@ -37,30 +37,38 @@ logger.addHandler(handler)
 
 class TaskEngineBuilder:
 
-    """执行会话场景资源初始化，构建MCTS任务
-    AEMORepresentationChain 
-    task_step_store[task_step_id]
+    """TaskEngineBuilder 场景加载模块
+		执行会话场景资源初始化，构建MCTS任务
 
     根据任务步骤，构建场景加载模块，生成资源文件csv
     根据每个任务，载入StructuredDreamsStoryboard 会话场景
     按照扩写任务步骤构建MCTS任务
     
+		输入：
+			task_step_id
+			task_step_store: 任务存储器（SimpleTaskStepStore）
+			start_task_context： 起始任务
+			llm： 模型
+
+    
     """
+    base_path: str
     cross_encoder_path: str
     storage_context: StorageContext
     task_step_store: BaseTaskStepStore
     task_step_id: str
     csv_file_path: str
-    dreams_analysis_store: SimpleDreamsAnalysisStore
     storyboard_executor: StructuredDreamsStoryboard
 
     def __init__(self,
+                base_path: str,
                 llm: BaseLanguageModel,
                 cross_encoder_path: str,
                 start_task_context: str,
                 task_step_store: BaseTaskStepStore,
                 task_step_id: str,
     ):
+        self.base_path = base_path
         self.start_task_context = start_task_context
         self.task_step_store = task_step_store
         self.task_step_id = task_step_id
@@ -71,7 +79,7 @@ class TaskEngineBuilder:
         self.csv_file_path = None
         self.storyboard_executor = None
         self.storage_context = StorageContext.from_defaults(
-            persist_dir=f"./storage/{self.task_step_id}"
+            persist_dir=f"{self.base_path}/storage/{self.task_step_id}"
         )
         self.storage_context.task_step_store = self.task_step_store
 
@@ -81,7 +89,7 @@ class TaskEngineBuilder:
         """
         try:
             storage_context = StorageContext.from_defaults(
-                persist_dir=f"./storage/{self.task_step_id}"
+                persist_dir=f"{self.base_path}/storage/{self.task_step_id}"
             )
             if storage_context.task_step_store is None:
                 return False
@@ -102,12 +110,15 @@ class TaskEngineBuilder:
 
     def init_task_engine(self):
         """
+        
         初始化任务引擎
         》TaskStepToQuestionChain 
-			1、对这个提示词所要求的输入拆分成子任务， 
-			2、对每个子任务指令转换为子问题，召回问题前3条，
-		》StoryBoardDreamsGenerationChain
-			对每个子任务载入会话场景
+        	输入：
+        		client： 矢量库客户端
+        		llm： 模型
+					invoke_task_step_to_question：1、 对开始任务进行抽取，得到任务步骤，提示词所要求的输入拆分成子任务， 
+					invoke_task_step_question_context： 2、对每个子任务指令转换为子问题，召回问题前3条，对任务步骤进行抽取，得到任务步骤的上下文
+					export_csv_file_path: 3、对召回内容与问题 导出csv文件
  
         """
               
@@ -115,6 +126,7 @@ class TaskEngineBuilder:
 
 
         self.task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
+            base_path=self.base_path,
             llm=self.llm, 
             task_step_store=self.task_step_store,
             client=client,
@@ -127,13 +139,21 @@ class TaskEngineBuilder:
  
     def init_task_engine_dreams(self, allow_init: bool = True) -> None:
         """
-        初始化场景加载资源
+        初始化场景加载资源StoryBoardDreamsGenerationChain
         如果allow_init为True，则清空存储，重新初始化
+     
+        对每个子任务通过职业提示词，载入会话场景
+            1、构建场景信息（story_scenario_context），提示词（STORY_BOARD_SCENE_TEMPLATE）
+            2、对任务上下文(story_board_summary_context)，构建第一人称数据(scene_monologue_context),提示词（STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE）
+            3、对任务上下文(story_board_summary_context)，获取任务分析(evolutionary_step), 提示词（EDREAMS_EVOLUTIONARY_TEMPLATE）
+            4、对任务分析(evolutionary_step)，分析对话预设信息（性格）， 提示词（EDREAMS_PERSONALITY_TEMPLATE）
+            5、对任务上下文(story_board_summary_context)，场景信息story_scenario_context, 第一人称数据(scene_monologue_context)，
+            生成关于人物职业的引导话术，提示词（DREAMS_GEN_TEMPLATE）
         """ 
         if self.csv_file_path is None:
             raise ValueError("csv_file_path is None, please invoke init_task_engine first")
         
-        dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(persist_dir=f"./storage/{self.task_step_id}")
+        dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(persist_dir=f"{self.base_path}/storage/{self.task_step_id}")
         if allow_init:
             analysis_ids = list(dreams_analysis_store.analysis_all.keys())
             for analysis_id in analysis_ids:
@@ -150,11 +170,11 @@ class TaskEngineBuilder:
             dreams_generation.update(output.get("dreams_personality_context"))
             dreams = DreamsPersonalityNode.from_config(cfg=dreams_generation)
             dreams_analysis_store.add_analysis([dreams])
-            dreams_analysis_store_path = concat_dirs(dirname=f"./storage/{self.task_step_id}", basename="dreams_analysis_store.json")
+            dreams_analysis_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{self.task_step_id}", basename="dreams_analysis_store.json")
             dreams_analysis_store.persist(persist_path=dreams_analysis_store_path)
 
         self.storage_context.dreams_analysis_store = dreams_analysis_store
-        self.storage_context.persist(persist_dir=f"./storage/{self.task_step_id}")
+        self.storage_context.persist(persist_dir=f"{self.base_path}/storage/{self.task_step_id}")
             
     def init_task_engine_storyboard_executor(self) -> None:
         """
@@ -201,7 +221,7 @@ class TaskEngineBuilder:
         code_gen_builder.storage_context.template_store = self.storage_context.template_store
         code_gen_builder.storage_context.index_store = self.storage_context.index_store
         code_gen_builder.storage_context.task_step_store = self.storage_context.task_step_store
-        code_gen_builder.storage_context.persist(persist_dir=f"./storage/{self.task_step_id}")
+        code_gen_builder.storage_context.persist(persist_dir=f"{self.base_path}/storage/{self.task_step_id}")
 
         return code_gen_builder
     
@@ -218,7 +238,7 @@ class TaskEngineBuilder:
         task_step.task_step_question_answer = ai_message.content
         self.task_step_store.add_task_step([task_step])
         # 每处理一个任务步骤，就持久化一次
-        task_step_store_path = concat_dirs(dirname=f"./storage/{self.task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+        task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{self.task_step_id}", basename=DEFAULT_PERSIST_FNAME)
         self.task_step_store.persist(persist_path=task_step_store_path) 
         return ai_message.content
     
@@ -250,7 +270,6 @@ class TaskEngineBuilder:
         assert executor._ai_message is not None
         
         code_gen_builder.remove_last_generator()
-        code_gen_builder.remove_last_generator()
 
         return _ai_message
 
@@ -265,6 +284,7 @@ class TaskEngineBuilder:
         linked_list_node = structured_storyboard.get_task_step_node(self.task_step_id)
         
         mcts_node = MCTSNode(
+            base_path=self.base_path,
             answer=linked_list_node.task_step_question_answer,
             linked_list_node=linked_list_node,
             code_gen_builder=code_gen_builder, 
@@ -278,6 +298,7 @@ class TaskEngineBuilder:
         while linked_list_node is not None and linked_list_node.prev is not None:
             linked_list_node = linked_list_node.prev
             parent_node = MCTSNode(
+                base_path=self.base_path,
                 answer=linked_list_node.task_step_question_answer, 
                 linked_list_node=linked_list_node,
                 code_gen_builder=code_gen_builder, 
