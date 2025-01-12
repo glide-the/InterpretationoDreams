@@ -155,8 +155,14 @@ class StructuredDreamsStoryboard:
         return messages
 
     def loader_cosplay_builder(self, 
+                               dreams_cosplay_role: str = "心理咨询工作者", 
+                               dreams_cosplay_step: int = 1, 
                                storage_context: Optional[StorageContext] = None,
                                ) -> CodeGeneratorBuilder:
+        """
+        dreams_cosplay_role对话角色
+        dreams_cosplay_step对话次数
+        """
         code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=storage_context)
 
         # 创建一个字典，用于按照story_board组织内容和角色
@@ -185,10 +191,13 @@ class StructuredDreamsStoryboard:
             "render_data": _base_render_data,
         }))
 
-        for guidance_question in guidance_questions:
+        for index, guidance_question in enumerate(guidance_questions):
+            if dreams_cosplay_step >= index:
+                break
+            
             logger.info(f'{guidance_question.step_description}:{guidance_question.step_advice}')
             _dreams_render_data = {
-                'dreams_cosplay_role': '心理咨询工作者',
+                'dreams_cosplay_role': dreams_cosplay_role,
                 'dreams_message': guidance_question.step_advice,
             }
             code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={

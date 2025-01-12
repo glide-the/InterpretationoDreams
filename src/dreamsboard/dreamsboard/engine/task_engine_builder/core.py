@@ -214,6 +214,7 @@ class TaskEngineBuilder:
             code_gen_builder = load_store_from_storage(storage_context=self.storage_context)
         except:
             code_gen_builder = self.storyboard_executor.loader_cosplay_builder(
+                dreams_cosplay_role=self.task_step_id,
                 storage_context=self.storage_context, 
             )
             
