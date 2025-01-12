@@ -289,6 +289,8 @@ class MCTSrStoryboard(MCTSr):
             input_variables=[
                 "problem", 
                 "current_answer",
+                "context",
+                "past_steps",
                 "start_task_context",
                 "aemo_representation_context",
                 "task_step_name",
@@ -299,9 +301,25 @@ class MCTSrStoryboard(MCTSr):
                 "critic_system_prompt", gpt_prompt_config.critic_system_prompt 
             )
         )
+        past_steps = ''
+        past_context = ''
+        context_linked_list_node = node.linked_list_node.head
+        past_steps += f'{context_linked_list_node.task_step_name}\n'
+        past_context += f'{context_linked_list_node.task_step_question_answer}\n'
+        while context_linked_list_node is not None and context_linked_list_node.next is not None:
+            if context_linked_list_node.task_step_id == node.linked_list_node.task_step_id:
+                break
+            context_linked_list_node = context_linked_list_node.next
+            
+            past_steps += f'{context_linked_list_node.task_step_name}\n'
+            past_context += f'{context_linked_list_node.task_step_question_answer}\n'
+            
+
         user_prompt = critic_system_prompt_template.format(
             problem=self.problem,
             current_answer=node.answer,
+            context=past_context,
+            past_steps=past_steps,
             start_task_context=node.linked_list_node.start_task_context,
             aemo_representation_context=node.linked_list_node.aemo_representation_context,
             task_step_name=node.linked_list_node.task_step_name,
@@ -319,11 +337,8 @@ class MCTSrStoryboard(MCTSr):
                 "problem", 
                 "current_answer",
                 "critique",
-                "start_task_context",
-                "aemo_representation_context",
-                "task_step_name",
-                "task_step_description",
-                "task_step_level"
+                "context",
+                "past_steps",
             ],
             template=os.environ.get(
                 "refine_system_prompt", gpt_prompt_config.refine_system_prompt 
@@ -333,11 +348,8 @@ class MCTSrStoryboard(MCTSr):
             problem=self.problem,
             current_answer=node.answer,
             critique=critique,
-            start_task_context=node.linked_list_node.start_task_context,
-            aemo_representation_context=node.linked_list_node.aemo_representation_context,
-            task_step_name=node.linked_list_node.task_step_name,
-            task_step_description=node.linked_list_node.task_step_description,
-            task_step_level=node.linked_list_node.task_step_level
+            context=past_context,
+            past_steps=past_steps
         )
  
         _refined_answer_response_message = self._get_ai_message(refine_system_prompt, node)

@@ -9,6 +9,8 @@ from langchain.chains import LLMChain
 from langchain.schema.language_model import BaseLanguageModel
 from dreamsboard.engine.entity.task_step.task_step import TaskStepNode
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
+from dreamsboard.engine.utils import concat_dirs
+from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
 import queue
 import logging
 
@@ -97,12 +99,13 @@ class StructuredTaskStepStoryboard:
             for task_step_id, task_step in self.task_step_store.task_step_all.items():
                 task_step_id = task_step.node_id
                 
-                task_step_store = SimpleTaskStepStore.from_persist_dir(f"{self.base_path}/storage/{task_step_id}")
+                # 从存储中获取详细的任务
+                task_step_store_node = SimpleTaskStepStore.from_persist_dir(f"{self.base_path}/storage/{task_step_id}")
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm=self.llm,
                     cross_encoder_path=self.cross_encoder_path,
                     start_task_context=self.start_task_context,
-                    task_step_store=task_step_store,
+                    task_step_store=task_step_store_node,
                     task_step_id=task_step_id,
                     base_path=self.base_path
                 ))
@@ -114,23 +117,28 @@ class StructuredTaskStepStoryboard:
             )
             for task_step in task_step_iter:
                     
-                task_step = TaskStepNode.from_config(cfg={
+                task_step_node = TaskStepNode.from_config(cfg={
                     "start_task_context": self.start_task_context,
                     "aemo_representation_context": result.get('aemo_representation_context'),
                     "task_step_name": task_step.task_step_name,
                     "task_step_description": task_step.task_step_description,
                     "task_step_level": task_step.task_step_level
                 })
-                      
+                task_step_id = task_step_node.node_id
                 
-                self.task_step_store.add_task_step([task_step])
-                self.task_step_store.persist()
-                task_step_id = task_step.node_id 
+                task_step_store_node = SimpleTaskStepStore.from_persist_dir(f"{self.base_path}/storage/{task_step_id}")
+                
+                task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+
+                task_step_store_node.add_task_step([task_step_node])
+                task_step_store_node.persist(persist_path=task_step_store_path)
+                self.task_step_store.add_task_step([task_step_node])
+                self.task_step_store.persist() 
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm=self.llm,
                     cross_encoder_path=self.cross_encoder_path,
                     start_task_context=self.start_task_context,
-                    task_step_store=self.task_step_store,
+                    task_step_store=task_step_store_node,
                     task_step_id=task_step_id,
                     base_path=self.base_path
                 ))

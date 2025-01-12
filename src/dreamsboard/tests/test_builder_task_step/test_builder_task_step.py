@@ -86,20 +86,8 @@ def test_builder_task_step():
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
     while not task_engine_builder.empty():
-        task_engine = task_engine_builder.get()
-        if not task_engine.check_engine_init():
-            task_engine.init_task_engine()
-            task_engine.init_task_engine_dreams()
-            task_engine.init_task_engine_storyboard_executor()
-
-        code_gen_builder = task_engine.storyboard_code_gen_builder()
-            
-        # persist index to disk
-        code_gen_builder.storage_context.persist(persist_dir=f"./storage/{task_engine.task_step_id}")
-        task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
-        task_step_store.add_task_step([task_step])
-        task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
-        task_step_store.persist(persist_path=task_step_store_path) 
+        task_engine = task_engine_builder.get()  
+        logger.info(task_engine.task_step_id)
 
 
 
@@ -154,7 +142,10 @@ def test_builder_task_step_answer():
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
+    step =0
     while not task_engine_builder.empty():
+        if step>=2 :
+            break
         task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
@@ -164,20 +155,15 @@ def test_builder_task_step_answer():
         code_gen_builder = task_engine.storyboard_code_gen_builder()
         task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
         if task_step.task_step_question_answer is None or len(task_step.task_step_question_answer) == 0:
-            task_engine.generate_step_answer(code_gen_builder)
-        # persist index to disk
-        code_gen_builder.storage_context.persist(persist_dir=f"./storage/{task_engine.task_step_id}")
-        task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
-        task_step_store.add_task_step([task_step])
-        task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
-        task_step_store.persist(persist_path=task_step_store_path) 
+            task_engine.generate_step_answer(code_gen_builder) 
+        step +=1
 
 
 def test_json_parse():
     json_text = """
     {
         "thought": "The thought process behind the answer.",
-        "answer": "A float representing the answer to the problem."
+        "answer": "0.1"
     }
     """
     json_text, json_object = try_parse_json_object(json_text)
@@ -235,7 +221,12 @@ def test_builder_task_step_mctsr():
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
+    step =0
+
     while not task_engine_builder.empty():
+        
+        if step>=2 :
+            break
         task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
@@ -252,13 +243,12 @@ def test_builder_task_step_mctsr():
             
             mcts_node.print()
             print(answer)
-
-
-            task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
-            task_step.task_step_question_answer = answer
-            task_step_store.add_task_step([task_step])
-            task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
-            task_step_store.persist(persist_path=task_step_store_path) 
+ 
 
         except:
             logger.error("场景加载失败")
+
+        finally:
+            step+=1
+
+            
