@@ -319,5 +319,4 @@ class TaskEngineBuilder:
             max_rollouts=2
         )
         mctsr.initialize(mcts_node)
-        mctsr.print()
         return mctsr

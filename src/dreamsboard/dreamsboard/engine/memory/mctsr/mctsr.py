@@ -52,6 +52,7 @@ import random
 import math
 from collections import deque
 from enum import Enum 
+from typing import Tuple
 from pydantic import BaseModel
 import tqdm
 from dreamsboard.engine.memory.mctsr.prompt import (
@@ -153,7 +154,7 @@ class MCTSr(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         
-    def self_refine(self, node: MCTSNode) -> MCTSNode:
+    def self_refine(self, node: MCTSNode) -> Tuple[MCTSNode, RefineResponse]:
         raise NotImplementedError()
 
     def _evaluate_answer(self, node: MCTSNode) -> int:
@@ -254,9 +255,13 @@ class MCTSr(BaseModel):
         for _ in tqdm.tqdm(range(self.max_rollouts)):
             node = self.select_node()
             self.self_evaluate(node)
-            child = self.self_refine(node)
+            child, refined_answer = self.self_refine(node)
             node.add_child(child)
-            self.self_evaluate(child)
+          
+            if refined_answer.answer_score > self.reward_limit:
+                refined_answer.answer_score -= self.excess_reward_penalty
+
+            child.add_reward(refined_answer.answer_score)
             self.backpropagate(child)
 
         return self.get_best_answer()
@@ -282,7 +287,7 @@ class MCTSr(BaseModel):
 
 class MCTSrStoryboard(MCTSr): 
 
-    def self_refine(self, node: MCTSNode) -> MCTSNode:
+    def self_refine(self, node: MCTSNode) ->  Tuple[MCTSNode, RefineResponse]:
         """
         自我反思
         """
@@ -398,7 +403,7 @@ class MCTSrStoryboard(MCTSr):
             visits=0,
             Q=0,
             reward_samples=[]
-        )
+        ), refined_answer
 
     def _evaluate_answer(self, node: MCTSNode) -> int:
         """

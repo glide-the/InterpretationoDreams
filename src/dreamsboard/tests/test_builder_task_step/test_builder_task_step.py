@@ -248,11 +248,11 @@ def test_builder_task_step_mctsr():
             task_step_id = task_engine.task_step_id
             
             task_engine.task_step_store.add_task_step([task_step])
-            task_step_store_path = concat_dirs(dirname=f"/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+            task_step_store_path = concat_dirs(dirname=f"./storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
             task_engine.task_step_store.persist(persist_path=task_step_store_path) 
             
             task_step_store.add_task_step([task_step])
-            task_step_store_path = concat_dirs(dirname=f"/storage", basename=DEFAULT_PERSIST_FNAME)
+            task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
             task_step_store.persist(persist_path=task_step_store_path) 
 
         except Exception as e:
