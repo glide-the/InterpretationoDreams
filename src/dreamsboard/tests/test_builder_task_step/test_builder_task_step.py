@@ -238,17 +238,15 @@ def test_builder_task_step_mctsr():
             task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
             if task_step.task_step_question_answer is None or len(task_step.task_step_question_answer) == 0:
                 task_engine.generate_step_answer(code_gen_builder)
-            mcts_node = task_engine.get_mcts_node(code_gen_builder)
+            mcts_node = task_engine.get_mcts_node()
             answer = mcts_node.run()
             
             mcts_node.print()
             print(answer)
  
 
-        except:
-            logger.error("场景加载失败")
+        except Exception as e:
+            logger.error("场景加载失败", e)
 
         finally:
             step+=1
-
-            

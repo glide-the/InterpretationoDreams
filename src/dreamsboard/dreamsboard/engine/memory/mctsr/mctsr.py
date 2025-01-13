@@ -61,12 +61,14 @@ from dreamsboard.engine.memory.mctsr.prompt import (
 from dreamsboard.engine.task_engine_builder.core import CodeGeneratorBuilder
 from dreamsboard.document_loaders.structured_storyboard_loader import LinkedListNode
 
-from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator
+from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, BaseProgramGenerator
 from langchain.schema import AIMessage
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
-from dreamsboard.engine.memory.mctsr.prompt import GLM_JSON_RESPONSE_PREFIX, GLM_JSON_RESPONSE_SUFFIX
+from dreamsboard.document_loaders.kor_loader import KorLoader
+from dreamsboard.document_loaders.protocol.ner_protocol import TaskStepRefineNode
 from langchain.prompts import PromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
+from dreamsboard.engine.storage.storage_context import StorageContext
 import numpy as np
 import logging
 import re
@@ -84,7 +86,7 @@ logger.addHandler(handler)
 
 PATTERN = re.compile(r"thought:\s*(.*?)\nanswer:\s*([\d.]+)", re.DOTALL)
 
-PLAINTEXT_PATTERN = re.compile(r"```plaintext?([\s\S]*?)```", re.DOTALL)
+PLAINTEXT_PATTERN = re.compile(r"```plaintext?([\s\S]*?)```[\s\S]*?answer: (\d+(\.\d+)?)", re.DOTALL)
 
 ROOT_UCT_SCORE = 10_000
 
@@ -94,8 +96,8 @@ class MCTSNode(BaseModel):
     answer: str
     linked_list_node: LinkedListNode
     """当前任务的会话信息""" 
-    code_gen_builder: CodeGeneratorBuilder
-    """当前任务的会话执行者""" 
+    storage_context: StorageContext
+    """当前任务的会话存储""" 
     parent: MCTSNode | None = None
     children: list[MCTSNode] = []
     visits: int = 0
@@ -304,15 +306,15 @@ class MCTSrStoryboard(MCTSr):
         past_steps = ''
         past_context = ''
         context_linked_list_node = node.linked_list_node.head
-        past_steps += f'{context_linked_list_node.task_step_name}\n'
-        past_context += f'{context_linked_list_node.task_step_question_answer}\n'
+        past_steps += f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n'
+        past_context += f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_question_answer}\n'
         while context_linked_list_node is not None and context_linked_list_node.next is not None:
             if context_linked_list_node.task_step_id == node.linked_list_node.task_step_id:
                 break
             context_linked_list_node = context_linked_list_node.next
             
-            past_steps += f'{context_linked_list_node.task_step_name}\n'
-            past_context += f'{context_linked_list_node.task_step_question_answer}\n'
+            past_steps += f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n'
+            past_context += f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_question_answer}\n'
             
 
         user_prompt = critic_system_prompt_template.format(
@@ -356,61 +358,26 @@ class MCTSrStoryboard(MCTSr):
         assert _refined_answer_response_message.content is not None
             
         json_object = {}
-        try: 
-            # 如果直接解析失败，尝试使用正则表达式
-            action_match = PATTERN.search(_refined_answer_response_message.content)
-            if action_match is not None:
-                thought_content = action_match.group(1).strip()
-                try:
-                    answer_value = float(action_match.group(2))
-                    if answer_value <= 1:
-                        answer_value = answer_value * 100
-                    json_object = {
-                        "thought": thought_content,
-                        "answer": answer_value
-                    }
-                except ValueError:
-                    logger.error("无法将答案转换为浮点数")
-                    raise
-            else:
-                action_match = PLAINTEXT_PATTERN.search(_refined_answer_response_message.content)
-                if action_match is not None:
-                    thought_content = action_match.group(1).strip()
-                            
-                    # 去掉 ```plaintext , 后```
-                    thought_content = thought_content.replace("```plaintext", "").replace("```", "")
-                    json_object = {
-                        "thought": thought_content,
-                        "answer": 100
-                    }
-                else:
-                        
-                    logger.error("无法从响应中提取思考过程和答案")
-                    raise ValueError("响应格式无效")
-
-            logger.info("\033[1;32m" + f"解析后的 JSON 对象: {json_object}" + "\033[0m")
-
-        except Exception as e:
-            logger.error(f"解析响应时出错: {str(e)}")
-            # 提供一个默认响应
-            json_object = {
-                "thought": "解析响应失败",
-                "answer": 0.0
-            }
-
+        task_step_refine_node_list = self._kor_task_step_refine_builder(_refined_answer_response_message)
+        # 将列表answer_score平均
+        answer_score = sum([float(task_step_refine_node.answer_socre) for task_step_refine_node in task_step_refine_node_list]) / len(task_step_refine_node_list)
+        json_object.update({
+            "thought": task_step_refine_node_list[0].thought,
+            "answer": task_step_refine_node_list[0].answer,
+            "answer_score": answer_score
+        })
+        logger.info("\033[1;32m" + f"解析后的 JSON 对象: {json_object}" + "\033[0m")
         refined_answer = RefineResponse.model_validate(
             json_object
         )
         self.refinements.append(refined_answer)
 
-        # persist index to disk
-        node.code_gen_builder.storage_context.persist(persist_dir=f"{node.base_path}/storage/{node.linked_list_node.task_step_id}")
  
         return MCTSNode(
             base_path=node.base_path,
-            answer=f"# Thought {refined_answer.thought}\n\n# Answer\n{refined_answer.answer}",
+            answer=f"{refined_answer.answer}\n\n```text \n{refined_answer.thought} \n\n {refined_answer.answer_score}```",
             linked_list_node=node.linked_list_node,
-            code_gen_builder=node.code_gen_builder,
+            storage_context=node.storage_context,
             parent=node,
             children=[],
             visits=0,
@@ -458,8 +425,19 @@ class MCTSrStoryboard(MCTSr):
         """
         获取AI消息
         """
-                 
-        node.code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
+        
+        code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=node.storage_context)
+        _base_render_data = {
+            'cosplay_role': node.linked_list_node.task_step_id,
+            'personality': node.linked_list_node.task_step_name,
+            'messages': []
+        }
+        code_gen_builder.add_generator(BaseProgramGenerator.from_config(cfg={
+            "code_file": "base_template.py-tpl",
+            "render_data": _base_render_data,
+        }))
+
+        code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
             "query_code_file": "query_template.py-tpl",
             "render_data": {
                 'cosplay_role': 'user',
@@ -467,7 +445,7 @@ class MCTSrStoryboard(MCTSr):
             },
         }))
 
-        executor = node.code_gen_builder.build_executor(
+        executor = code_gen_builder.build_executor(
             chat_function=self.llm,
             messages=[]
         )
@@ -475,12 +453,28 @@ class MCTSrStoryboard(MCTSr):
         executor.execute()
         _ai_message = executor.chat_run()
 
-        assert executor._ai_message is not None
-        # 删除上下文
-        node.code_gen_builder.remove_last_generator()
+        assert executor._ai_message is not None 
 
         return _ai_message
+    
+    def _kor_task_step_refine_builder(self, refined_answer_response_message: AIMessage) -> list[TaskStepRefineNode]:
+        """
+        抽取根据批评意见优化当前回答并续写上下文内容
+        """
+        kor_task_step_refine_builder = KorLoader.form_kor_task_step_refine_builder(self.llm)
+        response = kor_task_step_refine_builder.run(refined_answer_response_message.content)
+        task_step_refine_node_list = []
+        if response.get('data') is not None and response.get('data').get('script') is not None:
+            step_list = response.get('data').get('script')
+            for step in step_list:
+                task_step_refine_node = TaskStepRefineNode(
+                                            thought=step.get('thought'),
+                                            answer=step.get('answer'),
+                                            answer_socre=step.get('answer_socre')
+                                            )
+                task_step_refine_node_list.append(task_step_refine_node)
 
+        return task_step_refine_node_list
 
 def print_tree(node: MCTSNode | None, level: int = 0):
     if node is None:

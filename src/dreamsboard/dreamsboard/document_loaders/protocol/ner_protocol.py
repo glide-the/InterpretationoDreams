@@ -31,3 +31,11 @@ class TaskStepNodeListWrapper(BaseModel):
 
     def to_dict(self):
         return [step.to_dict() for step in self.steps]
+
+
+class TaskStepRefineNode(BaseModel):
+    """根据批评意见优化当前回答并续写上下文内容."""
+    thought: str = Field(..., description="""优化后的回答""")
+    answer: str = Field(..., description=""" 续写的上下文内容""")
+    answer_socre: str = Field(..., description="""答案评分分数。 浮点数""")
+    

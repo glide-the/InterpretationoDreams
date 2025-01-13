@@ -275,7 +275,7 @@ class TaskEngineBuilder:
         return _ai_message
 
 
-    def get_mcts_node(self, code_gen_builder: CodeGeneratorBuilder) -> MCTSrStoryboard:
+    def get_mcts_node(self) -> MCTSrStoryboard:
         """
         构建MCTS树, 初始化当前任务相关的MCTS节点，并返回MCTS执行器
         """
@@ -288,7 +288,7 @@ class TaskEngineBuilder:
             base_path=self.base_path,
             answer=linked_list_node.task_step_question_answer,
             linked_list_node=linked_list_node,
-            code_gen_builder=code_gen_builder, 
+            storage_context=self.storage_context, 
             parent=None, 
             children=[], 
             visits=0, 
@@ -302,7 +302,7 @@ class TaskEngineBuilder:
                 base_path=self.base_path,
                 answer=linked_list_node.task_step_question_answer, 
                 linked_list_node=linked_list_node,
-                code_gen_builder=code_gen_builder, 
+                storage_context=self.storage_context, 
                 parent=None, 
                 children=[], 
                 visits=0, 
@@ -313,7 +313,7 @@ class TaskEngineBuilder:
 
             
         task_step = self.task_step_store.get_task_step(self.task_step_id)
-        mctsr = MCTSrStoryboard(
+        mctsr = MCTSrStoryboard.model_construct(
             llm=self.llm,
             problem=task_step.task_step_name, 
             max_rollouts=2
