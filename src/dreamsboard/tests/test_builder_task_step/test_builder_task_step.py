@@ -6,6 +6,7 @@ from dreamsboard.engine.utils import concat_dirs
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
 from dreamsboard.engine.memory.mctsr.prompt import RefineResponse
+from dreamsboard.dreams.task_step_md.base import TaskStepMD
 import logging
 import os
 logger = logging.getLogger(__name__)
@@ -243,10 +244,26 @@ def test_builder_task_step_mctsr():
             
             mcts_node.print()
             print(answer)
- 
+            task_step.task_step_question_answer = answer 
+            task_step_id = task_engine.task_step_id
+            
+            task_engine.task_step_store.add_task_step([task_step])
+            task_step_store_path = concat_dirs(dirname=f"/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+            task_engine.task_step_store.persist(persist_path=task_step_store_path) 
+            
+            task_step_store.add_task_step([task_step])
+            task_step_store_path = concat_dirs(dirname=f"/storage", basename=DEFAULT_PERSIST_FNAME)
+            task_step_store.persist(persist_path=task_step_store_path) 
 
         except Exception as e:
             logger.error("场景加载失败", e)
 
         finally:
             step+=1
+
+
+def test_task_step_md():
+    task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
+    task_step_md = TaskStepMD(task_step_store)
+    md_text =   task_step_md.format_md()
+    print(md_text.text)

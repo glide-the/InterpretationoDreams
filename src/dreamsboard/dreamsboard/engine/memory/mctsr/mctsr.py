@@ -358,31 +358,39 @@ class MCTSrStoryboard(MCTSr):
         assert _refined_answer_response_message.content is not None
             
         json_object = {}
-        task_step_refine_node_list = self._kor_task_step_refine_builder(_refined_answer_response_message)
-        # 将列表answer_score平均
-        answer_score_list: list[float] = []
-        for task_step_refine_node in task_step_refine_node_list:
-            try:
-                answer_score_list.append(float(task_step_refine_node.answer_socre))
-            except ValueError:
-                answer_score_list.append(0.0)
-        answer_score = sum(answer_score_list) / len(answer_score_list)
-        if answer_score <= 1:
-            answer_score = answer_score * 100
+        try:
+            task_step_refine_node_list = self._kor_task_step_refine_builder(_refined_answer_response_message)
+            # 将列表answer_score平均
+            answer_score_list: list[float] = []
+            for task_step_refine_node in task_step_refine_node_list:
+                try:
+                    answer_score_list.append(float(task_step_refine_node.answer_socre))
+                except ValueError:
+                    answer_score_list.append(0.0)
+            answer_score = sum(answer_score_list) / len(answer_score_list)
+            if answer_score <= 1:
+                answer_score = answer_score * 100
 
-        json_object.update({
-            "thought": task_step_refine_node_list[0].thought,
-            "answer": task_step_refine_node_list[0].answer,
-            "answer_score": answer_score
-        })
+            json_object.update({
+                "thought": task_step_refine_node_list[0].thought,
+                "answer": task_step_refine_node_list[0].answer,
+                "answer_score": answer_score
+            })
+        except Exception as e: 
+            json_object = {
+                "thought": "解析失败",
+                "answer": node.answer,
+                "answer_score": 0
+            }
+
         logger.info("\033[1;32m" + f"解析后的 JSON 对象: {json_object}" + "\033[0m")
         refined_answer = RefineResponse.model_validate(json_object)
         self.refinements.append(refined_answer)
 
- 
+        # ```thought \n{refined_answer.thought} ```\n\n ```answer_score \n{refined_answer.answer_score} ```
         return MCTSNode(
             base_path=node.base_path,
-            answer=f"{refined_answer.answer}\n\n```thought \n{refined_answer.thought} ```\n\n ```answer_score \n{refined_answer.answer_score} ```",
+            answer=f"{refined_answer.answer}",
             linked_list_node=node.linked_list_node,
             storage_context=node.storage_context,
             parent=node,
@@ -447,7 +455,7 @@ class MCTSrStoryboard(MCTSr):
             chat_function=self.llm,
             messages=[]
         )
-        logger.info("\033[1;32m" + f"executor_code: {executor.executor_code}" + "\033[0m")
+        # logger.info("\033[1;32m" + f"executor_code: {executor.executor_code}" + "\033[0m")
         executor.execute()
         _ai_message = executor.chat_run()
 
