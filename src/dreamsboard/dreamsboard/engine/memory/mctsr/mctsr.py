@@ -300,7 +300,7 @@ class MCTSrStoryboard(MCTSr):
                 "task_step_level"
             ],
             template=os.environ.get(
-                "critic_system_prompt", gpt_prompt_config.critic_system_prompt 
+                "critic_system_prompt_data", gpt_prompt_config.critic_system_prompt_data 
             )
         )
         past_steps = ''
@@ -328,7 +328,7 @@ class MCTSrStoryboard(MCTSr):
             task_step_description=node.linked_list_node.task_step_description,
             task_step_level=node.linked_list_node.task_step_level
         ) 
-        _ai_message = self._get_ai_message(user_prompt, node)
+        _ai_message = self._get_ai_message(gpt_prompt_config.critic_system_prompt, user_prompt, node)
         assert _ai_message.content is not None
         critique = _ai_message.content
         assert critique is not None
@@ -343,7 +343,7 @@ class MCTSrStoryboard(MCTSr):
                 "past_steps",
             ],
             template=os.environ.get(
-                "refine_system_prompt", gpt_prompt_config.refine_system_prompt 
+                "refine_system_prompt_data", gpt_prompt_config.refine_system_prompt_data
             )
         )
         refine_system_prompt = refine_system_prompt_template.format(
@@ -354,28 +354,35 @@ class MCTSrStoryboard(MCTSr):
             past_steps=past_steps
         )
  
-        _refined_answer_response_message = self._get_ai_message(refine_system_prompt, node)
+        _refined_answer_response_message = self._get_ai_message(gpt_prompt_config.refine_system_prompt, refine_system_prompt, node)
         assert _refined_answer_response_message.content is not None
             
         json_object = {}
         task_step_refine_node_list = self._kor_task_step_refine_builder(_refined_answer_response_message)
         # 将列表answer_score平均
-        answer_score = sum([float(task_step_refine_node.answer_socre) for task_step_refine_node in task_step_refine_node_list]) / len(task_step_refine_node_list)
+        answer_score_list: list[float] = []
+        for task_step_refine_node in task_step_refine_node_list:
+            try:
+                answer_score_list.append(float(task_step_refine_node.answer_socre))
+            except ValueError:
+                answer_score_list.append(0.0)
+        answer_score = sum(answer_score_list) / len(answer_score_list)
+        if answer_score <= 1:
+            answer_score = answer_score * 100
+
         json_object.update({
             "thought": task_step_refine_node_list[0].thought,
             "answer": task_step_refine_node_list[0].answer,
             "answer_score": answer_score
         })
         logger.info("\033[1;32m" + f"解析后的 JSON 对象: {json_object}" + "\033[0m")
-        refined_answer = RefineResponse.model_validate(
-            json_object
-        )
+        refined_answer = RefineResponse.model_validate(json_object)
         self.refinements.append(refined_answer)
 
  
         return MCTSNode(
             base_path=node.base_path,
-            answer=f"{refined_answer.answer}\n\n```text \n{refined_answer.thought} \n\n {refined_answer.answer_score}```",
+            answer=f"{refined_answer.answer}\n\n```thought \n{refined_answer.thought} ```\n\n ```answer_score \n{refined_answer.answer_score} ```",
             linked_list_node=node.linked_list_node,
             storage_context=node.storage_context,
             parent=node,
@@ -396,7 +403,7 @@ class MCTSrStoryboard(MCTSr):
                 "answer"
             ],
             template=os.environ.get(
-                "evaluate_system_prompt", gpt_prompt_config.evaluate_system_prompt 
+                "evaluate_system_prompt_data", gpt_prompt_config.evaluate_system_prompt_data
             )
         )
 
@@ -412,7 +419,7 @@ class MCTSrStoryboard(MCTSr):
         
         for attempt in range(3):
             try:
-                _ai_message = self._get_ai_message(user_prompt, node) 
+                _ai_message = self._get_ai_message(gpt_prompt_config.evaluate_system_prompt, user_prompt, node) 
                 assert _ai_message.content is not None
                 return int(_ai_message.content)
             except ValueError: 
@@ -421,35 +428,26 @@ class MCTSrStoryboard(MCTSr):
                 if attempt == 2:
                     raise
     
-    def _get_ai_message(self, user_prompt: str, node: MCTSNode) -> AIMessage:
+    def _get_ai_message(self, system_prompt: str, user_prompt: str, node: MCTSNode) -> AIMessage:
         """
         获取AI消息
         """
         
         code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=node.storage_context)
         _base_render_data = {
-            'cosplay_role': node.linked_list_node.task_step_id,
-            'personality': node.linked_list_node.task_step_name,
-            'messages': []
+            'system_prompt': system_prompt,
+            'messages': [user_prompt]
         }
         code_gen_builder.add_generator(BaseProgramGenerator.from_config(cfg={
-            "code_file": "base_template.py-tpl",
+            "code_file": "base_template_system.py-tpl",
             "render_data": _base_render_data,
         }))
-
-        code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-            "query_code_file": "query_template.py-tpl",
-            "render_data": {
-                'cosplay_role': 'user',
-                'message': user_prompt
-            },
-        }))
-
+ 
         executor = code_gen_builder.build_executor(
             chat_function=self.llm,
             messages=[]
         )
-
+        logger.info("\033[1;32m" + f"executor_code: {executor.executor_code}" + "\033[0m")
         executor.execute()
         _ai_message = executor.chat_run()
 
