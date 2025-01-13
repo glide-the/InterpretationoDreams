@@ -39,16 +39,29 @@ class TaskStepMD:
         def wrapper_steps_unit(dict_input: dict):
             # 使用 TASK_STEP_MD_TEMPLATE 格式化每个任务步骤
             formatted_task_steps = [
-                _PROMPT_TEMPLATE_1.format(
-                    task_step_name=step.task_step_name,
-                    task_step_level=step.task_step_level,
-                    task_step_id=step.node_id,
-                    task_step_question_answer=step.task_step_question_answer
-                ) for step in list(self.task_step_store.task_step_all.values())
             ]
-            
+            for step in list(self.task_step_store.task_step_all.values()):
+                
+                if '>' in step.task_step_level: 
+                    
+                    step_text = _PROMPT_TEMPLATE_1.format(
+                        task_step_name=step.task_step_name,
+                        task_step_level=step.task_step_level,
+                        task_step_id=step.node_id,
+                        task_step_question_answer=step.task_step_question_answer
+                    )
+                    formatted_task_steps.append('   '+step_text.strip())
+                else:
+                    step_text = _PROMPT_TEMPLATE_1.format(
+                        task_step_name=f'**{step.task_step_name}**',
+                        task_step_level=step.task_step_level,
+                        task_step_id=step.node_id,
+                        task_step_question_answer=step.task_step_question_answer
+                    )
+                    formatted_task_steps.append('\n' + step_text.strip())
+
             # 将格式化的步骤列表转换为字符串
-            context_placeholder = "\n".join(formatted_task_steps)
+            context_placeholder = "".join(formatted_task_steps)
             return {
                 "start_task_context": list(self.task_step_store.task_step_all.values())[0].start_task_context,
                 "aemo_representation_context": list(self.task_step_store.task_step_all.values())[0].aemo_representation_context,

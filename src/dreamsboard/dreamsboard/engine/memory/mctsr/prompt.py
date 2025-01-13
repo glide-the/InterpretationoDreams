@@ -63,7 +63,7 @@ task_step_name: {task_step_name}
 task_step_description: {task_step_description}
 task_step_level: {task_step_level}
 """,
-    refine_system_prompt=""";; 作者: 甲木 ;; 版本: 0.4 ;; 模型: Claude 3.5 Sonnet ;; 用途: 根据批评意见优化当前回答并续写上下文内容
+    refine_system_prompt=""";; 作者: 甲木 ;; 版本: 0.5 ;; 模型: Claude 3.5 Sonnet ;; 用途: 根据批评意见优化当前回答并续写上下文内容
 
 ;; 定义优化大师
 (defun 优化大师 ()
@@ -121,7 +121,7 @@ task_step_level: {task_step_level}
 
 ;; 输出优化后的回答并附加评分
 (defun 输出优化后的回答 (优化结果 上下文 评分)
-  "输出优化后的回答，包含续写的上下文和评分分数"
+  "输出优化后的回答，包含续写的上下文和评分分数，且不允许出现标题或分段, 不允许出现任何`综上所述`的文字"
   (let ((优化答案 (生成优化后的回答 上下文 当前回答 问题描述 批评意见)))
     (setq 设计规范 "优化后的回答结构清晰，内容紧密关联")
     (setq 输出原则 '(简洁 逻辑清晰 相关性高))
@@ -138,6 +138,9 @@ task_step_level: {task_step_level}
     (print "请提供上下文、当前回答、问题描述和批评意见，我将为您生成一个优化后的答案并续写上下文内容。")))
 
 ;; 启动
+(启动)
+
+
 """,
 refine_system_prompt_data="""(启动) 
 
