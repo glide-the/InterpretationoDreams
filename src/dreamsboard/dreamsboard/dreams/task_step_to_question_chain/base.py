@@ -364,6 +364,6 @@ class TaskStepToQuestionChain(ABC):
 
         table = pd.DataFrame(table_data, columns=["角色", "内容", "分镜"])
 
-        table.to_csv(f"{self.base_path}/storage/{task_step_id}.csv", index=False)
+        table.to_csv(f"{self.base_path}/storage/{task_step_id}.csv", index=False, escapechar='\\')
 
         return f"{self.base_path}/storage/{task_step_id}.csv"
