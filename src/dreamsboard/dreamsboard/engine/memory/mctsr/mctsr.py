@@ -459,10 +459,10 @@ class MCTSrStoryboard(MCTSr):
             llm_runable=self.llm_runable,
             messages=[]
         )
-        # logger.info("\033[1;32m" + f"executor_code: {executor.executor_code}" + "\033[0m")
         executor.execute()
         _ai_message = executor.chat_run()
 
+        logger.info("\033[1;32m" + f"_ai_message: {_ai_message}" + "\033[0m")
         assert executor._ai_message is not None 
 
         return _ai_message

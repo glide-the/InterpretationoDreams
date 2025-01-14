@@ -238,9 +238,10 @@ def test_builder_task_step_mctsr():
     step =0
     task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
-        
-        if step>=2 :
-            break
+       
+        step+=1
+        if step<=2 :
+            continue
         task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
@@ -270,9 +271,7 @@ def test_builder_task_step_mctsr():
  
         except Exception as e:
             logger.error("场景加载失败", e)
-
-        finally:
-            step+=1
+ 
 
 
 def test_task_step_md():
