@@ -1,11 +1,15 @@
 from __future__ import annotations
+from langchain_core.messages import ( 
+    BaseMessage,
+)
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.runnables import Runnable
 from abc import ABC
 from typing import Any, Dict
 from langchain.chains import LLMChain
 from langchain.chains.base import Chain
 from langchain_core.prompts  import PromptTemplate
 from langchain.chains import SequentialChain
-from langchain.schema.language_model import BaseLanguageModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 
@@ -43,9 +47,9 @@ class AEMORepresentationChain(ABC):
     @classmethod
     def from_aemo_representation_chain(
             cls,
-            llm: BaseLanguageModel,
+            llm_runable: Runnable[LanguageModelInput, BaseMessage],
             start_task_context: str,
-            kor_dreams_task_step_llm: BaseLanguageModel = None,
+            kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage] = None,
     ) -> AEMORepresentationChain:
         # 00-判断情感表征是否符合.txt
         prompt_template1 = PromptTemplate(input_variables=["start_task_context"],
@@ -53,7 +57,7 @@ class AEMORepresentationChain(ABC):
                                 "AEMO_REPRESENTATION_PROMPT_TEMPLATE", AEMO_REPRESENTATION_PROMPT_TEMPLATE
                             ))
 
-        aemo_representation_chain = (prompt_template1 | llm | StrOutputParser())
+        aemo_representation_chain = (prompt_template1 | llm_runable | StrOutputParser())
    
  
         def wrapper_output(_dict):
@@ -69,7 +73,7 @@ class AEMORepresentationChain(ABC):
 
 
         kor_dreams_task_step_chain = KorLoader.form_kor_dreams_task_step_builder(
-            llm=llm if kor_dreams_task_step_llm is None else kor_dreams_task_step_llm)
+            llm_runable=llm_runable if kor_dreams_task_step_llm is None else kor_dreams_task_step_llm)
         return cls(start_task_context=start_task_context,
                    kor_dreams_task_step_chain=kor_dreams_task_step_chain,
                    aemo_representation_chain=aemo_representation_chain)

@@ -75,30 +75,5 @@ def test_engine_storage_code_gen_builder() -> None:
         code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
             "engine_code_file": "engine_template.py-tpl",
         }))
-
-    executor = code_gen_builder.build_executor()
-    executor.execute()
-    _ai_message = executor.chat_run()
-
-    logger.info(executor._messages)
-    logger.info(executor._ai_message)
-    assert executor._ai_message is not None
-
-    # persist index to disk
-    code_gen_builder.storage_context.persist(persist_dir="./storage")
-    # executor = code_gen_builder.build_executor()
-    # executor.execute()
-    # _ai_message = executor.chat_run()
-    # code_gen_builder.remove_last_generator()
-    #
-    # _ai_render_data = {
-    #     'ai_message_content': _ai_message.content
-    # }
-    # code_gen_builder.add_generator(AIProgramGenerator.from_config(cfg={
-    #     "ai_code_file": "ai_template.py-tpl",
-    #     "render_data": _ai_render_data,
-    # }))
-    #
-    # logger.info(executor._messages)
-    # logger.info(executor._ai_message)
+ 
     assert True

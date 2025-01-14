@@ -2,7 +2,11 @@
  
 # 3、对每个子任务载入会话场景，然后按照扩写任务步骤构建，MCTS任务
 
-from langchain.schema.language_model import BaseLanguageModel
+from langchain_core.messages import ( 
+    BaseMessage,
+)
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.runnables import Runnable
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
 
@@ -59,10 +63,11 @@ class TaskEngineBuilder:
     task_step_id: str
     csv_file_path: str
     storyboard_executor: StructuredDreamsStoryboard
+    llm_runable: Runnable[LanguageModelInput, BaseMessage]
 
     def __init__(self,
                 base_path: str,
-                llm: BaseLanguageModel,
+                llm_runable: Runnable[LanguageModelInput, BaseMessage],
                 cross_encoder_path: str,
                 start_task_context: str,
                 task_step_store: BaseTaskStepStore,
@@ -72,7 +77,7 @@ class TaskEngineBuilder:
         self.start_task_context = start_task_context
         self.task_step_store = task_step_store
         self.task_step_id = task_step_id
-        self.llm = llm
+        self.llm_runable = llm_runable
         self.cross_encoder_path = cross_encoder_path
         self.client = None
         self.task_step_to_question_chain = None
@@ -128,7 +133,7 @@ class TaskEngineBuilder:
         self.task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
             base_path=self.base_path,
             start_task_context=self.start_task_context,
-            llm=self.llm, 
+            llm_runable=self.llm_runable, 
             task_step_store=self.task_step_store,
             client=client,
             cross_encoder_path=self.cross_encoder_path
@@ -161,7 +166,7 @@ class TaskEngineBuilder:
                 dreams_analysis_store.delete_analysis(analysis_id=analysis_id)
 
             dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-                llm=self.llm, csv_file_path=self.csv_file_path
+                llm_runable=self.llm_runable, csv_file_path=self.csv_file_path
             )
 
             output = dreams_generation_chain.run() 
@@ -195,12 +200,12 @@ class TaskEngineBuilder:
         csv_builder = StructuredStoryboardCSVBuilder.form_builder(csv_file_path=self.csv_file_path)
         csv_builder.load()
         self.storyboard_executor = StructuredDreamsStoryboard.form_builder(
-            llm=self.llm,
+            llm_runable=self.llm_runable,
             builder=csv_builder,
             dreams_guidance_context=dreams_guidance_context,
             dreams_personality_context=dreams_personality_context,
-            guidance_llm=self.llm,
-            personality_llm=self.llm,
+            guidance_llm=self.llm_runable,
+            personality_llm=self.llm_runable,
             user_id=self.task_step_id
         )
 
@@ -260,7 +265,7 @@ class TaskEngineBuilder:
             },
         })) 
         executor = code_gen_builder.build_executor(
-            chat_function=self.llm,
+            llm_runable=self.llm_runable,
             messages=[]
         )
         logger.info(executor.executor_code)
@@ -315,7 +320,7 @@ class TaskEngineBuilder:
             
         task_step = self.task_step_store.get_task_step(self.task_step_id)
         mctsr = MCTSrStoryboard.model_construct(
-            llm=self.llm,
+            llm_runable=self.llm_runable,
             problem=task_step.task_step_name, 
             max_rollouts=2
         )

@@ -36,7 +36,7 @@ def test_structured_dreams_storyboard_store_drop_his() -> None:
         )
 
         dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-            llm=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/id46Bv3g/str/id46Bv3g_keyframe.csv")
+            llm_runable=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/id46Bv3g/str/id46Bv3g_keyframe.csv")
 
         output = dreams_generation_chain.run()
         logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))

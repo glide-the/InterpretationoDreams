@@ -1,6 +1,9 @@
 from __future__ import annotations
-from kor.extraction import create_extraction_chain
-from kor.nodes import Object, Text, Number
+from langchain_core.messages import ( 
+    BaseMessage,
+)
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.runnables import Runnable
 from langchain.chains import LLMChain
 from langchain.chains.ernie_functions import create_structured_output_runnable
 from langchain_community.chat_models import ChatOpenAI
@@ -14,7 +17,7 @@ class NerLoader:
     """实体关系抽取"""
     @classmethod
     def form_ner_dreams_personality_builder(cls,
-                                            llm: BaseLanguageModel) -> LLMChain:
+                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
         """
         生成性格分析的抽取链
         :param llm:
@@ -44,5 +47,5 @@ class NerLoader:
                 ("human", "{input}"),
             ]
         )
-        chain = create_structured_output_runnable(Personality, llm, prompt)
+        chain = create_structured_output_runnable(Personality, llm_runable, prompt)
         return chain

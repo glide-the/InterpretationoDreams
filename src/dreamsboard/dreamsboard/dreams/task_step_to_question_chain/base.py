@@ -1,11 +1,13 @@
 from __future__ import annotations
 from abc import ABC
-from typing import Any, Dict
-from langchain.chains import LLMChain
+from langchain_core.messages import ( 
+    BaseMessage,
+)
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.runnables import Runnable
 from langchain.chains.base import Chain
 from langchain_core.prompts  import PromptTemplate
 from langchain.chains import SequentialChain
-from langchain.schema.language_model import BaseLanguageModel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 
@@ -99,7 +101,7 @@ class TaskStepToQuestionChain(ABC):
             cls,
             base_path: str,
             start_task_context: str,
-            llm: BaseLanguageModel,
+            llm_runable: Runnable[LanguageModelInput, BaseMessage],
             task_step_store: BaseTaskStepStore,
             client: WeaviateClient,
             cross_encoder_path: str
@@ -118,7 +120,7 @@ class TaskStepToQuestionChain(ABC):
                                 "CONVERT_TASK_STEP_TO_QUESTION_PROMPT_TEMPLATE", CONVERT_TASK_STEP_TO_QUESTION_PROMPT_TEMPLATE
                             ))
 
-        task_step_to_question_chain = (prompt_template1 | llm | StrOutputParser())
+        task_step_to_question_chain = (prompt_template1 | llm_runable | StrOutputParser())
  
         def wrapper_output(_dict):
             return {
@@ -138,7 +140,7 @@ class TaskStepToQuestionChain(ABC):
                                         template=os.environ.get("TASK_STEP_QUESTION_TO_GRAPHQL_PROMPT_TEMPLATE", TASK_STEP_QUESTION_TO_GRAPHQL_PROMPT_TEMPLATE)
                                         )
 
-        task_step_question_to_graphql_chain = (prompt_template2 | llm | StrOutputParser())
+        task_step_question_to_graphql_chain = (prompt_template2 | llm_runable | StrOutputParser())
 
         def wrapper_output2(_dict):
             return {

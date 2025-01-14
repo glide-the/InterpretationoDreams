@@ -1,6 +1,10 @@
 from __future__ import annotations
 from typing import List, Optional
-
+from langchain_core.messages import ( 
+    BaseMessage,
+)
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.runnables import Runnable
 from dreamsboard.document_loaders.ner_loader import NerLoader
 from dreamsboard.document_loaders.protocol.ner_protocol import DreamsStepInfo, Personality
 from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
@@ -12,7 +16,6 @@ from dreamsboard.engine.generate.code_generate import (
 )
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder, KorLoader
 from langchain.chains import LLMChain
-from langchain.schema.language_model import BaseLanguageModel
 import logging
 
 from dreamsboard.engine.loading import load_store_from_storage
@@ -50,7 +53,7 @@ class StructuredDreamsStoryboard:
                  kor_dreams_personality_chain: LLMChain,
                  ner_dreams_personality_chain: LLMChain,
                  user_id: str = None,
-                 llm: BaseLanguageModel = None,
+                 llm_runable: Runnable[LanguageModelInput, BaseMessage]|None = None,
                  ):
         """
 
@@ -65,23 +68,24 @@ class StructuredDreamsStoryboard:
         self.kor_dreams_personality_chain = kor_dreams_personality_chain
         self.ner_dreams_personality_chain = ner_dreams_personality_chain
         self.user_id = user_id
-        self.llm = llm
+        self.llm_runable = llm_runable
+        
     @classmethod
     def form_builder(cls,
-                     llm: BaseLanguageModel,
+                     llm_runable: Runnable[LanguageModelInput, BaseMessage],
                      builder: StructuredStoryboardCSVBuilder,
                      dreams_guidance_context: str,
                      dreams_personality_context: str,
-                     guidance_llm: BaseLanguageModel = None,
-                     personality_llm: BaseLanguageModel = None,
+                     guidance_llm: Runnable[LanguageModelInput, BaseMessage] = None,
+                     personality_llm: Runnable[LanguageModelInput, BaseMessage] = None,
                      user_id: str = None, ) -> StructuredDreamsStoryboard:
         kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
-            llm=llm if guidance_llm is None else guidance_llm)
+            llm_runable=llm_runable if guidance_llm is None else guidance_llm)
         kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(
-            llm=llm if personality_llm is None else personality_llm
+            llm_runable=llm_runable if personality_llm is None else personality_llm
         )
         ner_dreams_personality_chain = NerLoader.form_ner_dreams_personality_builder(
-            llm=llm if personality_llm is None else personality_llm
+            llm_runable=llm_runable if personality_llm is None else personality_llm
         )
 
         return cls(builder=builder,
@@ -91,7 +95,7 @@ class StructuredDreamsStoryboard:
                    kor_dreams_personality_chain=kor_dreams_personality_chain,
                    ner_dreams_personality_chain=ner_dreams_personality_chain,
                    user_id=user_id,
-                   llm=llm)
+                   llm_runable=llm_runable)
 
     def kor_dreams_guidance_context(self) -> List[DreamsStepInfo]:
         """
@@ -205,7 +209,7 @@ class StructuredDreamsStoryboard:
                 "render_data": _dreams_render_data,
             })) 
             executor = code_gen_builder.build_executor(
-                chat_function=self.llm,
+                llm_runable=self.llm_runable,
                 messages=[]
             )
             executor.execute()

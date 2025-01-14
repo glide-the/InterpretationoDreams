@@ -20,7 +20,7 @@ def test_kor_glm_3():
         top_p=0.70,
     )
     kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
-        llm=guidance_llm)
+        llm_runable=guidance_llm)
 
     response = kor_dreams_guidance_chain.run(dreams_guidance_context)
     dreams_step_list = []
@@ -49,7 +49,7 @@ def test_kor_glm_4():
         top_p=0.70,
     )
     kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
-        llm=guidance_llm)
+        llm_runable=guidance_llm)
 
     response = kor_dreams_guidance_chain.run(dreams_guidance_context)
     dreams_step_list = []

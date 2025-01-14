@@ -63,7 +63,7 @@ def test_structured_dreams_storyboard_store_test1(setup_log) -> None:
 
 
         dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-            llm=llm, csv_file_path="src/docs/csv/id46Bv3g_keyframe.csv")
+            llm_runable=llm, csv_file_path="src/docs/csv/id46Bv3g_keyframe.csv")
 
         output = dreams_generation_chain.run()
         dreams_guidance_context = output.get("dreams_guidance_context").get("dreams_guidance_context")
@@ -83,7 +83,7 @@ def test_structured_dreams_storyboard_store_test1(setup_log) -> None:
 
         builder = StructuredStoryboardCSVBuilder.form_builder(csv_file_path="src/docs/csv/id46Bv3g_keyframe.csv")
         builder.load()
-        storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
+        storyboard_executor = StructuredDreamsStoryboard.form_builder(llm_runable=llm,
                                                                       builder=builder,
                                                                       dreams_guidance_context=dreams_guidance_context,
                                                                       dreams_personality_context=dreams_personality_context,
@@ -109,7 +109,7 @@ def test_structured_dreams_storyboard_store_test1(setup_log) -> None:
     }))
  
     executor = code_gen_builder.build_executor(
-        chat_function=llm,
+        llm_runable=llm,
         messages=[]
     )
     logger.info(executor)

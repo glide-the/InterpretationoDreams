@@ -34,7 +34,7 @@ def test_aemo_representation_chain_context():
         top_p=0.9,
     ) 
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
-            llm=llm,
+            llm_runable=llm,
             start_task_context="有哪些方法可以提升大模型的规划能力，各自优劣是什么？"
         )
 
@@ -58,7 +58,7 @@ def test_aemo_representation_chain_custom_prompt():
     )
     os.environ["AEMO_REPRESENTATION_PROMPT_TEMPLATE"] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
-            llm=llm,
+            llm_runable=llm,
             start_task_context="有哪些方法可以提升大模型的规划能力，各自优劣是什么？"
         )
 
@@ -90,7 +90,7 @@ def test_aemo_representation_chain_task_step():
     )
     os.environ["AEMO_REPRESENTATION_PROMPT_TEMPLATE"] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
-        llm=llm,
+        llm_runable=llm,
         start_task_context="有哪些方法可以提升大模型的规划能力，各自优劣是什么？",
         kor_dreams_task_step_llm=kor_dreams_task_step_llm
     )
@@ -131,7 +131,7 @@ def test_aemo_representation_chain_task_step_store():
     )
     os.environ["AEMO_REPRESENTATION_PROMPT_TEMPLATE"] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
-        llm=llm,
+        llm_runable=llm,
         start_task_context="有哪些方法可以提升大模型的规划能力，各自优劣是什么？",
         kor_dreams_task_step_llm=kor_dreams_task_step_llm
     )

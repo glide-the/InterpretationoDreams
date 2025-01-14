@@ -68,7 +68,11 @@ from dreamsboard.common.try_parse_json_object import try_parse_json_object
 from dreamsboard.document_loaders.kor_loader import KorLoader
 from dreamsboard.document_loaders.protocol.ner_protocol import TaskStepRefineNode
 from langchain.prompts import PromptTemplate
-from langchain.schema.language_model import BaseLanguageModel
+from langchain_core.messages import ( 
+    BaseMessage,
+)
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.runnables import Runnable
 from dreamsboard.engine.storage.storage_context import StorageContext
 import numpy as np
 import logging
@@ -133,7 +137,7 @@ class SelectionPolicy(Enum):
 
 class MCTSr(BaseModel):
     
-    llm: BaseLanguageModel
+    llm_runable: Runnable[LanguageModelInput, BaseMessage]
     problem: str
     max_rollouts: int
     exploration_constant: float = 1.0
@@ -452,7 +456,7 @@ class MCTSrStoryboard(MCTSr):
         }))
  
         executor = code_gen_builder.build_executor(
-            chat_function=self.llm,
+            llm_runable=self.llm_runable,
             messages=[]
         )
         # logger.info("\033[1;32m" + f"executor_code: {executor.executor_code}" + "\033[0m")
@@ -467,7 +471,7 @@ class MCTSrStoryboard(MCTSr):
         """
         抽取根据批评意见优化当前回答并续写上下文内容
         """
-        kor_task_step_refine_builder = KorLoader.form_kor_task_step_refine_builder(self.llm)
+        kor_task_step_refine_builder = KorLoader.form_kor_task_step_refine_builder(self.llm_runable)
         response = kor_task_step_refine_builder.run(refined_answer_response_message.content)
         task_step_refine_node_list = []
         if response.get('data') is not None and response.get('data').get('script') is not None:

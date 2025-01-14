@@ -1,16 +1,19 @@
 from __future__ import annotations
+from langchain_core.messages import ( 
+    BaseMessage,
+)
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.runnables import Runnable
 from kor.extraction import create_extraction_chain
 from kor.nodes import Object, Text, Number
 from langchain.chains import LLMChain
-from langchain_community.chat_models import ChatOpenAI
-from langchain.schema.language_model import BaseLanguageModel
 
 
 class KorLoader:
 
     @classmethod
     def form_kor_dreams_guidance_builder(cls,
-                                         llm: BaseLanguageModel) -> LLMChain:
+                                         llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
         """
         生成开放问题的抽取链
         :param llm:
@@ -73,12 +76,12 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
             many=True,
         )
 
-        chain = create_extraction_chain(llm, schema)
+        chain = create_extraction_chain(llm_runable, schema)
         return chain
 
     @classmethod
     def form_kor_dreams_personality_builder(cls,
-                                            llm: BaseLanguageModel) -> LLMChain:
+                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
         """
         生成性格分析的抽取链
         :param llm:
@@ -164,13 +167,13 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
             ],
             many=True,
         )
-        chain = create_extraction_chain(llm, schema)
+        chain = create_extraction_chain(llm_runable, schema)
         return chain
 
 
     @classmethod
     def form_kor_dreams_task_step_builder(cls,
-                                            llm: BaseLanguageModel) -> LLMChain:
+                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
         """
         生成任务步骤的抽取链
         :param llm:
@@ -280,12 +283,12 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
         )
 
 
-        chain = create_extraction_chain(llm, schema)
+        chain = create_extraction_chain(llm_runable, schema)
         return chain
 
     @classmethod
     def form_kor_task_step_refine_builder(cls,
-                                            llm: BaseLanguageModel) -> LLMChain:
+                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
         """
         抽取批评意见优化当前回答并续写上下文内容
         :param llm:
@@ -447,7 +450,7 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
         )
 
 
-        chain = create_extraction_chain(llm, schema)
+        chain = create_extraction_chain(llm_runable, schema)
         return chain
 
 

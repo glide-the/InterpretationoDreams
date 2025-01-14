@@ -1,12 +1,14 @@
 from __future__ import annotations
-from typing import List, Sequence
- 
+from langchain_core.messages import ( 
+    BaseMessage,
+)
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.runnables import Runnable
+from langchain_core.prompts import PromptTemplate
 from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
  
 from dreamsboard.document_loaders import KorLoader
 from dreamsboard.dreams.aemo_representation_chain.base import AEMORepresentationChain
-from langchain.chains import LLMChain
-from langchain.schema.language_model import BaseLanguageModel
 from dreamsboard.engine.entity.task_step.task_step import TaskStepNode
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.utils import concat_dirs
@@ -42,12 +44,12 @@ class StructuredTaskStepStoryboard:
     task_step_store: BaseTaskStepStore
     start_task_context: str
     cross_encoder_path: str
-    llm: BaseLanguageModel
+    llm_runable: Runnable[LanguageModelInput, BaseMessage]
     aemo_representation_chain: AEMORepresentationChain
 
     def __init__(self,
                  base_path: str,
-                 llm: BaseLanguageModel,
+                 llm_runable: Runnable[LanguageModelInput, BaseMessage],
                  cross_encoder_path: str,
                  start_task_context: str,
                  aemo_representation_chain: AEMORepresentationChain,
@@ -60,7 +62,7 @@ class StructuredTaskStepStoryboard:
         :param aemo_representation_chain: 情感表征链
         """
         self.base_path = base_path
-        self.llm = llm
+        self.llm_runable = llm_runable
         self.cross_encoder_path = cross_encoder_path
         self.start_task_context = start_task_context
         self.aemo_representation_chain = aemo_representation_chain
@@ -68,14 +70,14 @@ class StructuredTaskStepStoryboard:
 
     @classmethod
     def form_builder(cls,
-                     llm: BaseLanguageModel,
+                     llm_runable: Runnable[LanguageModelInput, BaseMessage],
                      cross_encoder_path: str,
                      start_task_context: str, 
-                     kor_dreams_task_step_llm: BaseLanguageModel | None = None,
+                     kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage] | None = None,
                      task_step_store: BaseTaskStepStore | None = None,
                      ) -> StructuredTaskStepStoryboard: 
         aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
-            llm=llm,
+            llm_runable=llm_runable,
             start_task_context=start_task_context,
             kor_dreams_task_step_llm=kor_dreams_task_step_llm
         )
@@ -87,7 +89,7 @@ class StructuredTaskStepStoryboard:
             task_step_store = SimpleTaskStepStore.from_persist_dir(f'./{base_path}/storage')
         
         return cls(base_path=base_path,
-                   llm=llm,
+                   llm_runable=llm_runable,
                    cross_encoder_path=cross_encoder_path,
                    start_task_context=start_task_context,
                    aemo_representation_chain=aemo_representation_chain,
@@ -107,7 +109,7 @@ class StructuredTaskStepStoryboard:
                 # 从存储中获取详细的任务
                 task_step_store_node = SimpleTaskStepStore.from_persist_dir(f"{self.base_path}/storage/{task_step_id}")
                 iter_builder_queue.put(TaskEngineBuilder(
-                    llm=self.llm,
+                    llm_runable=self.llm_runable,
                     cross_encoder_path=self.cross_encoder_path,
                     start_task_context=self.start_task_context,
                     task_step_store=task_step_store_node,
@@ -142,7 +144,7 @@ class StructuredTaskStepStoryboard:
                 task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage", basename=DEFAULT_PERSIST_FNAME)
                 self.task_step_store.persist(persist_path=task_step_store_path) 
                 iter_builder_queue.put(TaskEngineBuilder(
-                    llm=self.llm,
+                    llm_runable=self.llm_runable,
                     cross_encoder_path=self.cross_encoder_path,
                     start_task_context=self.start_task_context,
                     task_step_store=task_step_store_node,

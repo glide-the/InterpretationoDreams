@@ -23,7 +23,7 @@ def test_structured_dreams_storyboard() -> None:
     )
 
     dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-        llm=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/ieAeWyXU/str/ieAeWyXU_keyframe.csv")
+        llm_runable=llm, csv_file_path="/media/checkpoint/speech_data/抖音作品/ieAeWyXU/str/ieAeWyXU_keyframe.csv")
 
     output = dreams_generation_chain.run()
     logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))
@@ -31,7 +31,7 @@ def test_structured_dreams_storyboard() -> None:
     dreams_guidance_context = output.get("dreams_guidance_context")
     dreams_personality_context = output.get("dreams_personality_context")
 
-    storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
+    storyboard_executor = StructuredDreamsStoryboard.form_builder(llm_runable=llm,
                                                                   builder=dreams_generation_chain.builder,
                                                                   dreams_guidance_context=dreams_guidance_context,
                                                                   dreams_personality_context=dreams_personality_context

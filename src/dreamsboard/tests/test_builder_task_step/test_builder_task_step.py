@@ -7,6 +7,8 @@ from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNA
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
 from dreamsboard.engine.memory.mctsr.prompt import RefineResponse
 from dreamsboard.dreams.task_step_md.base import TaskStepMD
+from dreamsboard.common import _get_assistants_tool
+
 import logging
 import os
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
@@ -55,6 +57,12 @@ def test_builder_task_step():
         temperature=0.95,
         top_p=0.70,
     )
+    
+
+    tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+    kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+
     from tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
         STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
@@ -73,8 +81,8 @@ def test_builder_task_step():
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     start_task_context = "Bert模型应用场景综述"
     builder = StructuredTaskStepStoryboard.form_builder(
-        llm=llm,
-        kor_dreams_task_step_llm=kor_dreams_task_step_llm,
+        llm_runable=llm_with_tools,
+        kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
         start_task_context=start_task_context, 
         cross_encoder_path=cross_encoder_path
     )
@@ -108,6 +116,11 @@ def test_builder_task_step_answer():
         temperature=0.95,
         top_p=0.70,
     )
+
+    tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+    kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+
     from tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
         STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
@@ -128,8 +141,8 @@ def test_builder_task_step_answer():
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     start_task_context = "Bert模型应用场景综述"
     builder = StructuredTaskStepStoryboard.form_builder(
-        llm=llm,
-        kor_dreams_task_step_llm=kor_dreams_task_step_llm,
+        llm_runable=llm_with_tools,
+        kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
         start_task_context=start_task_context, 
         cross_encoder_path=cross_encoder_path
     )
@@ -167,6 +180,8 @@ def test_json_parse():
         json_text
     )
 
+ 
+
 def test_builder_task_step_mctsr():
     
     os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
@@ -186,6 +201,11 @@ def test_builder_task_step_mctsr():
         temperature=0.95,
         top_p=0.70,
     )
+
+    tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+    kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+
     from tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
         STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
@@ -206,8 +226,8 @@ def test_builder_task_step_mctsr():
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     start_task_context = "Bert模型应用场景综述"
     builder = StructuredTaskStepStoryboard.form_builder(
-        llm=llm,
-        kor_dreams_task_step_llm=kor_dreams_task_step_llm,
+        llm_runable=llm_with_tools,
+        kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
         start_task_context=start_task_context, 
         cross_encoder_path=cross_encoder_path
     )

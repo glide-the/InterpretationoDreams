@@ -109,7 +109,7 @@ def test_export_csv_file_path():
 
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
         base_path="./",
-        llm=llm, 
+        llm_runable=llm, 
         task_step_store=task_step_store,
         client=client,
         cross_encoder_path=cross_encoder_path

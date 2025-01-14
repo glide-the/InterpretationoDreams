@@ -124,7 +124,7 @@ def test_batch_extract(setup_log) -> None:
 
                             if not dreams_analysis_store_loaded:
                                 dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-                                    llm=llm, csv_file_path=filename, user_id=role)
+                                    llm_runable=llm, csv_file_path=filename, user_id=role)
 
                                 output = dreams_generation_chain.run()
                                 dreams_guidance_context = output.get("dreams_guidance_context").get("dreams_guidance_context")
@@ -150,7 +150,7 @@ def test_batch_extract(setup_log) -> None:
 
                             builder = StructuredStoryboardCSVBuilder.form_builder(csv_file_path=filename)
                             builder.load()
-                            storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
+                            storyboard_executor = StructuredDreamsStoryboard.form_builder(llm_runable=llm,
                                                                                           builder=builder,
                                                                                           dreams_guidance_context=dreams_guidance_context,
                                                                                           dreams_personality_context=dreams_personality_context,                                                                                      guidance_llm=guidance_llm,
@@ -160,7 +160,7 @@ def test_batch_extract(setup_log) -> None:
                             code_gen_builder = storyboard_executor.loader_cosplay_builder()
 
                             executor = code_gen_builder.build_executor(
-                                chat_function=llm,
+                                llm_runable=llm,
                                 messages=[]
                             )
                             logger.info(executor.executor_code)

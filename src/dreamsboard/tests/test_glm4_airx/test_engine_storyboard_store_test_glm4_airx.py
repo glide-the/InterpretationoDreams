@@ -1,10 +1,7 @@
 import logging
 
 from langchain_community.chat_models import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableLambda
-
+from dreamsboard.common import _get_assistants_tool
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
 from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
@@ -47,6 +44,12 @@ def test_structured_dreams_storyboard_store_test_glm4_airx(setup_log) -> None:
         temperature=0.95,
         top_p=0.70,
     )
+    
+
+    tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+    guidance_llm_with_tools = guidance_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+
     try:
 
         storage_context = StorageContext.from_defaults(persist_dir="./ieA2E1F7_keyframe")
@@ -97,11 +100,11 @@ def test_structured_dreams_storyboard_store_test_glm4_airx(setup_log) -> None:
 
         builder = StructuredStoryboardCSVBuilder.form_builder(csv_file_path="ieA2E1F7_keyframe.csv")
         builder.load()
-        storyboard_executor = StructuredDreamsStoryboard.form_builder(llm=llm,
+        storyboard_executor = StructuredDreamsStoryboard.form_builder(llm_runable=llm_with_tools,
                                                                       builder=builder,
                                                                       dreams_guidance_context=dreams_guidance_context,
                                                                       dreams_personality_context=dreams_personality_context,
-                                                                      guidance_llm=guidance_llm
+                                                                      guidance_llm=guidance_llm_with_tools
                                                                       )
         code_gen_builder = storyboard_executor.loader_cosplay_builder()
 
@@ -129,7 +132,10 @@ def test_structured_dreams_storyboard_store_test_glm4_airx(setup_log) -> None:
         },
     }))
 
-    executor = code_gen_builder.build_executor()
+    executor = code_gen_builder.build_executor(
+        llm_runable=llm_with_tools,
+        messages=[]
+    )
     logger.info(executor)
     logger.info(executor.executor_code)
 
