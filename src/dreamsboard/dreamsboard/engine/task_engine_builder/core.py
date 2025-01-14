@@ -127,6 +127,7 @@ class TaskEngineBuilder:
 
         self.task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
             base_path=self.base_path,
+            start_task_context=self.start_task_context,
             llm=self.llm, 
             task_step_store=self.task_step_store,
             client=client,

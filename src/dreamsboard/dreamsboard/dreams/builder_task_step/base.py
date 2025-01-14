@@ -11,11 +11,10 @@ from dreamsboard.engine.entity.task_step.task_step import TaskStepNode
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.utils import concat_dirs
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
+from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 import queue
 import logging
-
-from dreamsboard.engine.loading import load_store_from_storage
-from dreamsboard.engine.storage.storage_context import StorageContext
+import os 
 from dreamsboard.engine.storage.task_step_store.simple_task_step_store import SimpleTaskStepStore
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -69,18 +68,24 @@ class StructuredTaskStepStoryboard:
 
     @classmethod
     def form_builder(cls,
-                     base_path: str,
                      llm: BaseLanguageModel,
                      cross_encoder_path: str,
                      start_task_context: str, 
-                     kor_dreams_task_step_llm: BaseLanguageModel = None,
-                     task_step_store: BaseTaskStepStore = None,
+                     kor_dreams_task_step_llm: BaseLanguageModel | None = None,
+                     task_step_store: BaseTaskStepStore | None = None,
                      ) -> StructuredTaskStepStoryboard: 
         aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
             llm=llm,
             start_task_context=start_task_context,
             kor_dreams_task_step_llm=kor_dreams_task_step_llm
         )
+        
+        base_path = f'./{get_query_hash(start_task_context)}/'
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+        if task_step_store is None:
+            task_step_store = SimpleTaskStepStore.from_persist_dir(f'./{base_path}/storage')
+        
         return cls(base_path=base_path,
                    llm=llm,
                    cross_encoder_path=cross_encoder_path,
@@ -133,7 +138,9 @@ class StructuredTaskStepStoryboard:
                 task_step_store_node.add_task_step([task_step_node])
                 task_step_store_node.persist(persist_path=task_step_store_path)
                 self.task_step_store.add_task_step([task_step_node])
-                self.task_step_store.persist() 
+                
+                task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage", basename=DEFAULT_PERSIST_FNAME)
+                self.task_step_store.persist(persist_path=task_step_store_path) 
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm=self.llm,
                     cross_encoder_path=self.cross_encoder_path,

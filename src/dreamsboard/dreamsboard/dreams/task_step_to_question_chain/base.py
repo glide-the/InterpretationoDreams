@@ -22,7 +22,7 @@ from dreamsboard.dreams.task_step_to_question_chain.prompts import (
 from dreamsboard.engine.entity.task_step.task_step import TaskStepContext
 
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.context_collections import init_context_collections
-from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import exe_query
+from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import exe_query, get_query_hash
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import insert_into_database
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.init_networkx_concept import find_root_nodes
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.init_networkx_concept import find_high_outdegree_concepts
@@ -66,6 +66,9 @@ PATTERN = re.compile(r"```graphql?([\s\S]*?)```", re.DOTALL)
 
 class TaskStepToQuestionChain(ABC):
     base_path: str
+    start_task_context: str
+    collection_name: str
+    collection_name_context: str
     task_step_to_question_chain: Chain
     task_step_store: BaseTaskStepStore
     task_step_question_to_graphql_chain: Chain
@@ -73,12 +76,18 @@ class TaskStepToQuestionChain(ABC):
     cross_encoder: CrossEncoder
     def __init__(self,
                  base_path: str,
+                 start_task_context: str,
+                 collection_name: str,
+                 collection_name_context: str,
                  task_step_store: BaseTaskStepStore,
                  task_step_to_question_chain: Chain,
                  task_step_question_to_graphql_chain: Chain,
                  client: WeaviateClient,
                  cross_encoder: CrossEncoder):
         self.base_path = base_path
+        self.start_task_context = start_task_context
+        self.collection_name = collection_name
+        self.collection_name_context = collection_name_context
         self.task_step_store = task_step_store
         self.task_step_to_question_chain = task_step_to_question_chain
         self.task_step_question_to_graphql_chain = task_step_question_to_graphql_chain
@@ -89,11 +98,17 @@ class TaskStepToQuestionChain(ABC):
     def from_task_step_to_question_chain(
             cls,
             base_path: str,
+            start_task_context: str,
             llm: BaseLanguageModel,
             task_step_store: BaseTaskStepStore,
             client: WeaviateClient,
             cross_encoder_path: str
     ) -> TaskStepToQuestionChain:
+        """
+        
+        1、对当前主任务名称创建hash值，作为collection_name
+        2、对当前任务步骤名称创建hash值，作为collection_name_context
+        """
         prompt_template1 = PromptTemplate(input_variables=["start_task_context", 
                                                            "aemo_representation_context",
                                                            "task_step_name",
@@ -141,8 +156,16 @@ class TaskStepToQuestionChain(ABC):
             automodel_args={"torch_dtype": "auto"},
             trust_remote_code=True,
         )
+        
+           
+        collection_id = get_query_hash(start_task_context)
+        # TODO 之后单独设计召回模块，由模块生成collection_name, collection_name_context
+        collection_name, collection_name_context = init_context_collections(client, collection_id)
         return cls(
             base_path=base_path,
+            start_task_context=start_task_context,
+            collection_name=collection_name,
+            collection_name_context=collection_name_context,
             task_step_store=task_step_store,
             task_step_to_question_chain=task_step_to_question_chain,
             task_step_question_to_graphql_chain=task_step_question_to_graphql_chain,
@@ -239,19 +262,17 @@ class TaskStepToQuestionChain(ABC):
     def invoke_task_step_question_context(self, task_step_id: str) -> None:
         """
         对任务步骤进行抽取，得到任务步骤的上下文
+        3、增加项目
         """
 
         task_step_node = self.task_step_store.get_task_step(task_step_id)
         if task_step_node.task_step_question_context is not None and len(task_step_node.task_step_question_context) > 0:
             return
-            # task_step_id  - 转换为下划线
-        task_step_id = task_step_id.replace("-", "_")
-        collection_name, collection_name_context = init_context_collections(self.client, task_step_id)
 
-        top_k =100  # 可选参数，默认查询返回前 5 个结果
+        top_k =100  # 可选参数，默认查询返回前 100个结果
         properties_list = exe_query(task_step_node.task_step_question,top_k)
         # 插入数据到数据库 
-        insert_into_database(self.client, collection_name, 'ref_id', properties_list)
+        insert_into_database(self.client, self.collection_name, 'ref_id', properties_list)
 
         context_properties_list = [{
             "refId": item.get('ref_id'),
@@ -260,16 +281,16 @@ class TaskStepToQuestionChain(ABC):
             "chunkText": item.get('chunk_text')
         } for item in properties_list]
 
-        insert_into_database(self.client, collection_name_context, 'refId', context_properties_list)
+        insert_into_database(self.client, self.collection_name_context, 'refId', context_properties_list)
         retrieve_ids = []
         try:
-            retrieve_ids = self._retrieve_task_step_question_context(task_step_id, collection_name_context, task_step_node)
+            retrieve_ids = self._retrieve_task_step_question_context(task_step_id, self.collection_name_context, task_step_node)
         except Exception as e:
             logger.error(f"Error retrieving task step question context: {e}")
             
         if len(retrieve_ids) == 0:
             
-            collection = self.client.collections.get(collection_name) 
+            collection = self.client.collections.get(self.collection_name) 
 
             vector_names = ["chunk_text"]
             response = collection.query.hybrid(
@@ -282,7 +303,7 @@ class TaskStepToQuestionChain(ABC):
             )
         else:
             # 对refIds进行编码
-            collection = self.client.collections.get(collection_name)
+            collection = self.client.collections.get(self.collection_name)
             response = collection.query.fetch_objects(
                 filters=Filter.by_property("ref_id").contains_any(retrieve_ids), 
                 return_metadata=MetadataQuery(score=True, explain_score=True, distance=True),

@@ -23,12 +23,12 @@ def init_context_connect() -> WeaviateClient:
     return client
 
 
-def init_context_collections(client: WeaviateClient, task_id: str) -> tuple[str, str]:
+def init_context_collections(client: WeaviateClient, collection_id: str) -> tuple[str, str]:
     from datetime import datetime
  
 
     # Collection name with timestamp
-    collection_name = "AtomgitPapers"+ task_id 
+    collection_name = "AtomgitPapers"+ collection_id 
     
     collection_name_context = f"{collection_name}Context"
     client.collections.delete(collection_name) 

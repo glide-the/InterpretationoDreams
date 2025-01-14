@@ -9,6 +9,7 @@ from dreamsboard.engine.memory.mctsr.prompt import RefineResponse
 from dreamsboard.dreams.task_step_md.base import TaskStepMD
 import logging
 import os
+from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -68,18 +69,13 @@ def test_builder_task_step():
     os.environ["EDREAMS_EVOLUTIONARY_TEMPLATE"] = EDREAMS_EVOLUTIONARY_TEMPLATE_TEST
     os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
-
-
-    # 存储
-    task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
     
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    start_task_context = "Bert模型应用场景综述"
     builder = StructuredTaskStepStoryboard.form_builder(
-        base_path="./",
         llm=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
-        start_task_context="多模态大模型的技术发展路线是什么样的？", 
-        task_step_store=task_step_store,
+        start_task_context=start_task_context, 
         cross_encoder_path=cross_encoder_path
     )
     # 初始化任务引擎
@@ -90,7 +86,7 @@ def test_builder_task_step():
         task_engine = task_engine_builder.get()  
         logger.info(task_engine.task_step_id)
 
-
+    assert builder.base_path == f'./{get_query_hash(start_task_context)}/'
 
 def test_builder_task_step_answer():
     os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
@@ -129,14 +125,12 @@ def test_builder_task_step_answer():
 
 
     # 存储
-    task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    start_task_context = "Bert模型应用场景综述"
     builder = StructuredTaskStepStoryboard.form_builder(
-        base_path="./",
         llm=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
-        start_task_context="多模态大模型的技术发展路线是什么样的？", 
-        task_step_store=task_step_store,
+        start_task_context=start_task_context, 
         cross_encoder_path=cross_encoder_path
     )
     # 初始化任务引擎
@@ -144,6 +138,7 @@ def test_builder_task_step_answer():
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
     step =0
+    task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
         if step>=2 :
             break
@@ -208,14 +203,11 @@ def test_builder_task_step_mctsr():
 
 
     # 存储
-    task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     builder = StructuredTaskStepStoryboard.form_builder(
-        base_path="./",
         llm=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
-        start_task_context="多模态大模型的技术发展路线是什么样的？", 
-        task_step_store=task_step_store,
+        start_task_context="Bert模型应用场景综述", 
         cross_encoder_path=cross_encoder_path
     )
     # 初始化任务引擎
@@ -223,7 +215,7 @@ def test_builder_task_step_mctsr():
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
     step =0
-
+    task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
         
         if step>=2 :
@@ -248,13 +240,13 @@ def test_builder_task_step_mctsr():
             task_step_id = task_engine.task_step_id
             
             task_engine.task_step_store.add_task_step([task_step])
-            task_step_store_path = concat_dirs(dirname=f"./storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+            task_step_store_path = concat_dirs(dirname=f"{builder.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
             task_engine.task_step_store.persist(persist_path=task_step_store_path) 
             
             task_step_store.add_task_step([task_step])
-            task_step_store_path = concat_dirs(dirname=f"./storage", basename=DEFAULT_PERSIST_FNAME)
+            task_step_store_path = concat_dirs(dirname=f"{builder.base_path}/storage", basename=DEFAULT_PERSIST_FNAME)
             task_step_store.persist(persist_path=task_step_store_path) 
-
+ 
         except Exception as e:
             logger.error("场景加载失败", e)
 
