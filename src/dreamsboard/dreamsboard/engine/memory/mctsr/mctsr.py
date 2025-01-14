@@ -423,11 +423,6 @@ class MCTSrStoryboard(MCTSr):
         user_prompt = evaluate_system_prompt_template.format(
             problem=self.problem,
             answer=node.answer,
-            start_task_context=node.linked_list_node.start_task_context,
-            aemo_representation_context=node.linked_list_node.aemo_representation_context,
-            task_step_name=node.linked_list_node.task_step_name,
-            task_step_description=node.linked_list_node.task_step_description,
-            task_step_level=node.linked_list_node.task_step_level
         )
         
         for attempt in range(3):

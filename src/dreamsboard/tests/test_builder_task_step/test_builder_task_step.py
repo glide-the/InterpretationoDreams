@@ -204,10 +204,11 @@ def test_builder_task_step_mctsr():
 
     # 存储
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    start_task_context = "Bert模型应用场景综述"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
-        start_task_context="Bert模型应用场景综述", 
+        start_task_context=start_task_context, 
         cross_encoder_path=cross_encoder_path
     )
     # 初始化任务引擎
@@ -255,7 +256,7 @@ def test_builder_task_step_mctsr():
 
 
 def test_task_step_md():
-    task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
+    task_step_store = SimpleTaskStepStore.from_persist_dir("/mnt/ceph/develop/jiawei/InterpretationoDreams/906079e48187e1dadf611f8c2e9afabb/storage")
     task_step_md = TaskStepMD(task_step_store)
     md_text =   task_step_md.format_md()
     print(md_text.text)
