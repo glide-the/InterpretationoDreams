@@ -294,10 +294,10 @@ class TaskStepToQuestionChain(ABC):
             
             collection = self.client.collections.get(self.collection_name) 
 
-            vector_names = ["chunk_text"]
+            # vector_names = ["chunk_text"]
             response = collection.query.hybrid(
                 query=task_step_node.task_step_question,  
-                target_vector=vector_names,  # Specify the target vector for named vector collections
+                # target_vector=vector_names,  # Specify the target vector for named vector collections
                 limit=1,
                 alpha=0.1,
                 query_properties=["chunk_text"],  

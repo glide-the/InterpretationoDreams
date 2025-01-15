@@ -27,13 +27,22 @@ from langchain.document_loaders.base import BaseLoader
 from langchain.docstore.document import Document
 import pandas as pd
 from pandas import DataFrame
+from dataclasses import dataclass, asdict
 
+@dataclass
 class QuestionContext:
     def __init__(self, ref_id: str, score: float, text: str):
         self.ref_id = ref_id
         self.score = score
         self.text = text
 
+    def to_dict(self):
+        return {
+            "ref_id": self.ref_id,
+            "score": self.score,
+            "text": self.text
+        }
+    
 # 定义链表节点类
 class LinkedListNode:
     def __init__(self, 
@@ -144,6 +153,10 @@ class StructuredStoryboard:
         table_data = []
         current_parse_node = self.head
         while current_parse_node is not None:
+            task_context = [
+                context.to_dict() for context in current_parse_node.task_step_question_context
+            ]  # 遍历并转换每个对象为字典
+
             row = [
                 current_parse_node.task_step_id,
                 current_parse_node.shot_number,
@@ -154,7 +167,7 @@ class StructuredStoryboard:
                 current_parse_node.task_step_description,
                 current_parse_node.task_step_level,
                 current_parse_node.task_step_question,
-                current_parse_node.task_step_question_context,
+                task_context,
                 current_parse_node.task_step_question_answer,
                 current_parse_node.ref_task_step_id
             ]
@@ -174,7 +187,7 @@ class StructuredStoryboard:
             "task_step_question_context", 
             "task_step_question_answer", 
             "ref_task_step_id"
-        ])
+        ]) 
         return table
 
 

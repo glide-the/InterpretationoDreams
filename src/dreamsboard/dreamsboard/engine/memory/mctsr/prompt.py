@@ -63,7 +63,8 @@ task_step_name: {task_step_name}
 task_step_description: {task_step_description}
 task_step_level: {task_step_level}
 """,
-    refine_system_prompt="""# 目标
+    refine_system_prompt="""作为一个计算机科学领域的研究者，您已经查阅了近年来在顶级会议（如 NeurIPS、CVPR、ICML）及顶级期刊（如 JMLR、IEEE TPAMI、ACM Computing Surveys）上的相关文献，并且深入分析了 arXiv 上的最新论文，尝试通过参考文献中定义的算法和模型构建， 完成你的目标任务
+# 目标
 根据批评意见 (`<critique>`) 优化当前回答 (`<current_answer>`) 并续写上下文 （`<context>`）。
 
 ### 补充指南  
@@ -77,7 +78,7 @@ task_step_level: {task_step_level}
 
 ### 优化后的回答: 输出的优化答案 
 输出要求 
-    - 文本不超过500字
+    - 文本不超过1500字
 
 ### 续写的上下文: 包含续写的上下文
 输出要求

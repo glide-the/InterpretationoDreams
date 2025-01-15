@@ -1,6 +1,7 @@
 pkl
 .idea
 dist
+doubao
 **/*/__pycache__
 **/.ipynb_checkpoints
 __pycache__

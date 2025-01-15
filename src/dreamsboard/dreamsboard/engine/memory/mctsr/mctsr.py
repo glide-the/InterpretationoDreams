@@ -71,6 +71,8 @@ from langchain.prompts import PromptTemplate
 from langchain_core.messages import ( 
     BaseMessage,
 )
+from dreamsboard.dreams.task_step_md.prompts import TASK_MD_TEMPLATE,TASK_STEP_MD_TITLE_TEMPLATE,TASK_STEP_MD_DESC_TEMPLATE,TASK_STEP_MD_LIST_TEMPLATE, TASK_STEP_MD_TEMPLATE
+
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
 from dreamsboard.engine.storage.storage_context import StorageContext
@@ -93,6 +95,37 @@ PATTERN = re.compile(r"thought:\s*(.*?)\nanswer:\s*([\d.]+)", re.DOTALL)
 
 PLAINTEXT_PATTERN = re.compile(r"```plaintext?([\s\S]*?)```[\s\S]*?answer: (\d+(\.\d+)?)", re.DOTALL)
 
+_PROMPT_TEMPLATE_1 = PromptTemplate(input_variables=[
+    "task_step_name",
+    "task_step_level",
+    "task_step_id",
+    "task_step_question_answer"],
+    template=TASK_STEP_MD_TITLE_TEMPLATE)
+_PROMPT_TEMPLATE_1_1 = PromptTemplate(input_variables=[
+    "task_step_name",
+    "task_step_level",
+    "task_step_id",
+    "task_step_question_answer"],
+    template=TASK_STEP_MD_DESC_TEMPLATE)
+_PROMPT_TEMPLATE_1_2 = PromptTemplate(input_variables=[
+    "task_step_name",
+    "task_step_level",
+    "task_step_id",
+    "task_step_question_answer"],
+    template=TASK_STEP_MD_LIST_TEMPLATE)
+_PROMPT_TEMPLATE_1_3 = PromptTemplate(input_variables=[
+    "task_step_name",
+    "task_step_level",
+    "task_step_id",
+    "task_step_question_answer"],
+    template=TASK_STEP_MD_TEMPLATE)
+_PROMPT_TEMPLATE_2 = PromptTemplate(
+    input_variables=[
+        "start_task_context",
+        "aemo_representation_context",
+        "context_placeholder"
+    ],
+    template=TASK_MD_TEMPLATE)
 ROOT_UCT_SCORE = 10_000
 
 
@@ -291,6 +324,121 @@ class MCTSr(BaseModel):
 
 class MCTSrStoryboard(MCTSr): 
 
+    @staticmethod
+    def _wrapper_steps_unit(context_linked_list_node: LinkedListNode, continue_task_step_id: str):
+        # 使用 TASK_STEP_MD_TEMPLATE 格式化每个任务步骤
+        formatted_task_steps = [
+        ]
+        past_steps = []
+
+        past_steps.append(f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n')
+
+        # 计算层级关系
+        level_count = context_linked_list_node.task_step_level.count('>')
+        
+        if level_count == 0:
+            # 一级，格式化为标题 #
+            step_text = _PROMPT_TEMPLATE_1.format(
+                task_step_name=f'### {context_linked_list_node.task_step_name}',
+                task_step_level=context_linked_list_node.task_step_level,
+                task_step_description=context_linked_list_node.task_step_description,
+                task_step_id=context_linked_list_node.task_step_id,
+                task_step_question_answer=context_linked_list_node.task_step_question_answer
+            )
+            formatted_task_steps.append(step_text.strip()+"\n\n")
+        elif level_count == 1:
+            # 二级，格式化为标题 ##
+            step_text = _PROMPT_TEMPLATE_1_1.format(
+                task_step_name=f'{context_linked_list_node.task_step_name}',
+                task_step_level=context_linked_list_node.task_step_level,
+                task_step_description=context_linked_list_node.task_step_description,
+                task_step_id=context_linked_list_node.task_step_id,
+                task_step_question_answer=context_linked_list_node.task_step_question_answer
+            )
+            formatted_task_steps.append(step_text.strip()+"\n\n")
+            
+        elif level_count >= 2:
+            # 三级及以上，格式化为分类 -
+            step_text = _PROMPT_TEMPLATE_1_2.format(
+                task_step_name=f'- {context_linked_list_node.task_step_name}',
+                task_step_level=context_linked_list_node.task_step_level,
+                task_step_description=context_linked_list_node.task_step_description,
+                task_step_id=context_linked_list_node.task_step_id,
+                task_step_question_answer=context_linked_list_node.task_step_question_answer
+            )
+            formatted_task_steps.append(step_text.strip()+"\n\n")
+
+        else:
+            step_text = _PROMPT_TEMPLATE_1_3.format(
+                task_step_name=f'{context_linked_list_node.task_step_name}',
+                task_step_level=context_linked_list_node.task_step_level,
+                task_step_description=context_linked_list_node.task_step_description,
+                task_step_id=context_linked_list_node.task_step_id,
+                task_step_question_answer=context_linked_list_node.task_step_question_answer
+            )
+        
+            formatted_task_steps.append(step_text.strip())
+
+        while context_linked_list_node is not None and context_linked_list_node.next is not None:
+            if context_linked_list_node.task_step_id == continue_task_step_id:
+                break
+            step = context_linked_list_node.next
+            # 计算层级关系
+            level_count = step.task_step_level.count('>')
+
+            past_steps.append(f'{step.task_step_level} task_id: {step.task_step_id}, {step.task_step_name}\n')
+
+        
+            if level_count == 0:
+                # 一级，格式化为标题 #
+                step_text = _PROMPT_TEMPLATE_1.format(
+                    task_step_name=f'### {step.task_step_name}',
+                    task_step_level=step.task_step_level,
+                    task_step_description=step.task_step_description,
+                    task_step_id=step.task_step_id,
+                    task_step_question_answer=step.task_step_question_answer
+                )
+                formatted_task_steps.append(step_text.strip()+"\n\n")
+
+            elif level_count == 1:
+                # 二级，格式化为标题 ##
+                step_text = _PROMPT_TEMPLATE_1_1.format(
+                    task_step_name=f'{step.task_step_name}',
+                    task_step_level=step.task_step_level,
+                    task_step_description=step.task_step_description,
+                    task_step_id=step.task_step_id,
+                    task_step_question_answer=step.task_step_question_answer
+                )
+                formatted_task_steps.append(step_text.strip()+"\n\n")
+
+            elif level_count >= 2:
+                # 三级及以上，格式化为分类 -
+                step_text = _PROMPT_TEMPLATE_1_2.format(
+                    task_step_name=f'- {step.task_step_name}',
+                    task_step_level=step.task_step_level,
+                    task_step_description=step.task_step_description,
+                    task_step_id=step.task_step_id,
+                    task_step_question_answer=step.task_step_question_answer
+                )
+                formatted_task_steps.append(step_text.strip()+"\n\n")
+
+            else:
+                step_text = _PROMPT_TEMPLATE_1_3.format(
+                    task_step_name=f'{step.task_step_name}',
+                    task_step_level=step.task_step_level,
+                    task_step_description=step.task_step_description,
+                    task_step_id=step.task_step_id,
+                    task_step_question_answer=step.task_step_question_answer
+                )
+            
+                formatted_task_steps.append(step_text.strip())
+            
+
+        # 将格式化的步骤列表转换为字符串
+        context_placeholder = "".join(formatted_task_steps)
+        past_steps_placeholder = ''.join(past_steps)
+        return context_placeholder, past_steps_placeholder
+
     def self_refine(self, node: MCTSNode) ->  Tuple[MCTSNode, RefineResponse]:
         """
         自我反思
@@ -311,20 +459,10 @@ class MCTSrStoryboard(MCTSr):
             template=os.environ.get(
                 "critic_system_prompt_data", gpt_prompt_config.critic_system_prompt_data 
             )
-        )
-        past_steps = ''
-        past_context = ''
-        context_linked_list_node = node.linked_list_node.head
-        past_steps += f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n'
-        past_context += f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_question_answer}\n'
-        while context_linked_list_node is not None and context_linked_list_node.next is not None:
-            if context_linked_list_node.task_step_id == node.linked_list_node.task_step_id:
-                break
-            context_linked_list_node = context_linked_list_node.next
-            
-            past_steps += f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n'
-            past_context += f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_question_answer}\n'
-            
+        ) 
+        context_linked_list_node = node.linked_list_node.head 
+
+        past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.linked_list_node.task_step_id)
 
         user_prompt = critic_system_prompt_template.format(
             problem=self.problem,

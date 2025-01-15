@@ -26,7 +26,7 @@ story_board_role:"七七",
 """
 from __future__ import annotations
 from abc import ABC
-import csv
+import pandas as pd
 from typing import List, Set
 
 
@@ -72,22 +72,26 @@ class StructuredStoryboardCSVBuilder(ABC):
 
         # 打开CSV文件并读取数据
         with open(self.csv_file_path, newline='', encoding='utf-8') as file:
-            csv_reader = csv.reader(file, delimiter=',', quotechar='"')
-            headers = next(csv_reader)  # 读取标题行
+            csv_reader = pd.read_csv(
+                file, 
+                dtype=str,
+                keep_default_na=False,
+                sep=',',
+                skipinitialspace=True,
+                on_bad_lines='skip',
+            )
+            records = csv_reader.to_dict(orient="records")
+            for data_dict in records:  
+                role = data_dict.get('角色', '')
+                text = data_dict.get('内容', '')
+                start_point_len = data_dict.get('开始时间', '')
+                end_point_len = data_dict.get('结束时间', '')
+                storyboard = data_dict.get('分镜', '')
+                # 创建StructuredStoryboard对象
+                structured_storyboard = StructuredStoryboard(start_point_len, end_point_len, storyboard, text, role)
 
-            for row in csv_reader:
-                if len(row) == len(headers):  # 确保每行字段数与标题相同
-                    data_dict = dict(zip(headers, row))
-                    role = data_dict.get('角色', '')
-                    text = data_dict.get('内容', '')
-                    start_point_len = data_dict.get('开始时间', '')
-                    end_point_len = data_dict.get('结束时间', '')
-                    storyboard = data_dict.get('分镜', '')
-                    # 创建StructuredStoryboard对象
-                    structured_storyboard = StructuredStoryboard(start_point_len, end_point_len, storyboard, text, role)
-
-                    # 添加到数据列表
-                    self.data.append(structured_storyboard)
+                # 添加到数据列表
+                self.data.append(structured_storyboard)
 
     def build_text(self, user_id: str, columns_to_select) -> str:
         """
