@@ -7,6 +7,7 @@ from langchain_core.runnables import Runnable
 from kor.extraction import create_extraction_chain
 from kor.nodes import Object, Text, Number
 from langchain.chains import LLMChain
+from typing import Union
 
 
 class KorLoader:
@@ -173,7 +174,7 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
 
     @classmethod
     def form_kor_dreams_task_step_builder(cls,
-                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
+                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> Union[LLMChain,Object]:
         """
         生成任务步骤的抽取链
         :param llm:
@@ -284,7 +285,7 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
 
 
         chain = create_extraction_chain(llm_runable, schema)
-        return chain
+        return chain, schema
 
     @classmethod
     def form_kor_task_step_refine_builder(cls,

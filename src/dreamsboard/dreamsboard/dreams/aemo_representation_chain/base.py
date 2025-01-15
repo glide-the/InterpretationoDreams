@@ -12,11 +12,13 @@ from langchain_core.prompts  import PromptTemplate
 from langchain.chains import SequentialChain
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableParallel, RunnableLambda
-
+from kor.nodes import Object, Text, Number
 from dreamsboard.document_loaders import KorLoader
 from dreamsboard.dreams.aemo_representation_chain.prompts import (
     AEMO_REPRESENTATION_PROMPT_TEMPLATE,
 ) 
+from dreamsboard.common.csv_data import CSVEncoder
+from kor.extraction.parser import KorParser
 
 from dreamsboard.document_loaders.protocol.ner_protocol import TaskStepNode
 from typing import List
@@ -36,12 +38,15 @@ logger.addHandler(handler)
 class AEMORepresentationChain(ABC):
     aemo_representation_chain: Chain
     kor_dreams_task_step_chain: LLMChain
+    kor_schema: Object
     def __init__(self,
                  start_task_context: str,
                  kor_dreams_task_step_chain: LLMChain,
+                 kor_schema: Object,
                  aemo_representation_chain: Chain):
         self.start_task_context = start_task_context
         self.kor_dreams_task_step_chain = kor_dreams_task_step_chain
+        self.kor_schema = kor_schema
         self.aemo_representation_chain = aemo_representation_chain
 
     @classmethod
@@ -72,10 +77,11 @@ class AEMORepresentationChain(ABC):
                                     | RunnableLambda(wrapper_output))
 
 
-        kor_dreams_task_step_chain = KorLoader.form_kor_dreams_task_step_builder(
+        kor_dreams_task_step_chain, schema = KorLoader.form_kor_dreams_task_step_builder(
             llm_runable=llm_runable if kor_dreams_task_step_llm is None else kor_dreams_task_step_llm)
         return cls(start_task_context=start_task_context,
                    kor_dreams_task_step_chain=kor_dreams_task_step_chain,
+                   kor_schema=schema,
                    aemo_representation_chain=aemo_representation_chain)
 
     def invoke_kor_dreams_task_step_context(self, aemo_representation_context: str) -> List[TaskStepNode]:
@@ -95,7 +101,21 @@ class AEMORepresentationChain(ABC):
                                             task_step_description=step.get('task_step_description'),
                                             task_step_level=step.get('task_step_level'))
                 task_step_node_list.append(task_step_node)
+        else:
+            encoder = CSVEncoder(node=self.kor_schema)
+            parser = KorParser(encoder=encoder, schema_=self.kor_schema)
+            response = parser.parse(response.get('raw'))
 
+
+            if response.get('data') is not None and response.get('data').get('script') is not None:
+                step_list = response.get('data').get('script')
+                for step in step_list:
+                    task_step_node = TaskStepNode(start_task_context=self.start_task_context,
+                                                aemo_representation_context=aemo_representation_context,
+                                                task_step_name=step.get('task_step_name'),
+                                                task_step_description=step.get('task_step_description'),
+                                                task_step_level=step.get('task_step_level'))
+                    task_step_node_list.append(task_step_node)
         return task_step_node_list
   
     def invoke_aemo_representation_context(self) -> Dict[str, Any]: 
