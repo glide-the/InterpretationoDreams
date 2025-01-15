@@ -8,7 +8,7 @@ def test_kor3():
     llm = ChatOpenAI(
         openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-4",
-        openai_api_key="5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN",
+        openai_api_key="testkey",
         verbose=True,
         temperature=0.1,
         top_p=0.9,

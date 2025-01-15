@@ -27,7 +27,7 @@ logger.addHandler(handler)
 
 def test_structured_dreams_storyboard_store_test1(setup_log) -> None:
  
-    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    os.environ["ZHIPUAI_API_KEY"] = "testkey"
     
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"

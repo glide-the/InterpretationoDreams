@@ -37,7 +37,7 @@ logger.addHandler(handler)
 """
 
 def test_builder_task_step():
-    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    os.environ["ZHIPUAI_API_KEY"] = "testkey"
     
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
@@ -97,7 +97,7 @@ def test_builder_task_step():
     assert builder.base_path == f'./{get_query_hash(start_task_context)}/'
 
 def test_builder_task_step_answer():
-    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    os.environ["ZHIPUAI_API_KEY"] = "testkey"
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     llm = ChatOpenAI(
@@ -184,7 +184,7 @@ def test_json_parse():
 
 def test_builder_task_step_mctsr():
     
-    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    os.environ["ZHIPUAI_API_KEY"] = "testkey"
     llm = ChatOpenAI(
         openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-4-plus",

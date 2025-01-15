@@ -36,14 +36,14 @@ def test_invoke_task_step_to_question():
     llm = ChatOpenAI(
         openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-4-plus",
-        openai_api_key="5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN",
+        openai_api_key="testkey",
         verbose=True,
         temperature=0.1,
         top_p=0.9,
     )   
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
     
-    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    os.environ["ZHIPUAI_API_KEY"] = "testkey"
     client = init_context_connect()
 
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
@@ -67,12 +67,12 @@ def test_invoke_task_step_question_context():
     llm = ChatOpenAI(
         openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-4-plus",
-        openai_api_key="5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN",
+        openai_api_key="testkey",
         verbose=True,
         temperature=0.1,
         top_p=0.9,
     )   
-    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    os.environ["ZHIPUAI_API_KEY"] = "testkey"
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
     client = init_context_connect()
 
@@ -96,12 +96,12 @@ def test_export_csv_file_path():
     llm = ChatOpenAI(
         openai_api_base='https://open.bigmodel.cn/api/paas/v4',
         model="glm-4-plus",
-        openai_api_key="5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN",
+        openai_api_key="testkey",
         verbose=True,
         temperature=0.1,
         top_p=0.9,
     )   
-    os.environ["ZHIPUAI_API_KEY"] = "5fae8f96c5ed49c2b7b21f5c6d74de17.A0bcBERbeZ1gZYoN"
+    os.environ["ZHIPUAI_API_KEY"] = "testkey"
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
     client = init_context_connect()
 
