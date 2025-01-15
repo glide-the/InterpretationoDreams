@@ -153,9 +153,9 @@ def test_builder_task_step_answer():
     step =0
     task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
+        task_engine = task_engine_builder.get()
         if step>=2 :
             break
-        task_engine = task_engine_builder.get()
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()
@@ -224,7 +224,7 @@ def test_builder_task_step_mctsr():
 
     # 存储
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
-    start_task_context = "Bert模型应用场景综述"
+    start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
@@ -239,10 +239,10 @@ def test_builder_task_step_mctsr():
     task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
        
-        step+=1
-        if step<=2 :
-            continue
         task_engine = task_engine_builder.get()
+        step+=1
+        if step<=7 :
+            continue
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()
