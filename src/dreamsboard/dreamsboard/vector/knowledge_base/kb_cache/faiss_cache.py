@@ -1,5 +1,4 @@
 import os
-import torch
 
 from langchain.schema import Document
 from langchain_community.vectorstores.faiss import FAISS

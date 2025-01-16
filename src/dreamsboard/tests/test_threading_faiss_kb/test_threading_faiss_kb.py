@@ -14,9 +14,9 @@ def faiss_service():
     """Fixture to create a FaissKBService instance."""
     return FaissKBService(
         kb_name="faiss",
-        embed_model="/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base",
+        embed_model="D:\model\m3e-base",
         vector_name="samples",
-        device="cuda:0"
+        device="cpu"
     )
  
 
@@ -33,10 +33,10 @@ def test_search_with_parametrization(faiss_service, query, expected_num_results)
             
     docs = faiss_service.do_add_doc(docs)
     pprint(docs)
-    docs = faiss_service.do_search(query=f"{query}", top_k=3, score_threshold=1.0) 
-    pprint(docs) 
-    
+    docs = faiss_service.do_search(query=f"{query}", top_k=3, score_threshold=0.8)
+    pprint(docs)
+
+    faiss_service.do_clear_vs()
     assert len(docs) == expected_num_results
-    faiss_service.do_clear_vs() 
 
      
