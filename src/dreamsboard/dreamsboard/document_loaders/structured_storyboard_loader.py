@@ -31,14 +31,16 @@ from dataclasses import dataclass, asdict
 
 @dataclass
 class QuestionContext:
-    def __init__(self, ref_id: str, score: float, text: str):
+    def __init__(self, ref_id: str, chunk_id: str, score: float, text: str):
         self.ref_id = ref_id
+        self.chunk_id = chunk_id
         self.score = score
         self.text = text
 
     def to_dict(self):
         return {
             "ref_id": self.ref_id,
+            "chunk_id": self.chunk_id,
             "score": self.score,
             "text": self.text
         }
@@ -105,7 +107,7 @@ class StructuredStoryboard:
             task_step_description = data["task_step_description"]
             task_step_level = data["task_step_level"]
             task_step_question = data["task_step_question"]
-            task_step_question_context = [QuestionContext(ref_id=context["ref_id"], score=context["score"], text=context["text"]) for context in data["task_step_question_context"]]
+            task_step_question_context = [QuestionContext(ref_id=context["ref_id"], chunk_id=context["chunk_id"], score=context["score"], text=context["text"]) for context in data["task_step_question_context"]]
             task_step_question_answer = data["task_step_question_answer"]
             ref_task_step_id = data["ref_task_step_id"]
 

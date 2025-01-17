@@ -78,7 +78,7 @@ def test_builder_task_step():
     os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
     
-    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -138,7 +138,7 @@ def test_builder_task_step_answer():
 
 
     # 存储
-    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -223,7 +223,7 @@ def test_builder_task_step_mctsr():
 
 
     # 存储
-    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,

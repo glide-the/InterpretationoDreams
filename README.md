@@ -108,7 +108,7 @@ def test_builder_task_step():
     # 存储
     task_step_store = SimpleTaskStepStore.from_persist_dir("./storage")
     
-    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
     builder = StructuredTaskStepStoryboard.form_builder(
         base_path="./",
         llm=llm,

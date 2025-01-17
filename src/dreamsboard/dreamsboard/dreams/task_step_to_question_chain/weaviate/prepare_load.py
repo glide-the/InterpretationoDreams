@@ -1,5 +1,4 @@
-from weaviate.classes.query import Filter
-from weaviate.client import WeaviateClient
+
 from typing import List
 
 import requests
@@ -24,42 +23,6 @@ SEARCH_PAPERS_URL = "http://180.184.65.98:38880/atomgit/search_papers"
 QUERY_BY_PAPER_ID_URL = "http://180.184.65.98:38880/atomgit/query_by_paper_id"
 
 
-def prepare_properties(paper_details: List[dict]):
-    """
-    将 paper_details 数据转化为向量数据库插入所需的 properties 格式
-    """
-    properties_list = []
-    
-    for paper in paper_details:
-        properties = {
-            "ref_id": paper.get("paper_id"),  # 可能是另一个 ID，具体根据实际情况
-            "paper_id": paper.get("paper_id"),
-            "paper_title": paper.get("paper_title"),
-            "chunk_id": paper.get("chunk_id"),
-            "chunk_text": paper.get("chunk_text"),
-            "original_filename": paper.get("original_filename", "")  # 默认空字符串，如果没有提供
-        }
-        properties_list.append(properties)
-    
-    return properties_list
-
-def insert_into_database(client: WeaviateClient, collection_name:str, union_id:str, properties_list: List[dict]):
-    """
-    插入数据到向量数据库,检查唯一
-    """
-    
-    collection = client.collections.get(collection_name)
-    union_ids = [item.get(union_id) for item in properties_list]
-    response = collection.query.fetch_objects(
-        filters=Filter.by_property(union_id).contains_any(union_ids),
-    )
-        
-    exist_ids = [o.properties[union_id] for o in response.objects]
-   
-    for properties in properties_list:
-        if properties[union_id] not in exist_ids:
-            collection.data.insert(properties=properties)
-    
 
 def search_papers(query, top_k=5):
     """

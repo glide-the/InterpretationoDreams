@@ -21,6 +21,7 @@ logger.addHandler(handler)
 
 class TaskStepContext(BaseModel):
     ref_id: str = Field(default="", description="ref_id")
+    chunk_id: str = Field(default="", description="chunk_id")
     score: float = Field(default=0.0, description="score")
     text: str = Field(default="", description="text")
 

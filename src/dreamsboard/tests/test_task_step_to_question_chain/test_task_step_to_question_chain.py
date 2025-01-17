@@ -4,7 +4,6 @@ from dreamsboard.dreams.task_step_to_question_chain.base import TaskStepToQuesti
 from dreamsboard.engine.storage.task_step_store.simple_task_step_store import SimpleTaskStepStore
 from langchain_community.chat_models import ChatOpenAI
 from dreamsboard.engine.utils import concat_dirs
-from dreamsboard.dreams.task_step_to_question_chain.weaviate.context_collections import init_context_connect
 from dreamsboard.document_loaders.csv_structured_storyboard_loader import StructuredStoryboardCSVBuilder
 
 from sentence_transformers import CrossEncoder
@@ -44,15 +43,21 @@ def test_invoke_task_step_to_question():
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
     
     os.environ["ZHIPUAI_API_KEY"] = "testkey"
-    client = init_context_connect()
 
-    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
 
+    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+
+    collection = FaissCollectionService(
+        kb_name="faiss",
+        embed_model="D:\model\m3e-base",
+        vector_name="samples",
+        device="cpu"
+    )
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
         base_path="./",
         llm=llm, 
         task_step_store=task_step_store,
-        client=client,
+        collection=collection,
         cross_encoder_path=cross_encoder_path
     )
     
@@ -74,17 +79,24 @@ def test_invoke_task_step_question_context():
     )   
     os.environ["ZHIPUAI_API_KEY"] = "testkey"
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
-    client = init_context_connect()
 
-    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
 
+    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+
+    collection = FaissCollectionService(
+        kb_name="faiss",
+        embed_model="D:\model\m3e-base",
+        vector_name="samples",
+        device="cpu"
+    )
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
         base_path="./",
-        llm=llm, 
+        llm=llm,
         task_step_store=task_step_store,
-        client=client,
+        collection=collection,
         cross_encoder_path=cross_encoder_path
     )
+
     task_step_id = list(task_step_store.task_step_all.keys())[0]
     task_step_to_question_chain.invoke_task_step_question_context(task_step_id)
     assert task_step_store.task_step_all is not None
@@ -103,17 +115,24 @@ def test_export_csv_file_path():
     )   
     os.environ["ZHIPUAI_API_KEY"] = "testkey"
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
-    client = init_context_connect()
 
-    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
 
+    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+
+    collection = FaissCollectionService(
+        kb_name="faiss",
+        embed_model="D:\model\m3e-base",
+        vector_name="samples",
+        device="cpu"
+    )
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
         base_path="./",
-        llm_runable=llm, 
+        llm=llm,
         task_step_store=task_step_store,
-        client=client,
+        collection=collection,
         cross_encoder_path=cross_encoder_path
     )
+
     task_step_id = list(task_step_store.task_step_all.keys())[0]
     csv_file_path = task_step_to_question_chain.export_csv_file_path(task_step_id)
     logger.info("csv_file_path:" + csv_file_path)
