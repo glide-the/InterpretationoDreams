@@ -79,12 +79,14 @@ def test_builder_task_step():
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
     
     cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+    embed_model_path = "D:\model\m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
         start_task_context=start_task_context, 
-        cross_encoder_path=cross_encoder_path
+        cross_encoder_path=cross_encoder_path,
+        embed_model_path=embed_model_path
     )
     # 初始化任务引擎
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
@@ -139,23 +141,22 @@ def test_builder_task_step_answer():
 
     # 存储
     cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+    embed_model_path = "D:\model\m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
-        start_task_context=start_task_context, 
-        cross_encoder_path=cross_encoder_path
+        start_task_context=start_task_context,
+        cross_encoder_path=cross_encoder_path,
+        embed_model_path=embed_model_path
     )
     # 初始化任务引擎
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
-    step =0
     task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
         task_engine = task_engine_builder.get()
-        if step>=2 :
-            break
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()
@@ -165,7 +166,7 @@ def test_builder_task_step_answer():
         task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
         if task_step.task_step_question_answer is None or len(task_step.task_step_question_answer) == 0:
             task_engine.generate_step_answer(code_gen_builder) 
-        step +=1
+
 
 
 def test_json_parse():
@@ -224,25 +225,27 @@ def test_builder_task_step_mctsr():
 
     # 存储
     cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+    embed_model_path = "D:\model\m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
-        start_task_context=start_task_context, 
-        cross_encoder_path=cross_encoder_path
+        start_task_context=start_task_context,
+        cross_encoder_path=cross_encoder_path,
+        embed_model_path=embed_model_path
     )
     # 初始化任务引擎
     os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
     os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
-    step =0
+    # step =0
     task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
        
         task_engine = task_engine_builder.get()
-        step+=1
-        if step<=7 :
-            continue
+        # step+=1
+        # if step<=7 :
+        #     continue
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()
