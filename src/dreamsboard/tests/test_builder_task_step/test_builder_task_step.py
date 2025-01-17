@@ -37,27 +37,23 @@ logger.addHandler(handler)
 """
 
 def test_builder_task_step():
-    os.environ["ZHIPUAI_API_KEY"] = "testkey"
-    
-    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
-    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+
     llm = ChatOpenAI(
-        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
-        model="glm-4-plus",
-        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
     )
     kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
-        model="glm-4-plus",
-        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
         verbose=True,
         temperature=0.95,
         top_p=0.70,
     )
-    
 
     tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
     llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
@@ -78,8 +74,8 @@ def test_builder_task_step():
     os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
     
-    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
-    embed_model_path = "D:\model\m3e-base"
+    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -88,9 +84,7 @@ def test_builder_task_step():
         cross_encoder_path=cross_encoder_path,
         embed_model_path=embed_model_path
     )
-    # 初始化任务引擎
-    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
-    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+    # 初始化任务引擎 
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
     while not task_engine_builder.empty():
         task_engine = task_engine_builder.get()  
@@ -99,21 +93,19 @@ def test_builder_task_step():
     assert builder.base_path == f'./{get_query_hash(start_task_context)}/'
 
 def test_builder_task_step_answer():
-    os.environ["ZHIPUAI_API_KEY"] = "testkey"
-    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
-    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+
     llm = ChatOpenAI(
-        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
-        model="glm-4-plus",
-        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
     )
     kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
-        model="glm-4-plus",
-        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
         verbose=True,
         temperature=0.95,
         top_p=0.70,
@@ -140,8 +132,8 @@ def test_builder_task_step_answer():
 
 
     # 存储
-    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
-    embed_model_path = "D:\model\m3e-base"
+    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -184,20 +176,19 @@ def test_json_parse():
  
 
 def test_builder_task_step_mctsr():
-    
-    os.environ["ZHIPUAI_API_KEY"] = "testkey"
+     
     llm = ChatOpenAI(
-        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
-        model="glm-4-plus",
-        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
     )
     kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
-        model="glm-4-plus",
-        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
         verbose=True,
         temperature=0.95,
         top_p=0.70,
@@ -224,8 +215,8 @@ def test_builder_task_step_mctsr():
 
 
     # 存储
-    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
-    embed_model_path = "D:\model\m3e-base"
+    cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -235,8 +226,6 @@ def test_builder_task_step_mctsr():
         embed_model_path=embed_model_path
     )
     # 初始化任务引擎
-    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
-    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
     # step =0
     task_step_store = builder.task_step_store

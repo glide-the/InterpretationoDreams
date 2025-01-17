@@ -3,6 +3,10 @@ pkl
 dist
 doubao
 faiss
+index.faiss
+index.pkl
+faiss
+.virtual_documents
 **/*/__pycache__
 **/.ipynb_checkpoints
 __pycache__
