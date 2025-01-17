@@ -55,7 +55,11 @@ def test_builder_task_step():
         top_p=0.70,
     )
 
-    tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    if 'glm' in os.environ.get("API_MODEL"):
+
+        tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    else:
+        tools = []
     llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
     kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
@@ -111,7 +115,11 @@ def test_builder_task_step_answer():
         top_p=0.70,
     )
 
-    tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    if 'glm' in os.environ.get("API_MODEL"):
+
+        tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    else:
+        tools = []
     llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
     kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
@@ -194,7 +202,11 @@ def test_builder_task_step_mctsr():
         top_p=0.70,
     )
 
-    tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    if 'glm' in os.environ.get("API_MODEL"):
+
+        tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    else:
+        tools = []
     llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
     kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
