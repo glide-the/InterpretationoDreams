@@ -28,6 +28,8 @@ import logging
 from dreamsboard.engine.memory.mctsr.mctsr import MCTSNode, MCTSrStoryboard
 from langchain.schema import AIMessage
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
+import torch
+from dreamsboard.vector.faiss_kb_service import FaissCollectionService
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -58,6 +60,7 @@ class TaskEngineBuilder:
     """
     base_path: str
     cross_encoder_path: str
+    embed_model_path: str
     storage_context: StorageContext
     task_step_store: BaseTaskStepStore
     task_step_id: str
@@ -69,6 +72,7 @@ class TaskEngineBuilder:
                 base_path: str,
                 llm_runable: Runnable[LanguageModelInput, BaseMessage],
                 cross_encoder_path: str,
+                embed_model_path: str,
                 start_task_context: str,
                 task_step_store: BaseTaskStepStore,
                 task_step_id: str,
@@ -79,6 +83,7 @@ class TaskEngineBuilder:
         self.task_step_id = task_step_id
         self.llm_runable = llm_runable
         self.cross_encoder_path = cross_encoder_path
+        self.embed_model_path = embed_model_path
         self.client = None
         self.task_step_to_question_chain = None
         self.csv_file_path = None
@@ -126,16 +131,22 @@ class TaskEngineBuilder:
 					export_csv_file_path: 3、对召回内容与问题 导出csv文件
  
         """
-              
-        client = init_context_connect()
+        collection_id = get_query_hash(start_task_context)
 
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        collection = FaissCollectionService(
+            kb_name=collection_id,
+            embed_model=self.embed_model_path,
+            vector_name="samples",
+            device=device
+        )
 
         self.task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
             base_path=self.base_path,
             start_task_context=self.start_task_context,
             llm_runable=self.llm_runable, 
             task_step_store=self.task_step_store,
-            client=client,
+            collection=collection,
             cross_encoder_path=self.cross_encoder_path
         )
         self.task_step_to_question_chain.invoke_task_step_to_question(self.task_step_id)
