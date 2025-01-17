@@ -28,11 +28,12 @@ json-repair = "^0.26.0"
 SQLAlchemy = { version = "~2.0.25", optional = true }
 faiss-cpu = { version = "~1.7.4", optional = true }
 sentence-transformers = { version = "~3.3.1", optional = true }
+einops = { version = "~0.8.0", optional = true }
 
 
 [tool.poetry.extras]
 
-vector = ["SQLAlchemy", "faiss-cpu", "sentence-transformers"]
+vector = ["SQLAlchemy", "faiss-cpu", "sentence-transformers", "einops"]
 
 
 [tool.poetry.group.test.dependencies]

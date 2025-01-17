@@ -169,29 +169,25 @@ class TaskStepToQuestionChain(ABC):
         task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
         self.task_step_store.persist(persist_path=task_step_store_path)
 
-    def _insert_into_database(self, union_id:str, properties_list: List[Dict] = []) -> None:
+    def _insert_into_database(self, union_id_key:str, page_content_key:str, properties_list: List[Dict] = []) -> None:
         """
         插入数据到向量数据库,检查唯一
-        :param union_id:  唯一标识
+        :param union_id_key:  唯一标识
         :param properties_list:  数据列表
         :return: None
         """
 
-        union_ids = [item.get(union_id) for item in properties_list]
+        union_ids = [str(item.get(union_id_key)) for item in properties_list]
 
         response = self.collection.get_doc_by_ids(ids=union_ids)
 
-        exist_ids = [o.metadata[union_id] for o in response]
+        exist_ids = [o.metadata[union_id_key] for o in response]
 
         docs = []
         for item in properties_list:
-            metadata = {
-                "ref_id": item.get('ref_id'),
-                "paper_id": item.get('paper_id'),
-                "chunk_id": item.get('chunk_id')
-            }
-            if item.get(union_id) not in exist_ids:
-                doc = DocumentWithVSId(id=item.get(union_id), page_content=item.get('chunk_text'), metadata=metadata )
+            metadata = {key: value for key, value in item.items() if key != page_content_key}
+            if item.get(union_id_key) not in exist_ids:
+                doc = DocumentWithVSId(id=item.get(union_id_key), page_content=item.get(page_content_key), metadata=metadata )
                 docs.append(doc)
 
         self.collection.do_add_doc(docs)
@@ -211,7 +207,7 @@ class TaskStepToQuestionChain(ABC):
 
         # 插入数据到数据库
 
-        self._insert_into_database('ref_id', properties_list)
+        self._insert_into_database('ref_id','chunk_text', properties_list)
 
         # 召回
         response = self.collection.do_search(query=f"{task_step_node.task_step_question}", top_k=10, score_threshold=0.6)
@@ -220,17 +216,23 @@ class TaskStepToQuestionChain(ABC):
         ref_ids = []
         chunk_ids = []
         for o in response:
-            chunk_texts.append(o.metadata['chunk_text'])
+            chunk_texts.append(o.page_content)
             ref_ids.append(o.metadata['ref_id'])
             chunk_ids.append(o.metadata['chunk_id'])
 
-        rankings = self.cross_encoder.rank(task_step_node.task_step_question, chunk_texts, return_documents=True, convert_to_tensor=True)
+        rankings = self.cross_encoder.rank(
+            task_step_node.task_step_question,
+            chunk_texts,
+            show_progress_bar=True,
+            return_documents=True,
+            convert_to_tensor=True
+        )
 
         task_step_question_context = []
         # 召回问题前3条，存入task_step_question_context
         for i, ranking in enumerate(rankings[:3]):
             logger.info(f"ref_ids: {ref_ids[i]},chunk_ids: {chunk_ids[i]}, Score: {ranking['score']:.4f}, Text: {ranking['text']}")
-            task_step_question_context.append(TaskStepContext(ref_id=ref_ids[i], chunk_id=chunk_ids[i], score=ranking['score'], text=ranking['text']))
+            task_step_question_context.append(TaskStepContext(ref_id=str(ref_ids[i]), chunk_id=str(chunk_ids[i]), score=ranking['score'], text=ranking['text']))
 
         # rankingscorpus_id 的索引与ref_ids的索引一致 
         task_step_node.task_step_question_context = task_step_question_context

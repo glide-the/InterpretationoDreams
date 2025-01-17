@@ -88,25 +88,6 @@ def init_context_collections(client: WeaviateClient, collection_id: str) -> tupl
 
 
 
-def prepare_properties(paper_details: List[dict]):
-    """
-    将 paper_details 数据转化为向量数据库插入所需的 properties 格式
-    """
-    properties_list = []
-
-    for paper in paper_details:
-        properties = {
-            "ref_id": paper.get("paper_id"),  # 可能是另一个 ID，具体根据实际情况
-            "paper_id": paper.get("paper_id"),
-            "paper_title": paper.get("paper_title"),
-            "chunk_id": paper.get("chunk_id"),
-            "chunk_text": paper.get("chunk_text"),
-            "original_filename": paper.get("original_filename", "")  # 默认空字符串，如果没有提供
-        }
-        properties_list.append(properties)
-
-    return properties_list
-
 def insert_into_database(client: WeaviateClient, collection_name:str, union_id:str, properties_list: List[dict]):
     """
     插入数据到向量数据库,检查唯一

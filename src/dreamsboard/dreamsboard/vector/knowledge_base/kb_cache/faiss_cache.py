@@ -59,8 +59,9 @@ class _FaissPool(CachePool):
         model_kwargs = {'device': device}
         embeddings = HuggingFaceEmbeddings(
             model_name=embed_model,
-            model_kwargs=model_kwargs, 
-        )  
+            model_kwargs=model_kwargs,
+            show_progress=True,
+        )
         doc = Document(page_content="init", metadata={})
         vector_store = FAISS.from_documents([doc], embeddings, normalize_L2=True)
         ids = list(vector_store.docstore._dict.keys())
@@ -106,8 +107,9 @@ class KBFaissPool(_FaissPool):
                         model_kwargs = {'device': device}
                         embeddings = HuggingFaceEmbeddings(
                             model_name=embed_model,
-                            model_kwargs=model_kwargs, 
-                        ) 
+                            model_kwargs=model_kwargs,
+                            show_progress=True,
+                        )
                         vector_store = FAISS.load_local(
                             vs_path,
                             embeddings,

@@ -44,8 +44,18 @@ class FaissCollectionService(CollectionService):
         self.load_vector_store().save(self._vs_path)
 
     def get_doc_by_ids(self, ids: List[str]) -> List[DocumentWithVSId]:
+        if not isinstance(ids[0], str):
+            raise ValueError(f"ids expected to be List[str] but got {type(ids)}")
+
         with self.load_vector_store().acquire() as vs:
-            return [DocumentWithVSId(**{**vs.docstore._dict.get(id).dict(), "id":id}) for id in ids]
+            docs = []
+            for id in ids:
+                store_data = vs.docstore._dict.get(id)
+                if store_data is None:
+                    continue
+                doc = DocumentWithVSId(**{**store_data.dict(), "id":id})
+                docs.append(doc)
+            return docs
 
     def del_doc_by_ids(self, ids: List[str]) -> bool:
         with self.load_vector_store().acquire() as vs:
@@ -63,7 +73,7 @@ class FaissCollectionService(CollectionService):
         query: str,
         top_k: int,
         score_threshold: float = 1,
-    ) -> List[Tuple[DocumentWithVSId, float]]:
+    ) -> List[DocumentWithVSId]:
         with self.load_vector_store().acquire() as vs:
             faiss_retriever = vs.as_retriever(
                 search_type="similarity_score_threshold",

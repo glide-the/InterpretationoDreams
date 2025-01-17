@@ -53,7 +53,7 @@ class CollectionService:
             query: str,
             top_k: int,
             score_threshold: float = 1,
-    ) -> List[Tuple[DocumentWithVSId, float]]:
+    ) -> List[DocumentWithVSId]:
         raise NotImplementedError
 
     def do_add_doc(
