@@ -3,7 +3,7 @@ import json
 
 # 解析愿jsonl文件
 def parse_jsonl_file(jsonl_file):
-    with open(jsonl_file, "r") as f:
+    with open(jsonl_file, "r", encoding='utf-8') as f:
         for line in f:
             yield json.loads(line)
 

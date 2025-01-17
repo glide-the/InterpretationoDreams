@@ -44,6 +44,7 @@ class StructuredTaskStepStoryboard:
     task_step_store: BaseTaskStepStore
     start_task_context: str
     cross_encoder_path: str
+    embed_model_path: str
     llm_runable: Runnable[LanguageModelInput, BaseMessage]
     aemo_representation_chain: AEMORepresentationChain
 
@@ -51,6 +52,7 @@ class StructuredTaskStepStoryboard:
                  base_path: str,
                  llm_runable: Runnable[LanguageModelInput, BaseMessage],
                  cross_encoder_path: str,
+                 embed_model_path: str,
                  start_task_context: str,
                  aemo_representation_chain: AEMORepresentationChain,
                  task_step_store: BaseTaskStepStore,
@@ -64,6 +66,7 @@ class StructuredTaskStepStoryboard:
         self.base_path = base_path
         self.llm_runable = llm_runable
         self.cross_encoder_path = cross_encoder_path
+        self.embed_model_path = embed_model_path
         self.start_task_context = start_task_context
         self.aemo_representation_chain = aemo_representation_chain
         self.task_step_store = task_step_store
@@ -72,7 +75,8 @@ class StructuredTaskStepStoryboard:
     def form_builder(cls,
                      llm_runable: Runnable[LanguageModelInput, BaseMessage],
                      cross_encoder_path: str,
-                     start_task_context: str, 
+                     embed_model_path: str,
+                     start_task_context: str,
                      kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage] | None = None,
                      task_step_store: BaseTaskStepStore | None = None,
                      ) -> StructuredTaskStepStoryboard: 
@@ -91,6 +95,7 @@ class StructuredTaskStepStoryboard:
         return cls(base_path=base_path,
                    llm_runable=llm_runable,
                    cross_encoder_path=cross_encoder_path,
+                   embed_model_path=embed_model_path,
                    start_task_context=start_task_context,
                    aemo_representation_chain=aemo_representation_chain,
                    task_step_store=task_step_store)
@@ -111,6 +116,7 @@ class StructuredTaskStepStoryboard:
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm_runable=self.llm_runable,
                     cross_encoder_path=self.cross_encoder_path,
+                    embed_model_path=self.embed_model_path,
                     start_task_context=self.start_task_context,
                     task_step_store=task_step_store_node,
                     task_step_id=task_step_id,
@@ -146,6 +152,7 @@ class StructuredTaskStepStoryboard:
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm_runable=self.llm_runable,
                     cross_encoder_path=self.cross_encoder_path,
+                    embed_model_path=self.embed_model_path,
                     start_task_context=self.start_task_context,
                     task_step_store=task_step_store_node,
                     task_step_id=task_step_id,

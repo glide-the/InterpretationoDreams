@@ -11,7 +11,6 @@ from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
 
 from dreamsboard.dreams.task_step_to_question_chain.base import TaskStepToQuestionChain
-from dreamsboard.dreams.task_step_to_question_chain.weaviate.context_collections import init_context_connect
 
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
@@ -31,6 +30,7 @@ from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNA
 import torch
 from dreamsboard.vector.faiss_kb_service import FaissCollectionService
 
+from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -131,7 +131,7 @@ class TaskEngineBuilder:
 					export_csv_file_path: 3、对召回内容与问题 导出csv文件
  
         """
-        collection_id = get_query_hash(start_task_context)
+        collection_id = get_query_hash(self.start_task_context)
 
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         collection = FaissCollectionService(

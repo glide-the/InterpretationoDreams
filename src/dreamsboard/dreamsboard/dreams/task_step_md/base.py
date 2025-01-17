@@ -124,7 +124,7 @@ class TaskStepMD:
 
     def write_md(self, output_path: str) -> StringPromptValue:
         md = self.format_md()
-        with open(output_path, "w") as f:
+        with open(output_path, "w", encoding='utf-8') as f:
             f.write(md.text)
         logger.info(f"Write MD to {output_path}")
         return md

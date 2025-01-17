@@ -9,7 +9,7 @@ from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, 
 import sys
 import asyncio
 from langchain.docstore.document import Document
-from langchain.vector.base import DocumentWithVSId
+from dreamsboard.vector.base import DocumentWithVSId
 
 
 

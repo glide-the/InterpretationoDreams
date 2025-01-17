@@ -15,7 +15,7 @@ logger.addHandler(handler)
 
 def test_template() -> None:
     # 读取模板文件
-    with open(get_template_path('base_template.py-tpl'), 'r') as template_file:
+    with open(get_template_path('base_template.py-tpl'), 'r', encoding='utf-8') as template_file:
         base_template_content = template_file.read()
 
     # 创建一个Jinja2模板对象

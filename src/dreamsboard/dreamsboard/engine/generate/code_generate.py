@@ -197,7 +197,7 @@ class QueryProgramGenerator(CodeGenerator):
             if render_data is None:
                 render_data = {}
             # 读取模板文件
-            with open(query_code_file, 'r') as dreams_query_template_file:
+            with open(query_code_file, 'r', encoding='utf-8') as dreams_query_template_file:
                 dreams_query_template_content = dreams_query_template_file.read()
 
             super().__init__(exec_data=render_data, dreams_query_template_content=dreams_query_template_content)
@@ -273,7 +273,7 @@ class AIProgramGenerator(CodeGenerator):
             if render_data is None:
                 render_data = {}
             # 读取模板文件
-            with open(ai_code_file, 'r') as ai_template_file:
+            with open(ai_code_file, 'r', encoding='utf-8') as ai_template_file:
                 ai_template_content = ai_template_file.read()
 
             super().__init__(exec_data=render_data, ai_template_content=ai_template_content)
@@ -354,7 +354,7 @@ class EngineProgramGenerator(CodeGenerator):
             if model_name is None:
                 raise RuntimeError("model_name is None.")
             # 读取模板文件
-            with open(engine_code_file, 'r') as engine_template_file:
+            with open(engine_code_file, 'r', encoding='utf-8') as engine_template_file:
                 engine_template_content = engine_template_file.read()
 
             super().__init__(exec_data=render_data, engine_template_content=engine_template_content)
