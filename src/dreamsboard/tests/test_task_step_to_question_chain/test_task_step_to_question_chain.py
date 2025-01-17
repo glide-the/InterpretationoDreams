@@ -56,13 +56,19 @@ def test_invoke_task_step_to_question():
         vector_name="samples",
         device="cpu"
     )
+    cross_encoder = CrossEncoder(
+        cross_encoder_path,
+        automodel_args={"torch_dtype": "auto"},
+        trust_remote_code=True,
+    )
+
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
         base_path="./",
         llm_runable=llm,
         start_task_context=start_task_context,
         task_step_store=task_step_store,
         collection=collection,
-        cross_encoder_path=cross_encoder_path
+        cross_encoder=cross_encoder
     )
 
     task_step_id = list(task_step_store.task_step_all.keys())[0]
@@ -98,15 +104,21 @@ def test_invoke_task_step_question_context():
         vector_name="samples",
         device="cpu"
     )
+
+    cross_encoder = CrossEncoder(
+        cross_encoder_path,
+        automodel_args={"torch_dtype": "auto"},
+        trust_remote_code=True,
+    )
+
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
         base_path="./",
         llm_runable=llm,
         start_task_context=start_task_context,
         task_step_store=task_step_store,
         collection=collection,
-        cross_encoder_path=cross_encoder_path
+        cross_encoder=cross_encoder
     )
-
     task_step_id = list(task_step_store.task_step_all.keys())[0]
     task_step_to_question_chain.invoke_task_step_question_context(task_step_id)
     assert task_step_store.task_step_all is not None
@@ -139,13 +151,20 @@ def test_export_csv_file_path():
         vector_name="samples",
         device="cpu"
     )
+
+    cross_encoder = CrossEncoder(
+        cross_encoder_path,
+        automodel_args={"torch_dtype": "auto"},
+        trust_remote_code=True,
+    )
+
     task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
         base_path="./",
         llm_runable=llm,
         start_task_context=start_task_context,
         task_step_store=task_step_store,
         collection=collection,
-        cross_encoder_path=cross_encoder_path
+        cross_encoder=cross_encoder
     )
 
     task_step_id = list(task_step_store.task_step_all.keys())[0]

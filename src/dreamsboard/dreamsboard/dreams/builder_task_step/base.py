@@ -16,7 +16,13 @@ from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNA
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 import queue
 import logging
+
 import os 
+import torch
+from dreamsboard.vector.faiss_kb_service import FaissCollectionService
+from sentence_transformers import CrossEncoder
+from dreamsboard.vector.base import CollectionService
+from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 from dreamsboard.engine.storage.task_step_store.simple_task_step_store import SimpleTaskStepStore
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -43,17 +49,17 @@ class StructuredTaskStepStoryboard:
     base_path: str
     task_step_store: BaseTaskStepStore
     start_task_context: str
-    cross_encoder_path: str
-    embed_model_path: str
+    cross_encoder: CrossEncoder
+    collection: CollectionService
     llm_runable: Runnable[LanguageModelInput, BaseMessage]
     aemo_representation_chain: AEMORepresentationChain
 
     def __init__(self,
                  base_path: str,
                  llm_runable: Runnable[LanguageModelInput, BaseMessage],
-                 cross_encoder_path: str,
-                 embed_model_path: str,
                  start_task_context: str,
+                 cross_encoder: CrossEncoder,
+                 collection: CollectionService,
                  aemo_representation_chain: AEMORepresentationChain,
                  task_step_store: BaseTaskStepStore,
                  ):
@@ -65,8 +71,8 @@ class StructuredTaskStepStoryboard:
         """
         self.base_path = base_path
         self.llm_runable = llm_runable
-        self.cross_encoder_path = cross_encoder_path
-        self.embed_model_path = embed_model_path
+        self.cross_encoder = cross_encoder
+        self.collection = collection
         self.start_task_context = start_task_context
         self.aemo_representation_chain = aemo_representation_chain
         self.task_step_store = task_step_store
@@ -92,11 +98,25 @@ class StructuredTaskStepStoryboard:
         if task_step_store is None:
             task_step_store = SimpleTaskStepStore.from_persist_dir(f'./{base_path}/storage')
         
+        collection_id = get_query_hash(start_task_context)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        collection = FaissCollectionService(
+            kb_name=collection_id,
+            embed_model=embed_model_path,
+            vector_name="samples",
+            device=device
+        )
+        cross_encoder = CrossEncoder(
+            cross_encoder_path,
+            automodel_args={"torch_dtype": "auto"},
+            trust_remote_code=True,
+        )
+
         return cls(base_path=base_path,
                    llm_runable=llm_runable,
-                   cross_encoder_path=cross_encoder_path,
-                   embed_model_path=embed_model_path,
                    start_task_context=start_task_context,
+                   cross_encoder=cross_encoder,
+                   collection=collection,
                    aemo_representation_chain=aemo_representation_chain,
                    task_step_store=task_step_store)
 
@@ -115,8 +135,8 @@ class StructuredTaskStepStoryboard:
                 task_step_store_node = SimpleTaskStepStore.from_persist_dir(f"{self.base_path}/storage/{task_step_id}")
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm_runable=self.llm_runable,
-                    cross_encoder_path=self.cross_encoder_path,
-                    embed_model_path=self.embed_model_path,
+                    cross_encoder=self.cross_encoder,
+                    collection=self.collection,
                     start_task_context=self.start_task_context,
                     task_step_store=task_step_store_node,
                     task_step_id=task_step_id,
@@ -151,8 +171,8 @@ class StructuredTaskStepStoryboard:
                 self.task_step_store.persist(persist_path=task_step_store_path) 
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm_runable=self.llm_runable,
-                    cross_encoder_path=self.cross_encoder_path,
-                    embed_model_path=self.embed_model_path,
+                    cross_encoder=self.cross_encoder,
+                    collection=self.collection,
                     start_task_context=self.start_task_context,
                     task_step_store=task_step_store_node,
                     task_step_id=task_step_id,

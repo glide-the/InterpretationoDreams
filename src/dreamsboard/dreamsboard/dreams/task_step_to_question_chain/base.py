@@ -89,7 +89,7 @@ class TaskStepToQuestionChain(ABC):
             llm_runable: Runnable[LanguageModelInput, BaseMessage],
             task_step_store: BaseTaskStepStore,
             collection: CollectionService,
-            cross_encoder_path: str
+            cross_encoder: CrossEncoder
     ) -> TaskStepToQuestionChain:
         """
 
@@ -137,12 +137,6 @@ class TaskStepToQuestionChain(ABC):
                                                    "task_step_question_graphql_context": task_step_question_to_graphql_chain,
                                                }
                                                | RunnableLambda(wrapper_output2))
-
-        cross_encoder = CrossEncoder(
-            cross_encoder_path,
-            automodel_args={"torch_dtype": "auto"},
-            trust_remote_code=True,
-        )
 
         return cls(
             base_path=base_path,

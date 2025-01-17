@@ -24,13 +24,11 @@ from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_sto
 from dreamsboard.engine.storage.storage_context import StorageContext
 from dreamsboard.engine.utils import concat_dirs
 import logging 
+from dreamsboard.vector.base import CollectionService
 from dreamsboard.engine.memory.mctsr.mctsr import MCTSNode, MCTSrStoryboard
 from langchain.schema import AIMessage
+from sentence_transformers import CrossEncoder
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
-import torch
-from dreamsboard.vector.faiss_kb_service import FaissCollectionService
-
-from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -59,8 +57,8 @@ class TaskEngineBuilder:
     
     """
     base_path: str
-    cross_encoder_path: str
-    embed_model_path: str
+    cross_encoder: CrossEncoder
+    collection: CollectionService
     storage_context: StorageContext
     task_step_store: BaseTaskStepStore
     task_step_id: str
@@ -71,8 +69,8 @@ class TaskEngineBuilder:
     def __init__(self,
                 base_path: str,
                 llm_runable: Runnable[LanguageModelInput, BaseMessage],
-                cross_encoder_path: str,
-                embed_model_path: str,
+                cross_encoder: CrossEncoder,
+                collection: CollectionService,
                 start_task_context: str,
                 task_step_store: BaseTaskStepStore,
                 task_step_id: str,
@@ -82,8 +80,8 @@ class TaskEngineBuilder:
         self.task_step_store = task_step_store
         self.task_step_id = task_step_id
         self.llm_runable = llm_runable
-        self.cross_encoder_path = cross_encoder_path
-        self.embed_model_path = embed_model_path
+        self.cross_encoder = cross_encoder
+        self.collection = collection
         self.client = None
         self.task_step_to_question_chain = None
         self.csv_file_path = None
@@ -131,23 +129,14 @@ class TaskEngineBuilder:
 					export_csv_file_path: 3、对召回内容与问题 导出csv文件
  
         """
-        collection_id = get_query_hash(self.start_task_context)
-
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        collection = FaissCollectionService(
-            kb_name=collection_id,
-            embed_model=self.embed_model_path,
-            vector_name="samples",
-            device=device
-        )
 
         self.task_step_to_question_chain = TaskStepToQuestionChain.from_task_step_to_question_chain(
             base_path=self.base_path,
             start_task_context=self.start_task_context,
             llm_runable=self.llm_runable, 
             task_step_store=self.task_step_store,
-            collection=collection,
-            cross_encoder_path=self.cross_encoder_path
+            collection=self.collection,
+            cross_encoder=self.cross_encoder
         )
         self.task_step_to_question_chain.invoke_task_step_to_question(self.task_step_id)
         self.task_step_to_question_chain.invoke_task_step_question_context(self.task_step_id)
