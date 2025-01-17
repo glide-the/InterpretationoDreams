@@ -6,6 +6,7 @@ faiss
 index.faiss
 index.pkl
 faiss
+env.sh
 .virtual_documents
 .vscode/launch.json
 **/*/__pycache__

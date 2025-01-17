@@ -89,7 +89,7 @@ def test_structured_storyboard_loader():
 
 def test_structured_storyboard_loader_from_json():
 
-    store_load = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
+    store_load = SimpleTaskStepStore.from_persist_dir(persist_dir="/mnt/ceph/develop/jiawei/InterpretationoDreams/src/docs/doubao/60f9b7459a7749597e7efa71d1747bc4/storage")
     logger.info(store_load.task_step_all)
     structured_storyboard = StructuredStoryboard(json_data=[step.__dict__ for step in list(store_load.task_step_all.values())])
  
