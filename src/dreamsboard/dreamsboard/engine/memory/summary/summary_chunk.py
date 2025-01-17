@@ -9,13 +9,8 @@ from langchain.chains.combine_documents.map_reduce import ReduceDocumentsChain, 
 import sys
 import asyncio
 from langchain.docstore.document import Document
+from langchain.vector.base import DocumentWithVSId
 
-
-class DocumentWithVSId(Document):
-    """
-    矢量化后的文档
-    """
-    id: str = None
 
 
 class SummaryAdapter:

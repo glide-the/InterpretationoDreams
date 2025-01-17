@@ -1,6 +1,6 @@
 import os
 import shutil
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any, Sized
 
 from langchain.docstore.document import Document
  
@@ -8,9 +8,17 @@ from dreamsboard.vector.knowledge_base.kb_cache.faiss_cache import (
     ThreadSafeFaiss,
     kb_faiss_pool,
 ) 
+from dreamsboard.vector.base import CollectionService, DocumentWithVSId
 
+def _len_check_if_sized(x: Any, y: Any, x_name: str, y_name: str) -> None:
+    if isinstance(x, Sized) and isinstance(y, Sized) and len(x) != len(y):
+        raise ValueError(
+            f"{x_name} and {y_name} expected to be equal length but "
+            f"len({x_name})={len(x)} and len({y_name})={len(y)}"
+        )
+    return
 
-class FaissKBService:
+class FaissCollectionService(CollectionService):
     _vs_path: str
     device: str
     kb_name: str
@@ -35,9 +43,9 @@ class FaissKBService:
     def save_vector_store(self):
         self.load_vector_store().save(self._vs_path)
 
-    def get_doc_by_ids(self, ids: List[str]) -> List[Document]:
+    def get_doc_by_ids(self, ids: List[str]) -> List[DocumentWithVSId]:
         with self.load_vector_store().acquire() as vs:
-            return [vs.docstore._dict.get(id) for id in ids]
+            return [DocumentWithVSId(**{**vs.docstore._dict.get(id).dict(), "id":id}) for id in ids]
 
     def del_doc_by_ids(self, ids: List[str]) -> bool:
         with self.load_vector_store().acquire() as vs:
@@ -55,30 +63,42 @@ class FaissKBService:
         query: str,
         top_k: int,
         score_threshold: float = 1,
-    ) -> List[Tuple[Document, float]]:
+    ) -> List[Tuple[DocumentWithVSId, float]]:
         with self.load_vector_store().acquire() as vs:
             faiss_retriever = vs.as_retriever(
                 search_type="similarity_score_threshold",
                 search_kwargs={"score_threshold": score_threshold, "k": top_k},
             )
             docs = faiss_retriever.invoke(query)
+            docs = [DocumentWithVSId(**{**doc.dict(), "id":doc.metadata['id']}) for doc in docs]
         return docs
 
     def do_add_doc(
         self,
-        docs: List[Document],
+        docs: List[DocumentWithVSId],
         **kwargs,
     ) -> List[Dict]:
+        if docs is None or len(docs) == 0:
+            return []
+        if not isinstance(docs[0], DocumentWithVSId):
+            raise ValueError(f"docs expected to be List[DocumentWithVSId] but got {type(docs)}")
+
+        ids = [x.id for x in docs]
         texts = [x.page_content for x in docs]
         metadatas = [x.metadata for x in docs]
+
+
+        _len_check_if_sized(docs, ids, "docs", "ids")
+        _len_check_if_sized(docs, texts, "docs", "texts")
+        _len_check_if_sized(docs, metadatas, "docs", "metadatas")
         with self.load_vector_store().acquire() as vs:
             embeddings = vs.embeddings.embed_documents(texts)
             ids = vs.add_embeddings(
-                text_embeddings=zip(texts, embeddings), metadatas=metadatas
+                text_embeddings=zip(texts, embeddings), metadatas=metadatas, ids=ids
             )
             if not kwargs.get("not_refresh_vs_cache"):
                 vs.save_local(self._vs_path)
-        doc_infos = [{"id": id, "metadata": doc.metadata} for id, doc in zip(ids, docs)]
+        doc_infos = [DocumentWithVSId(**{**doc.dict(), "id":id}) for id, doc in zip(ids, docs)]
         return doc_infos
 
 

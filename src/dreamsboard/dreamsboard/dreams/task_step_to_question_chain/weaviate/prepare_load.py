@@ -164,4 +164,5 @@ def exe_query(query, top_k):
         return properties_list
     else:
         logger.info("No papers found.")
+        return []
      
