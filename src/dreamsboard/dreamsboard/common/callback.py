@@ -59,8 +59,10 @@ class Iteratorize:
     
     def _run(self):
         """在迭代开始时启动线程并执行任务
-        DO：在 EventManager 中，多个事件（task_function）可能会同时尝试获取相同资源的锁（resource_lock），但如果一个线程持有某个锁且另一个线程正在等待同一个锁，它们就会产生死锁。
-如果多个任务被注册到相同资源，并且这些任务还相互依赖（或者访问同一个资源），则可能会形成死锁链。
+        DO：在 EventManager 中，多个事件（task_function）可能会同时尝试获取相同资源的锁（resource_lock），
+        但如果一个线程持有某个锁且另一个线程正在等待同一个锁，它们就会产生死锁。
+        如果多个任务被注册到相同资源，并且这些任务还相互依赖（或者访问同一个资源），则可能会形成死锁链。
+        解决方案: 对资源锁增加一个超时机制，若在一定时间内无法获得锁，可以进行回滚，避免无限期阻塞。
         """
         # 获取锁，确保同一资源不会被多个任务同时执行
         lock_acquired = False
@@ -160,7 +162,7 @@ class EventManager:
         tasks = self._get_thread_tasks()
 
         # 创建Iteratorize任务并传入对应的资源锁
-        iteratorize_task = Iteratorize(task_func, resource_id, kwargs, self.lock_dict[resource_id])
+        iteratorize_task = Iteratorize(task_func, resource_id, kwargs, resource_lock=self.lock_dict[resource_id])
         
         # 将任务存储到当前线程的任务字典中
         tasks[event_id] = iteratorize_task
