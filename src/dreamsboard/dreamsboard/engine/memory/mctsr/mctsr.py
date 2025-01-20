@@ -525,6 +525,7 @@ class MCTSrStoryboard(MCTSr):
  
         
         owner = f"register_event end thread {threading.get_native_id()}" 
+        logger.info(f"owner:{owner}")
         
         results = None
         while results is None or len(results) == 0:
@@ -571,6 +572,7 @@ class MCTSrStoryboard(MCTSr):
  
         
         owner = f"register_event end thread {threading.get_native_id()}" 
+        logger.info(f"owner:{owner}")
          
         results = None
         while results is None or len(results) == 0:
@@ -660,6 +662,7 @@ class MCTSrStoryboard(MCTSr):
         
                 
                 owner = f"register_event end thread {threading.get_native_id()}" 
+                logger.info(f"owner:{owner}")
                 
                 results = None
                 while results is None or len(results) == 0:
