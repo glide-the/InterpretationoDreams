@@ -343,11 +343,13 @@ def test_builder_task_step_mctsr_threads():
         cross_encoder_path=cross_encoder_path,
         embed_model_path=embed_model_path
     )
+
+     
     # 初始化任务引擎
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
 
     def worker(task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore):
-        owner = f"thread {threading.get_native_id()}"
+        owner = f"task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
         logger.info(f"{owner}，任务开始")
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()

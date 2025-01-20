@@ -140,5 +140,5 @@ class KBFaissPool(_FaissPool):
 
  
 
-kb_faiss_pool = KBFaissPool(cache_num=3) 
+kb_faiss_pool = KBFaissPool(cache_num=1) 
  
