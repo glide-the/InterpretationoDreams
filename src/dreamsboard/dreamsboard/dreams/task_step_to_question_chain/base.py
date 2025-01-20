@@ -211,7 +211,7 @@ class TaskStepToQuestionChain(ABC):
         
         event_id = event_manager.register_event(
             self._into_database_query,
-            resource_id=f"resource_collection",
+            resource_id=f"resource_collection_{self.collection.kb_name}",
             kwargs={
                     "collection": self.collection,
                     "union_id_key": 'ref_id',
