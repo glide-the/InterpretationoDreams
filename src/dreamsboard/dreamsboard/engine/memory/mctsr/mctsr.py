@@ -76,8 +76,11 @@ from dreamsboard.dreams.task_step_md.prompts import TASK_MD_TEMPLATE,TASK_STEP_M
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
 from dreamsboard.engine.storage.storage_context import StorageContext
+
+from dreamsboard.common.callback import (event_manager)
 import numpy as np
 import logging
+import threading 
 import re
 import os
 
@@ -323,6 +326,35 @@ class MCTSr(BaseModel):
 
 
 class MCTSrStoryboard(MCTSr): 
+    """
+    
+    resource_id=f"resource_{node.linked_list_node.task_step_id}"
+    """
+    
+    @staticmethod
+    def _get_ai_message(callback, resource_id, **kwargs):
+ 
+        code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=kwargs.get("storage_context"))
+        _base_render_data = {
+            'system_prompt': kwargs.get("system_prompt"),
+            'messages': [kwargs.get("user_prompt")]
+        }
+        code_gen_builder.add_generator(BaseProgramGenerator.from_config(cfg={
+            "code_file": "base_template_system.py-tpl",
+            "render_data": _base_render_data,
+        }))
+
+        executor = code_gen_builder.build_executor(
+            llm_runable=kwargs.get("llm_runable"),
+            messages=[]
+        )
+        executor.execute()
+        _ai_message = executor.chat_run()
+
+        logger.info("\033[1;32m" + f"{resource_id}: {_ai_message}" + "\033[0m")
+        assert executor._ai_message is not None 
+
+        callback(_ai_message)
 
     @staticmethod
     def _wrapper_steps_unit(context_linked_list_node: LinkedListNode, continue_task_step_id: str):
@@ -475,7 +507,30 @@ class MCTSrStoryboard(MCTSr):
             task_step_description=node.linked_list_node.task_step_description,
             task_step_level=node.linked_list_node.task_step_level
         ) 
-        _ai_message = self._get_ai_message(gpt_prompt_config.critic_system_prompt, user_prompt, node)
+
+             
+        owner = f"register_event thread {threading.get_native_id()}"
+        logger.info(f"owner:{owner}")
+        
+        event_id = event_manager.register_event(
+            self._get_ai_message,
+            resource_id=f"resource_critic_{node.linked_list_node.task_step_id}",
+            kwargs={
+                    "llm_runable": self.llm_runable,
+                    "system_prompt": gpt_prompt_config.critic_system_prompt,
+                    "user_prompt": user_prompt,
+                    "storage_context": node.storage_context,
+                },
+        )
+ 
+        
+        owner = f"register_event end thread {threading.get_native_id()}" 
+        logger.info(f"owner:{owner}")
+        
+        results = None
+        while results is None or len(results) == 0:
+            results = event_manager.get_results(event_id)
+        _ai_message = results[0]
         assert _ai_message.content is not None
         critique = _ai_message.content
         assert critique is not None
@@ -501,7 +556,28 @@ class MCTSrStoryboard(MCTSr):
             past_steps=past_steps
         )
  
-        _refined_answer_response_message = self._get_ai_message(gpt_prompt_config.refine_system_prompt, refine_system_prompt, node)
+        owner = f"register_event thread {threading.get_native_id()}"
+        logger.info(f"owner:{owner}")
+        
+        event_id = event_manager.register_event(
+            self._get_ai_message,
+            resource_id=f"resource_refine_{node.linked_list_node.task_step_id}",
+            kwargs={
+                    "llm_runable": self.llm_runable,
+                    "system_prompt": gpt_prompt_config.refine_system_prompt,
+                    "user_prompt": refine_system_prompt,
+                    "storage_context": node.storage_context,
+                },
+        )
+ 
+        
+        owner = f"register_event end thread {threading.get_native_id()}" 
+        logger.info(f"owner:{owner}")
+         
+        results = None
+        while results is None or len(results) == 0:
+            results = event_manager.get_results(event_id)
+        _refined_answer_response_message = results[0] 
         assert _refined_answer_response_message.content is not None
             
         json_object = {}
@@ -569,7 +645,29 @@ class MCTSrStoryboard(MCTSr):
         
         for attempt in range(3):
             try:
-                _ai_message = self._get_ai_message(gpt_prompt_config.evaluate_system_prompt, user_prompt, node) 
+                        
+                owner = f"register_event thread {threading.get_native_id()}"
+                logger.info(f"owner:{owner}")
+                
+                event_id = event_manager.register_event(
+                    self._get_ai_message,
+                    resource_id=f"resource_evaluate_{node.linked_list_node.task_step_id}",
+                    kwargs={
+                            "llm_runable": self.llm_runable,
+                            "system_prompt": gpt_prompt_config.evaluate_system_prompt,
+                            "user_prompt": user_prompt,
+                            "storage_context": node.storage_context,
+                        },
+                )
+        
+                
+                owner = f"register_event end thread {threading.get_native_id()}" 
+                logger.info(f"owner:{owner}")
+                
+                results = None
+                while results is None or len(results) == 0:
+                    results = event_manager.get_results(event_id)
+                _ai_message = results[0]  
                 assert _ai_message.content is not None
                 return int(_ai_message.content)
             except ValueError: 
@@ -578,32 +676,6 @@ class MCTSrStoryboard(MCTSr):
                 if attempt == 2:
                     raise
     
-    def _get_ai_message(self, system_prompt: str, user_prompt: str, node: MCTSNode) -> AIMessage:
-        """
-        获取AI消息
-        """
-        
-        code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=node.storage_context)
-        _base_render_data = {
-            'system_prompt': system_prompt,
-            'messages': [user_prompt]
-        }
-        code_gen_builder.add_generator(BaseProgramGenerator.from_config(cfg={
-            "code_file": "base_template_system.py-tpl",
-            "render_data": _base_render_data,
-        }))
- 
-        executor = code_gen_builder.build_executor(
-            llm_runable=self.llm_runable,
-            messages=[]
-        )
-        executor.execute()
-        _ai_message = executor.chat_run()
-
-        logger.info("\033[1;32m" + f"_ai_message: {_ai_message}" + "\033[0m")
-        assert executor._ai_message is not None 
-
-        return _ai_message
     
     def _kor_task_step_refine_builder(self, refined_answer_response_message: AIMessage) -> list[TaskStepRefineNode]:
         """

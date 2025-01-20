@@ -24,10 +24,12 @@ from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_sto
 from dreamsboard.engine.storage.storage_context import StorageContext
 from dreamsboard.engine.utils import concat_dirs
 import logging 
+import threading 
 from dreamsboard.vector.base import CollectionService
 from dreamsboard.engine.memory.mctsr.mctsr import MCTSNode, MCTSrStoryboard
 from langchain.schema import AIMessage
 from sentence_transformers import CrossEncoder
+from dreamsboard.common.callback import (event_manager)
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -236,50 +238,63 @@ class TaskEngineBuilder:
         """
         生成当前任务的答案
         """
-        task_step = self.task_step_store.get_task_step(self.task_step_id)
-        ai_message = self._get_ai_message(
-            user_prompt=task_step.task_step_question,
-            code_gen_builder=code_gen_builder, 
+        task_step = self.task_step_store.get_task_step(self.task_step_id) 
+             
+        owner = f"register_event thread {threading.get_native_id()}"
+        logger.info(f"owner:{owner}")
+        
+        event_id = event_manager.register_event(
+            self._get_ai_message,
+            resource_id=f"resource_critic_{self.task_step_id}",
+            kwargs={
+                    "llm_runable": self.llm_runable,
+                    "code_gen_builder": code_gen_builder,
+                    "user_prompt": task_step.task_step_question, 
+                },
         )
-        logger.info(ai_message.content)
-        task_step.task_step_question_answer = ai_message.content
+ 
+        
+        owner = f"register_event end thread {threading.get_native_id()}" 
+        
+        results = None
+        while results is None or len(results) == 0:
+            results = event_manager.get_results(event_id)
+        _ai_message = results[0] 
+        task_step.task_step_question_answer = _ai_message.content
         self.task_step_store.add_task_step([task_step])
         # 每处理一个任务步骤，就持久化一次
         task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{self.task_step_id}", basename=DEFAULT_PERSIST_FNAME)
         self.task_step_store.persist(persist_path=task_step_store_path) 
-        return ai_message.content
-    
-    def _get_ai_message(self, 
-                        user_prompt: str,
-                        code_gen_builder: CodeGeneratorBuilder,
-        ) -> AIMessage:
-        """
-        获取AI消息
-        """
-                 
+        return _ai_message.content
+     
+
+    @staticmethod
+    def _get_ai_message(callback, resource_id, **kwargs):
+ 
+        code_gen_builder = kwargs.get("code_gen_builder")
+       
         code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
             "query_code_file": "query_template.py-tpl",
             "render_data": {
                 'cosplay_role': 'user',
-                'message': user_prompt
+                'message': kwargs.get("user_prompt")
             },
         })) 
         executor = code_gen_builder.build_executor(
-            llm_runable=self.llm_runable,
+            llm_runable=kwargs.get("llm_runable"),
             messages=[]
-        )
-        logger.info(executor.executor_code)
+        ) 
 
         executor.execute()
         _ai_message = executor.chat_run()
-
-        logger.info(executor._ai_message)
+ 
         assert executor._ai_message is not None
         
         code_gen_builder.remove_last_generator()
 
-        return _ai_message
+        logger.info("\033[1;32m" + f"{resource_id}: {_ai_message}" + "\033[0m") 
 
+        callback(_ai_message)
 
     def get_mcts_node(self) -> MCTSrStoryboard:
         """

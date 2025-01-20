@@ -31,6 +31,7 @@ class FaissCollectionService(CollectionService):
         self.embed_model = embed_model
         self.vector_name = vector_name
         self._vs_path = os.path.join(kb_name, "vector_store", vector_name)
+        self.load_vector_store()
  
     def load_vector_store(self) -> ThreadSafeFaiss:
         return kb_faiss_pool.load_vector_store(
@@ -74,7 +75,7 @@ class FaissCollectionService(CollectionService):
         top_k: int,
         score_threshold: float = 1,
     ) -> List[DocumentWithVSId]:
-        with self.load_vector_store().acquire() as vs:
+        with self.load_vector_store().acquire(msg="查询") as vs:
             faiss_retriever = vs.as_retriever(
                 search_type="similarity_score_threshold",
                 search_kwargs={"score_threshold": score_threshold, "k": top_k},
@@ -101,13 +102,13 @@ class FaissCollectionService(CollectionService):
         _len_check_if_sized(docs, ids, "docs", "ids")
         _len_check_if_sized(docs, texts, "docs", "texts")
         _len_check_if_sized(docs, metadatas, "docs", "metadatas")
-        with self.load_vector_store().acquire() as vs:
+        with self.load_vector_store().acquire(msg="插入") as vs:
             embeddings = vs.embeddings.embed_documents(texts)
             ids = vs.add_embeddings(
                 text_embeddings=zip(texts, embeddings), metadatas=metadatas, ids=ids
-            )
-            if not kwargs.get("not_refresh_vs_cache"):
-                vs.save_local(self._vs_path)
+            ) 
+
+        self.save_vector_store()
         doc_infos = [DocumentWithVSId(**{**doc.dict(), "id":id}) for id, doc in zip(ids, docs)]
         return doc_infos
 

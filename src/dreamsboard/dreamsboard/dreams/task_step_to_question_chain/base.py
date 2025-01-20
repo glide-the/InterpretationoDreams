@@ -25,12 +25,12 @@ from dreamsboard.engine.entity.task_step.task_step import TaskStepContext
 
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import exe_query, get_query_hash
 
-import json
-import copy
+import threading
+from dreamsboard.common.callback import (event_manager)
 from sentence_transformers import CrossEncoder
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
 from dreamsboard.engine.utils import concat_dirs
-from typing import List
+from typing import List, Dict
 from dreamsboard.vector.base import CollectionService, DocumentWithVSId
 import logging
 import os
@@ -163,28 +163,34 @@ class TaskStepToQuestionChain(ABC):
         task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
         self.task_step_store.persist(persist_path=task_step_store_path)
 
-    def _insert_into_database(self, union_id_key:str, page_content_key:str, properties_list: List[Dict] = []) -> None:
+    @staticmethod
+    def _into_database_query(callback, resource_id, **kwargs) -> None:
         """
         插入数据到向量数据库,检查唯一
         :param union_id_key:  唯一标识
-        :param properties_list:  数据列表
+        :param page_content_key:  数据列表
+        :param properties_list:  数据列表 
         :return: None
         """
 
-        union_ids = [str(item.get(union_id_key)) for item in properties_list]
+        union_ids = [str(item.get(kwargs.get("union_id_key"))) for item in kwargs.get("properties_list")]
 
-        response = self.collection.get_doc_by_ids(ids=union_ids)
+        response = kwargs.get("collection").get_doc_by_ids(ids=union_ids)
 
-        exist_ids = [o.metadata[union_id_key] for o in response]
+        exist_ids = [o.metadata[kwargs.get("union_id_key")] for o in response]
 
         docs = []
-        for item in properties_list:
-            metadata = {key: value for key, value in item.items() if key != page_content_key}
-            if item.get(union_id_key) not in exist_ids:
-                doc = DocumentWithVSId(id=item.get(union_id_key), page_content=item.get(page_content_key), metadata=metadata )
+        for item in kwargs.get("properties_list"):
+            metadata = {key: value for key, value in item.items() if key != kwargs.get("page_content_key")}
+            if item.get(kwargs.get("union_id_key")) not in exist_ids:
+                doc = DocumentWithVSId(id=item.get(kwargs.get("union_id_key")), page_content=item.get(kwargs.get("page_content_key")), metadata=metadata )
                 docs.append(doc)
 
-        self.collection.do_add_doc(docs)
+        kwargs.get("collection").do_add_doc(docs)
+        # 召回 
+        response = kwargs.get("collection").do_search(query=kwargs.get('task_step_question'), top_k=10, score_threshold=0.6)
+        callback(response)
+
 
     def invoke_task_step_question_context(self, task_step_id: str) -> None:
         """
@@ -196,15 +202,32 @@ class TaskStepToQuestionChain(ABC):
         if task_step_node.task_step_question_context is not None and len(task_step_node.task_step_question_context) > 0:
             return
 
-        top_k =100  # 可选参数，默认查询返回前 100个结果
+        top_k =30  # 可选参数，默认查询返回前 30个结果
         properties_list = exe_query(task_step_node.task_step_question,top_k)
 
         # 插入数据到数据库
-
-        self._insert_into_database('ref_id','chunk_text', properties_list)
-
-        # 召回
-        response = self.collection.do_search(query=f"{task_step_node.task_step_question}", top_k=10, score_threshold=0.6)
+        owner = f"register_event thread {threading.get_native_id()}"
+        logger.info(f"owner:{owner}")
+        
+        event_id = event_manager.register_event(
+            self._into_database_query,
+            resource_id=f"resource_collection_{self.collection.kb_name}",
+            kwargs={
+                    "collection": self.collection,
+                    "union_id_key": 'ref_id',
+                    "page_content_key": 'chunk_text',
+                    "properties_list": properties_list,
+                    "task_step_question": task_step_node.task_step_question,
+                },
+        )
+ 
+        owner = f"register_event end thread {threading.get_native_id()}" 
+        logger.info(f"owner:{owner}")
+        
+        results = None
+        while results is None or len(results) == 0:
+            results = event_manager.get_results(event_id)
+        response = results[0]
 
         chunk_texts = []
         ref_ids = []

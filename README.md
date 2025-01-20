@@ -69,8 +69,10 @@
 
 ```
 
-def test_builder_task_step_mctsr():
-     
+
+def test_builder_task_step_mctsr_threads():
+    import threading
+
     llm = ChatOpenAI(
         openai_api_base=os.environ.get("API_BASE"),
         model=os.environ.get("API_MODEL"),
@@ -123,16 +125,14 @@ def test_builder_task_step_mctsr():
         cross_encoder_path=cross_encoder_path,
         embed_model_path=embed_model_path
     )
+
+     
     # 初始化任务引擎
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
-    # step =0
-    task_step_store = builder.task_step_store
-    while not task_engine_builder.empty():
-       
-        task_engine = task_engine_builder.get()
-        # step+=1
-        # if step<=7 :
-        #     continue
+
+    def worker(task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore):
+        owner = f"task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
+        logger.info(f"{owner}，任务开始")
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()
@@ -162,6 +162,24 @@ def test_builder_task_step_mctsr():
         except Exception as e:
             logger.error("场景加载失败", e)
  
+        logger.info(f"{owner}，任务结束")
+
+    threads = []
+    
+    # step =0
+    task_step_store = builder.task_step_store
+    while not task_engine_builder.empty():
+       
+        task_engine = task_engine_builder.get()
+ 
+        t = threading.Thread(target=worker,
+                             kwargs={"task_engine": task_engine, "task_step_store": task_step_store},
+                             daemon=True)
+        t.start()
+        threads.append(t)
+
+    for t in threads:
+        t.join() 
 ```
 
 ### 渲染文档
@@ -179,7 +197,17 @@ display(Markdown(md_text.text))
 #### 任务规划模块设计方案
  
 ```
-设计中
+规划模块设计初期方案，只对问题进行了简单的任务拆分,有两个提示词完成操作，封装代码在AEMORepresentationChain
+AEMO_REPRESENTATION_PROMPT_TEMPLATE
+用于确定任务目标，规定任务场景，以及任务的话题，最终输出带有标题副标题子列表的简单描述文本
+KorLoader.form_kor_dreams_task_step_builder
+用于对文本结构化抽取，获取提取步骤的名称，提取每个步骤的具体建议和问题，提取步骤的层级编号
+
+上下文交互最终由存储管理器BaseTaskStepStore定义两种范围（全局上下文、任务上下文）
+
+由loader_task_step_iter_builder完成任务资源的加载
+TODO 目前全局上下文并没有参与交互
+
 ```
 
  
