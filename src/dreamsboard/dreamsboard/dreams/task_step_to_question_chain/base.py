@@ -211,7 +211,7 @@ class TaskStepToQuestionChain(ABC):
         
         event_id = event_manager.register_event(
             self._into_database_query,
-            resource_id=f"resource_collection_{self.collection.kb_name}",
+            resource_id=f"resource_collection_{task_step_id}",
             kwargs={
                     "collection": self.collection,
                     "union_id_key": 'ref_id',
@@ -228,6 +228,7 @@ class TaskStepToQuestionChain(ABC):
         while results is None or len(results) == 0:
             results = event_manager.get_results(event_id)
         response = results[0]
+        self.collection.save_vector_store()
 
         chunk_texts = []
         ref_ids = []

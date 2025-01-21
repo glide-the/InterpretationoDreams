@@ -12,6 +12,7 @@ from dreamsboard.common import _get_assistants_tool
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
 import logging
+import multiprocessing
 import os
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 logger = logging.getLogger(__name__)
@@ -335,7 +336,7 @@ def test_builder_task_step_mctsr_threads():
     # 存储
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
-    start_task_context = "什么是损失函数？"
+    start_task_context = "大模型中的LayerNorm和RMSNorm有什么区别？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,

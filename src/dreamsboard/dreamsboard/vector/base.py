@@ -3,12 +3,7 @@ import shutil
 from typing import Dict, List, Tuple
 
 from langchain.docstore.document import Document
-
-from dreamsboard.vector.knowledge_base.kb_cache.faiss_cache import (
-    ThreadSafeFaiss,
-    kb_faiss_pool,
-)
-
+ 
 class DocumentWithVSId(Document):
     """
     矢量化后的文档

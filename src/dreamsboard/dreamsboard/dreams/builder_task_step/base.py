@@ -130,15 +130,23 @@ class StructuredTaskStepStoryboard:
         if not allow_init: 
             for task_step_id, task_step in self.task_step_store.task_step_all.items():
                 task_step_id = task_step.node_id
-                
-                # 从存储中获取详细的任务
+                 
+                # 从存储中获取详细的任务,设置到全局上下文
                 task_step_store_node = SimpleTaskStepStore.from_persist_dir(f"{self.base_path}/storage/{task_step_id}")
+                task_step_node = task_step_store_node.get_task_step(task_step_id)
+
+                task_step_store_node.add_task_step([task_step_node])
+                task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+
+                self.task_step_store.persist(persist_path=task_step_store_path)
+                task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage", basename=DEFAULT_PERSIST_FNAME)
+                self.task_step_store.persist(persist_path=task_step_store_path) 
                 iter_builder_queue.put(TaskEngineBuilder(
                     llm_runable=self.llm_runable,
                     cross_encoder=self.cross_encoder,
                     collection=self.collection,
                     start_task_context=self.start_task_context,
-                    task_step_store=task_step_store_node,
+                    task_step_store=self.task_step_store,
                     task_step_id=task_step_id,
                     base_path=self.base_path
                 ))
@@ -158,15 +166,13 @@ class StructuredTaskStepStoryboard:
                     "task_step_level": task_step.task_step_level
                 })
                 task_step_id = task_step_node.node_id
-                
-                task_step_store_node = SimpleTaskStepStore.from_persist_dir(f"{self.base_path}/storage/{task_step_id}")
-                
-                task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
-
-                task_step_store_node.add_task_step([task_step_node])
-                task_step_store_node.persist(persist_path=task_step_store_path)
+  
                 self.task_step_store.add_task_step([task_step_node])
                 
+                 
+                task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage/{task_step_id}", basename=DEFAULT_PERSIST_FNAME)
+
+                self.task_step_store.persist(persist_path=task_step_store_path)
                 task_step_store_path = concat_dirs(dirname=f"{self.base_path}/storage", basename=DEFAULT_PERSIST_FNAME)
                 self.task_step_store.persist(persist_path=task_step_store_path) 
                 iter_builder_queue.put(TaskEngineBuilder(
@@ -174,7 +180,7 @@ class StructuredTaskStepStoryboard:
                     cross_encoder=self.cross_encoder,
                     collection=self.collection,
                     start_task_context=self.start_task_context,
-                    task_step_store=task_step_store_node,
+                    task_step_store=self.task_step_store,
                     task_step_id=task_step_id,
                     base_path=self.base_path
                 ))

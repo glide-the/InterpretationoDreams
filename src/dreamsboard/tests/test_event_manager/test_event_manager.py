@@ -27,18 +27,34 @@ handler.setLevel(logging.DEBUG)
 
 logger.addHandler(handler)
 
+from dreamsboard.vector.faiss_kb_service import FaissCollectionService
+
+from dreamsboard.vector.base import DocumentWithVSId
+ 
 
 # Example of how to use the EventManager and Iteratorize
 def task_function(callback, resource_id, **kwargs):
 
     print(f"Executing task on resource {resource_id} with args: {kwargs}")
-    # 模拟一些处理，生成任务结果
-    for i in range(3):
-        callback(f"Task result {i} on resource {resource_id}")
+    docs = [DocumentWithVSId(id='1', page_content=f"text added by {resource_id}")]
+
+    response = kwargs.get("faiss_service").get_doc_by_ids(ids=['1'])
+    if len(response) == 0 :
+        docs = kwargs.get("faiss_service").do_add_doc(docs)
+        print(docs)
+        docs = kwargs.get("faiss_service").do_search(query=f"{resource_id}", top_k=3, score_threshold=0.8)
+        print(docs)
+    callback(f"Task result resource_id on resource {resource_id}")
    
     
 def test_event_manager(): 
-     
+        
+    faiss_service = FaissCollectionService(
+            kb_name="faiss",
+            embed_model="/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base",
+            vector_name="samples",
+            device="cuda"
+    )
     def register_and_execute_events(event_manager, start_idx, end_idx):
 
         owner = f"start_event thread {threading.get_native_id()}"
@@ -53,6 +69,7 @@ def test_event_manager():
                 task_function,
                 resource_id=f"resource_{i % 2 + 1}",
                 kwargs={ 
+                    "faiss_service": faiss_service
                 },
             )
 
