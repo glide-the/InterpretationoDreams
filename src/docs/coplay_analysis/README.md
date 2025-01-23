@@ -25,6 +25,13 @@ executor = code_gen_builder.build_executor()
 print(executor.executor_code)
 ```
 
+
+### 数据处理方式
+相关工具
+- `https://github.com/glide-the/Keyframe-Extraction-for-video-summarization` 提取视频关键帧,结合字幕文件整理分镜信息
+- `https://github.com/LC1332/Chat-Haruhi-Suzumiya` 提取视频字幕及其对应的时间戳 
+
+
 ##### 抖音数据分析整理角色标签卡
 
 - [01_宝今天煮饺子把皮煮开了原来是喜欢你露馅儿了_阿七.md](coplay_analysis/01_%E5%AE%9D%E4%BB%8A%E5%A4%A9%E7%85%AE%E9%A5%BA%E5%AD%90%E6%8A%8A%E7%9A%AE%E7%85%AE%E5%BC%80%E4%BA%86%E5%8E%9F%E6%9D%A5%E6%98%AF%E5%96%9C%E6%AC%A2%E4%BD%A0%E9%9C%B2%E9%A6%85%E5%84%BF%E4%BA%86_%E9%98%BF%E4%B8%83.md)
