@@ -29,7 +29,7 @@ from dreamsboard.vector.base import CollectionService
 from dreamsboard.engine.memory.mctsr.mctsr import MCTSNode, MCTSrStoryboard
 from langchain.schema import AIMessage
 from sentence_transformers import CrossEncoder
-from dreamsboard.common.callback import (event_manager)
+from dreamsboard.common.callback import (call_func)
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -243,7 +243,7 @@ class TaskEngineBuilder:
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
         
-        event_id = event_manager.register_event(
+        results = call_func(
             self._get_ai_message,
             resource_id=f"resource_critic_{self.task_step_id}",
             kwargs={
@@ -252,13 +252,7 @@ class TaskEngineBuilder:
                     "user_prompt": task_step.task_step_question, 
                 },
         )
- 
-        
-        owner = f"register_event end thread {threading.get_native_id()}" 
-        
-        results = None
-        while results is None or len(results) == 0:
-            results = event_manager.get_results(event_id)
+         
         _ai_message = results[0] 
         task_step.task_step_question_answer = _ai_message.content
         self.task_step_store.add_task_step([task_step])

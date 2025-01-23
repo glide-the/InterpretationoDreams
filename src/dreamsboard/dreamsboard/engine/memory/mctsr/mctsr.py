@@ -77,7 +77,7 @@ from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
 from dreamsboard.engine.storage.storage_context import StorageContext
 
-from dreamsboard.common.callback import (event_manager)
+from dreamsboard.common.callback import (call_func)
 import numpy as np
 import logging
 import threading 
@@ -193,7 +193,15 @@ class MCTSr(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-        
+
+    @property 
+    def llm_runable(self) -> Runnable[LanguageModelInput, BaseMessage]:
+        return self.llm_runable
+
+    @llm_runable.setter
+    def llm_runable(self, llm_runable:Runnable[LanguageModelInput, BaseMessage]) -> None:
+        self.llm_runable = llm_runable
+
     def self_refine(self, node: MCTSNode) -> Tuple[MCTSNode, RefineResponse]:
         raise NotImplementedError()
 
@@ -292,6 +300,7 @@ class MCTSr(BaseModel):
         self.root = root_node
 
     def run(self): 
+          
         for _ in tqdm.tqdm(range(self.max_rollouts)):
             node = self.select_node()
             self.self_evaluate(node)
@@ -304,6 +313,9 @@ class MCTSr(BaseModel):
             child.add_reward(refined_answer.answer_score)
             self.backpropagate(child)
 
+
+        owner = f"thread {threading.get_native_id()}, run end"
+        logger.info(f"owner:{owner}")
         return self.get_best_answer()
 
     def get_best_answer(self):
@@ -414,53 +426,53 @@ class MCTSrStoryboard(MCTSr):
         while context_linked_list_node is not None and context_linked_list_node.next is not None:
             if context_linked_list_node.task_step_id == continue_task_step_id:
                 break
-            step = context_linked_list_node.next
+            context_linked_list_node = context_linked_list_node.next
             # 计算层级关系
-            level_count = step.task_step_level.count('>')
+            level_count = context_linked_list_node.task_step_level.count('>')
 
-            past_steps.append(f'{step.task_step_level} task_id: {step.task_step_id}, {step.task_step_name}\n')
+            past_steps.append(f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n')
 
         
             if level_count == 0:
                 # 一级，格式化为标题 #
                 step_text = _PROMPT_TEMPLATE_1.format(
-                    task_step_name=f'### {step.task_step_name}',
-                    task_step_level=step.task_step_level,
-                    task_step_description=step.task_step_description,
-                    task_step_id=step.task_step_id,
-                    task_step_question_answer=step.task_step_question_answer
+                    task_step_name=f'### {context_linked_list_node.task_step_name}',
+                    task_step_level=context_linked_list_node.task_step_level,
+                    task_step_description=context_linked_list_node.task_step_description,
+                    task_step_id=context_linked_list_node.task_step_id,
+                    task_step_question_answer=context_linked_list_node.task_step_question_answer
                 )
                 formatted_task_steps.append(step_text.strip()+"\n\n")
 
             elif level_count == 1:
                 # 二级，格式化为标题 ##
                 step_text = _PROMPT_TEMPLATE_1_1.format(
-                    task_step_name=f'{step.task_step_name}',
-                    task_step_level=step.task_step_level,
-                    task_step_description=step.task_step_description,
-                    task_step_id=step.task_step_id,
-                    task_step_question_answer=step.task_step_question_answer
+                    task_step_name=f'{context_linked_list_node.task_step_name}',
+                    task_step_level=context_linked_list_node.task_step_level,
+                    task_step_description=context_linked_list_node.task_step_description,
+                    task_step_id=context_linked_list_node.task_step_id,
+                    task_step_question_answer=context_linked_list_node.task_step_question_answer
                 )
                 formatted_task_steps.append(step_text.strip()+"\n\n")
 
             elif level_count >= 2:
                 # 三级及以上，格式化为分类 -
                 step_text = _PROMPT_TEMPLATE_1_2.format(
-                    task_step_name=f'- {step.task_step_name}',
-                    task_step_level=step.task_step_level,
-                    task_step_description=step.task_step_description,
-                    task_step_id=step.task_step_id,
-                    task_step_question_answer=step.task_step_question_answer
+                    task_step_name=f'- {context_linked_list_node.task_step_name}',
+                    task_step_level=context_linked_list_node.task_step_level,
+                    task_step_description=context_linked_list_node.task_step_description,
+                    task_step_id=context_linked_list_node.task_step_id,
+                    task_step_question_answer=context_linked_list_node.task_step_question_answer
                 )
                 formatted_task_steps.append(step_text.strip()+"\n\n")
 
             else:
                 step_text = _PROMPT_TEMPLATE_1_3.format(
-                    task_step_name=f'{step.task_step_name}',
-                    task_step_level=step.task_step_level,
-                    task_step_description=step.task_step_description,
-                    task_step_id=step.task_step_id,
-                    task_step_question_answer=step.task_step_question_answer
+                    task_step_name=f'{context_linked_list_node.task_step_name}',
+                    task_step_level=context_linked_list_node.task_step_level,
+                    task_step_description=context_linked_list_node.task_step_description,
+                    task_step_id=context_linked_list_node.task_step_id,
+                    task_step_question_answer=context_linked_list_node.task_step_question_answer
                 )
             
                 formatted_task_steps.append(step_text.strip())
@@ -512,7 +524,7 @@ class MCTSrStoryboard(MCTSr):
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
         
-        event_id = event_manager.register_event(
+        results = call_func(
             self._get_ai_message,
             resource_id=f"resource_critic_{node.linked_list_node.task_step_id}",
             kwargs={
@@ -522,14 +534,7 @@ class MCTSrStoryboard(MCTSr):
                     "storage_context": node.storage_context,
                 },
         )
- 
-        
-        owner = f"register_event end thread {threading.get_native_id()}" 
-        logger.info(f"owner:{owner}")
-        
-        results = None
-        while results is None or len(results) == 0:
-            results = event_manager.get_results(event_id)
+  
         _ai_message = results[0]
         assert _ai_message.content is not None
         critique = _ai_message.content
@@ -559,7 +564,7 @@ class MCTSrStoryboard(MCTSr):
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
         
-        event_id = event_manager.register_event(
+        results = call_func(
             self._get_ai_message,
             resource_id=f"resource_refine_{node.linked_list_node.task_step_id}",
             kwargs={
@@ -569,14 +574,7 @@ class MCTSrStoryboard(MCTSr):
                     "storage_context": node.storage_context,
                 },
         )
- 
-        
-        owner = f"register_event end thread {threading.get_native_id()}" 
-        logger.info(f"owner:{owner}")
-         
-        results = None
-        while results is None or len(results) == 0:
-            results = event_manager.get_results(event_id)
+  
         _refined_answer_response_message = results[0] 
         assert _refined_answer_response_message.content is not None
             
@@ -646,10 +644,10 @@ class MCTSrStoryboard(MCTSr):
         for attempt in range(3):
             try:
                         
-                owner = f"register_event thread {threading.get_native_id()}"
+                owner = f"register_event thread {threading.get_native_id()}, _evaluate_answer"
                 logger.info(f"owner:{owner}")
                 
-                event_id = event_manager.register_event(
+                results = call_func(
                     self._get_ai_message,
                     resource_id=f"resource_evaluate_{node.linked_list_node.task_step_id}",
                     kwargs={
@@ -659,15 +657,11 @@ class MCTSrStoryboard(MCTSr):
                             "storage_context": node.storage_context,
                         },
                 )
-        
-                
-                owner = f"register_event end thread {threading.get_native_id()}" 
-                logger.info(f"owner:{owner}")
-                
-                results = None
-                while results is None or len(results) == 0:
-                    results = event_manager.get_results(event_id)
+         
                 _ai_message = results[0]  
+                
+                owner = f"event end thread {threading.get_native_id()}, _evaluate_answer"
+                logger.info(f"owner:{owner}")
                 assert _ai_message.content is not None
                 return int(_ai_message.content)
             except ValueError: 

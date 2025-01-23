@@ -109,6 +109,32 @@ class Iteratorize:
             self.process.join()
 
 
+def call_func(func, resource_id,  kwargs={}):
+    # 创建一个资源锁，用于保护资源
+    resource_lock = Lock()
+    sentinel = "SENTINEL"
+    result_holder = []
+
+    # 创建多个 Iteratorize 实例，模拟多个并发任务
+    it = Iteratorize(func=func, resource_id=resource_id, sentinel=sentinel, resource_lock=resource_lock, kwargs=kwargs)
+
+    thread = threading.Thread(target=run_iterator, args=(it,result_holder))
+   
+    thread.start()
+    thread.join()
+    
+    return result_holder
+ 
+
+# 运行 Iteratorize 并获取结果
+def run_iterator(it, result_holder):
+    with it as iterator:
+        for result in iterator:
+            print(f"Received: {result}")
+            result_holder.append(result)
+        print(f"Iteration complete for {it.resource_id}.")
+
+
 class EventManager:
     def __init__(self):
         self.lock_dict = {}  # 用来存储资源ID对应的锁

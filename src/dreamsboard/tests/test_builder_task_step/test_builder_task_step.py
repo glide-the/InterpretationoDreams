@@ -309,6 +309,14 @@ def test_builder_task_step_mctsr_threads():
         top_p=0.70,
     )
 
+    deepseek_llm = ChatOpenAI(
+        openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
+        model=os.environ.get("DEEPSEEK_API_MODEL"),
+        openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    )
     if 'glm' in os.environ.get("API_MODEL"):
 
         tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
@@ -349,8 +357,8 @@ def test_builder_task_step_mctsr_threads():
     # 初始化任务引擎
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
 
-    def worker(task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore):
-        owner = f"task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
+    def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore):
+        owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
         logger.info(f"{owner}，任务开始")
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
@@ -358,11 +366,17 @@ def test_builder_task_step_mctsr_threads():
             task_engine.init_task_engine_storyboard_executor()
 
         try:
+            logger.info(f"{owner}，storyboard_code_gen_builder")
             code_gen_builder = task_engine.storyboard_code_gen_builder()
             task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
             if task_step.task_step_question_answer is None or len(task_step.task_step_question_answer) == 0:
                 task_engine.generate_step_answer(code_gen_builder)
+            
+            logger.info(f"step:{step}, {owner}，get_mcts_node")
             mcts_node = task_engine.get_mcts_node()
+            if step % 2 == 0:
+                mcts_node.llm_runable = deepseek_llm
+            logger.info(f"step:{step}, {owner}，get_mcts_node run")
             answer = mcts_node.run()
             
             mcts_node.print()
@@ -385,17 +399,17 @@ def test_builder_task_step_mctsr_threads():
 
     threads = []
     
-    # step =0
+    step =0
     task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
        
         task_engine = task_engine_builder.get()
- 
+        step += 1
         t = threading.Thread(target=worker,
-                             kwargs={"task_engine": task_engine, "task_step_store": task_step_store},
+                             kwargs={"step": step, "task_engine": task_engine, "task_step_store": task_step_store},
                              daemon=True)
         t.start()
-        threads.append(t)
+        threads.append(t) 
 
     for t in threads:
         t.join()
