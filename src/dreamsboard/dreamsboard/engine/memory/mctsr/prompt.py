@@ -78,7 +78,7 @@ task_step_level: {task_step_level}
 
 ### 优化后的回答: 输出的优化答案 
 输出要求 
-    - 文本不超过1500字
+    - Does not want answers with numbered or structured content like 1. 2. 3. 4. 
 
 ### 续写的上下文: 包含续写的上下文
 输出要求
