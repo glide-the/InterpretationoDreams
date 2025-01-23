@@ -317,6 +317,14 @@ def test_builder_task_step_mctsr_threads():
         temperature=0.1,
         top_p=0.9,
     )
+    zhipuai_llm = ChatOpenAI(
+        openai_api_base=os.environ.get("ZHIPUAI_API_BASE"),
+        model=os.environ.get("ZHIPUAI_API_MODEL"),
+        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    )
     if 'glm' in os.environ.get("API_MODEL"):
 
         tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
@@ -376,6 +384,8 @@ def test_builder_task_step_mctsr_threads():
             mcts_node = task_engine.get_mcts_node()
             if step % 2 == 0:
                 mcts_node.llm_runable = deepseek_llm
+            if step % 3 == 0:
+                mcts_node.llm_runable = zhipuai_llm
             logger.info(f"step:{step}, {owner}，get_mcts_node run")
             answer = mcts_node.run()
             

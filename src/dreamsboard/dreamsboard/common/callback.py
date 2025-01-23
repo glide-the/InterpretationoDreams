@@ -8,6 +8,8 @@ import logging
 import time
 import queue
 import asyncio
+import atexit
+
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +41,8 @@ class Iteratorize:
         self._callback = self._callback_func()  # 保存回调函数
         self.process = Process(target=self._run)  # 延迟创建进程
         self.process.start()
- 
+        atexit.register(self.cleanup)  # Jupyter 退出时清理进程
+
     def _callback_func(self):
         """回调函数用于收集结果，并控制迭代的结束"""
         def _callback(val):
@@ -90,12 +93,15 @@ class Iteratorize:
         else:
             return obj
 
-    def __del__(self):
-        """ Cleanup resources, stop the task if needed. """
+    def cleanup(self):
         self.stop_now = True
         if self.process.is_alive():
             self.process.terminate()
             self.process.join()
+
+    def __del__(self):
+        """ Cleanup resources, stop the task if needed. """ 
+        pass 
 
     def __enter__(self):
         """ Used for context management. """
