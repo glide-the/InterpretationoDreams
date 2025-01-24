@@ -187,6 +187,8 @@ class TaskStepToQuestionChain(ABC):
                 docs.append(doc)
 
         kwargs.get("collection").do_add_doc(docs)
+        
+        kwargs.get("collection").save_vector_store()
         # 召回 
         response = kwargs.get("collection").do_search(query=kwargs.get('task_step_question'), top_k=10, score_threshold=0.6)
         callback(response)
@@ -210,7 +212,7 @@ class TaskStepToQuestionChain(ABC):
         logger.info(f"owner:{owner}")
         event_id = event_manager.register_event(
             self._into_database_query,
-            resource_id=f"resource_collection_{task_step_id}",
+            resource_id=f"resource_collection_{self.collection.kb_name}",
             kwargs={
                     "collection": self.collection,
                     "union_id_key": 'ref_id',
@@ -223,7 +225,6 @@ class TaskStepToQuestionChain(ABC):
         while results is None or len(results) == 0:
             results = event_manager.get_results(event_id) 
         response = results[0]
-        self.collection.save_vector_store()
 
         chunk_texts = []
         ref_ids = []

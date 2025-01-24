@@ -94,6 +94,7 @@ class Iteratorize:
 
     def __del__(self):
         """ Cleanup resources, stop the task if needed. """ 
+        self.stop_now = True
         if self.thread.is_alive():
             self.thread.join()
 
