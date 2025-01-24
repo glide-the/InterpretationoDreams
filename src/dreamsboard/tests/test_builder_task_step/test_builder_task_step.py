@@ -352,7 +352,7 @@ def test_builder_task_step_mctsr_threads():
     # 存储
     cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
-    start_task_context = "大模型中的LayerNorm和RMSNorm有什么区别？"
+    start_task_context = "MCTS在PRM偏好策略模型微调的应用探索综述"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,

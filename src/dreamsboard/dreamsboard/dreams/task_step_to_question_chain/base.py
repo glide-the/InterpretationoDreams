@@ -26,7 +26,7 @@ from dreamsboard.engine.entity.task_step.task_step import TaskStepContext
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import exe_query, get_query_hash
 
 import threading
-from dreamsboard.common.callback import (call_func)
+from dreamsboard.common.callback import (event_manager)
 from sentence_transformers import CrossEncoder
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
 from dreamsboard.engine.utils import concat_dirs
@@ -208,8 +208,7 @@ class TaskStepToQuestionChain(ABC):
         # 插入数据到数据库
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
-        
-        results = call_func(
+        event_id = event_manager.register_event(
             self._into_database_query,
             resource_id=f"resource_collection_{task_step_id}",
             kwargs={
@@ -220,6 +219,9 @@ class TaskStepToQuestionChain(ABC):
                     "task_step_question": task_step_node.task_step_question,
                 },
         ) 
+        results = None
+        while results is None or len(results) == 0:
+            results = event_manager.get_results(event_id) 
         response = results[0]
         self.collection.save_vector_store()
 

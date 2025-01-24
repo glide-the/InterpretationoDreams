@@ -39,6 +39,92 @@ class Iteratorize:
         self.resource_lock = resource_lock  # 传入具体的锁，而不是整个lock_dict
 
         self._callback = self._callback_func()  # 保存回调函数
+        self.thread = Thread(target=self._run)  # 延迟创建线程
+        self.thread.start()
+
+    def _callback_func(self):
+        """回调函数用于收集结果，并控制迭代的结束"""
+        def _callback(val):
+            if self.stop_now:
+                raise ValueError
+            self.q.put(val)
+        return _callback
+    
+    def _run(self):
+        """在迭代开始时启动线程并执行任务
+        DO：在 EventManager 中，多个事件（task_function）可能会同时尝试获取相同资源的锁（resource_lock），
+        但如果一个线程持有某个锁且另一个线程正在等待同一个锁，它们就会产生死锁。
+        如果多个任务被注册到相同资源，并且这些任务还相互依赖（或者访问同一个资源），则可能会形成死锁链。
+        解决方案: 对资源锁增加一个超时机制，若在一定时间内无法获得锁，可以进行回滚，避免无限期阻塞。
+        """
+   
+        owner = f"getlock thread {threading.get_native_id()}"
+        logger.info(f"owner:{owner}, resource_id:{self.resource_id}")
+         
+        self.resource_lock.acquire()
+        owner = f"lock thread {threading.get_native_id()}"
+        logger.info(f"owner:{owner}, resource_id:{self.resource_id}")
+    
+        try:
+            # 执行任务，传入回调函数
+            self.mfunc(callback=self._callback, resource_id=self.resource_id, **self.kwargs)
+        except ValueError:
+            traceback.print_exc()
+        except:
+            traceback.print_exc()
+        finally:
+            
+            self.resource_lock.release()
+            # 任务结束，放入sentinel来标识结束
+            self.q.put(self.sentinel)
+     
+
+    def __iter__(self):
+        """控制迭代器，第一次迭代时启动线程"""
+        return self
+
+
+    def __next__(self):
+        """ Fetch the next value from the queue or stop if sentinel is received. """
+        obj = self.q.get(True, None)
+        if obj == self.sentinel:  # 使用 == 比较
+            raise StopIteration
+        else:
+            return obj 
+
+    def __del__(self):
+        """ Cleanup resources, stop the task if needed. """ 
+        if self.thread.is_alive():
+            self.thread.join()
+
+    def __enter__(self):
+        """ Used for context management. """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """ Stop the iteration when exiting context. """
+        self.stop_now = True
+        if self.thread.is_alive():
+            self.thread.join()
+
+
+
+class ProcessIteratorize:
+    """
+    这个类会将一个任务封装为延迟执行的迭代器（Generator）。
+    任务不会在注册时立即启动线程，而是在 __iter__ 方法第一次被调用时才会启动线程。
+    每个任务会检查资源锁，确保同一资源不会被多个任务同时访问。
+    """
+    def __init__(self, func, resource_id, sentinel, kwargs={}, resource_lock=None):
+        self.mfunc = func
+        self.q = Queue()
+        self.sentinel = sentinel
+        self.kwargs = kwargs
+        self.stop_now = False
+        self.resource_id = resource_id
+        self.resource_lock = resource_lock  # 传入具体的锁，而不是整个lock_dict
+
+        self._callback = self._callback_func()  # 保存回调函数
         self.process = Process(target=self._run)  # 延迟创建进程
         self.process.start()
         atexit.register(self.cleanup)  # Jupyter 退出时清理进程
@@ -122,7 +208,7 @@ def call_func(func, resource_id,  kwargs={}):
     result_holder = []
 
     # 创建多个 Iteratorize 实例，模拟多个并发任务
-    it = Iteratorize(func=func, resource_id=resource_id, sentinel=sentinel, resource_lock=resource_lock, kwargs=kwargs)
+    it = ProcessIteratorize(func=func, resource_id=resource_id, sentinel=sentinel, resource_lock=resource_lock, kwargs=kwargs)
 
     thread = threading.Thread(target=run_iterator, args=(it,result_holder))
    
