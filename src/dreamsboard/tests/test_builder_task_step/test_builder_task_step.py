@@ -310,17 +310,17 @@ def test_builder_task_step_mctsr_threads():
     )
 
     deepseek_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
-        model=os.environ.get("DEEPSEEK_API_MODEL"),
-        openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
     )
     zhipuai_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("ZHIPUAI_API_BASE"),
-        model=os.environ.get("ZHIPUAI_API_MODEL"),
-        openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
