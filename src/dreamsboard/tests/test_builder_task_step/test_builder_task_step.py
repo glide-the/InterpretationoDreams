@@ -14,6 +14,8 @@ from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
 import logging
 import multiprocessing
 import os
+import langchain
+
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -289,49 +291,43 @@ def test_task_step_md():
 
 
 
-def test_builder_task_step_mctsr_threads():
+def test_builder_task_step_mctsr_threads(setup_log):
     import threading
 
+    # llm = ChatOpenAI(
+    #     openai_api_base=os.environ.get("API_BASE"),
+    #     model=os.environ.get("API_MODEL"),
+    #     openai_api_key=os.environ.get("API_KEY"),
+    #     verbose=True,
+    #     temperature=0.1,
+    #     top_p=0.9,
+    # )
+    # kor_dreams_task_step_llm = ChatOpenAI(
+    #     openai_api_base=os.environ.get("API_BASE"),
+    #     model=os.environ.get("API_MODEL"),
+    #     openai_api_key=os.environ.get("API_KEY"),
+    #     verbose=True,
+    #     temperature=0.95,
+    #     top_p=0.70,
+    # ) 
+    # if 'glm' in os.environ.get("API_MODEL"):
+
+    #     tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+    # else:
+    #     tools = []
+    # llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+    # kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+
     llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
+        openai_api_base=os.environ.get("QIANFAN_API_BASE"),
+        model=os.environ.get("QIANFAN_API_MODEL"),
+        openai_api_key=os.environ.get("QIANFAN_API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
-    )
-    kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
-
-    deepseek_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
-    zhipuai_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
-    if 'glm' in os.environ.get("API_MODEL"):
-
-        tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
-    else:
-        tools = []
-    llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
-    kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+    ) 
+    llm_with_tools = llm
+    kor_dreams_task_step_llm_with_tools = llm
 
     from tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
@@ -382,11 +378,9 @@ def test_builder_task_step_mctsr_threads():
             
             logger.info(f"step:{step}, {owner}，get_mcts_node")
             mcts_node = task_engine.get_mcts_node()
-            if step % 2 == 0:
-                mcts_node.llm_runable = deepseek_llm
-            if step % 3 == 0:
-                mcts_node.llm_runable = zhipuai_llm
+           
             logger.info(f"step:{step}, {owner}，get_mcts_node run")
+            mcts_node.initialize()
             answer = mcts_node.run()
             
             mcts_node.print()

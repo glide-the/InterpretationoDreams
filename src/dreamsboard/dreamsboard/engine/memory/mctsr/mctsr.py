@@ -77,6 +77,8 @@ from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
 from dreamsboard.engine.storage.storage_context import StorageContext
 
+from dreamsboard.document_loaders.structured_storyboard_loader import StructuredStoryboard
+from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.common.callback import (call_func)
 import numpy as np
 import logging
@@ -133,12 +135,9 @@ ROOT_UCT_SCORE = 10_000
 
 
 class MCTSNode(BaseModel):
-    base_path: str
+    task_step_id: str
     answer: str
-    linked_list_node: LinkedListNode
     """当前任务的会话信息""" 
-    storage_context: StorageContext
-    """当前任务的会话存储""" 
     parent: MCTSNode | None = None
     children: list[MCTSNode] = []
     visits: int = 0
@@ -173,6 +172,11 @@ class SelectionPolicy(Enum):
 
 class MCTSr(BaseModel):
     
+    base_path: str
+    task_step_id: str
+    """当前任务的id"""
+    storage_context: StorageContext
+    """当前任务的会话存储""" 
     llm_runable: Runnable[LanguageModelInput, BaseMessage]
     problem: str
     max_rollouts: int
@@ -293,11 +297,17 @@ class MCTSr(BaseModel):
             raise ValueError(f"Invalid selection policy: {self.selection_policy}")
  
 
-    def initialize(self, root_node: MCTSNode):
-        """Generate a zero-shot answer."""
-        if not isinstance(root_node, MCTSNode):
-            raise ValueError("root_node must be an instance of MCTSNode")
-        self.root = root_node
+    def initialize(self):
+        """Generate a zero-shot answer.""" 
+        # 构建MCTS树,
+        structured_storyboard = _build_structured_storyboard(self.storage_context.task_step_store)
+            
+        linked_list_node = structured_storyboard.get_task_step_node(self.task_step_id)
+        #  初始化当前节点self.root的上级节点
+        mcts_tree = linked_list_to_tree(structured_storyboard.head)
+
+        matching_node = find_matching_node_in_tree_iterative(mcts_tree, linked_list_node)
+        self.root = matching_node
 
     def run(self): 
           
@@ -504,8 +514,10 @@ class MCTSrStoryboard(MCTSr):
                 "critic_system_prompt_data", gpt_prompt_config.critic_system_prompt_data 
             )
         ) 
-        context_linked_list_node = node.linked_list_node.head 
 
+        structured_storyboard = _build_structured_storyboard(self.storage_context.task_step_store)
+             
+        context_linked_list_node = structured_storyboard.head
         past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.linked_list_node.task_step_id)
 
         user_prompt = critic_system_prompt_template.format(
@@ -629,16 +641,24 @@ class MCTSrStoryboard(MCTSr):
         evaluate_system_prompt_template = PromptTemplate(
             input_variables=[
                 "problem", 
+                "past_steps", 
+                "context", 
                 "answer"
             ],
             template=os.environ.get(
                 "evaluate_system_prompt_data", gpt_prompt_config.evaluate_system_prompt_data
             )
         )
+        structured_storyboard = _build_structured_storyboard(self.storage_context.task_step_store)
+             
+        context_linked_list_node = structured_storyboard.head
+        past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.linked_list_node.task_step_id)
 
         user_prompt = evaluate_system_prompt_template.format(
             problem=self.problem,
             answer=node.answer,
+            context=past_context,
+            past_steps=past_steps
         )
         
         for attempt in range(3):
@@ -699,3 +719,66 @@ def print_tree(node: MCTSNode | None, level: int = 0):
         logger.info(indent + line)
     for child in node.children:
         print_tree(child, level + 1)
+
+ 
+    
+def _build_structured_storyboard(task_step_store: BaseTaskStepStore) -> StructuredStoryboard:
+    task_step_all = task_step_store.task_step_all
+    task_step_all_list = [val.__dict__ for val in list(task_step_all.values())]
+    structured_storyboard = StructuredStoryboard(json_data=task_step_all_list) 
+
+    return structured_storyboard
+
+
+
+# 链表转树的函数
+def linked_list_to_tree(linked_list_head):
+    if linked_list_head is None:
+        return None
+
+    # 递归构建树
+    def build_tree(node: LinkedListNode, parent: MCTSNode = None):
+        if node is None:
+            return None
+        
+        # 为当前链表节点创建树节点
+        mcts_node = MCTSNode(
+            task_step_id=node.task_step_id,
+            answer=node.task_step_question_answer,
+            children=[], 
+            visits=0, 
+            Q=0, 
+            reward_samples=[],
+            parent=parent
+        )
+        
+        # 如果有下一个节点，继续递归构建子节点
+        if node.next:
+            child_node = build_tree(node.next, mcts_node)
+            mcts_node.children.append(child_node)
+        
+        return mcts_node
+
+    # 从链表头开始构建树
+    root = build_tree(linked_list_head)
+    return root
+
+
+# 使用栈来模拟深度优先搜索
+def find_matching_node_in_tree_iterative(tree_node, linked_list_node):
+    # 初始化栈，开始时栈中只包含根节点
+    stack = [tree_node]
+
+    while stack:
+        # 获取栈顶的节点
+        current_node = stack.pop()
+
+        # 如果当前节点与链表节点相同，返回当前节点
+        if current_node.answer == linked_list_node.task_step_question_answer:
+            return current_node
+
+        # 将子节点添加到栈中，按深度优先顺序处理
+        for child in current_node.children:
+            stack.append(child)
+
+    return None  # 如果没有匹配的节点，返回 None

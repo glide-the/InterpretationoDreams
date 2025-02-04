@@ -94,7 +94,7 @@ refine_system_prompt_data="""# 当前上下文：
 {context}
 </context>
 
-# 当前回答：
+# 当前答案：
 <current_answer>
 {current_answer}
 </current_answer>
@@ -119,11 +119,22 @@ refine_system_prompt_data="""# 当前上下文：
 - Return *ONLY* the score. 
 
 """,
-    evaluate_system_prompt_data="""<problem>
+    evaluate_system_prompt_data="""你的目标:
+<problem>
 {problem}
 </problem>
+
+你目前的结果在这里:
+<context>
+{context}
+</context>
+
 <answer>
 {answer}
 </answer>
+
+你目前已完成以下步骤：
+{past_steps} 
+
 """,
 )

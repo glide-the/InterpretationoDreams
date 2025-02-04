@@ -15,7 +15,6 @@ from dreamsboard.dreams.task_step_to_question_chain.base import TaskStepToQuesti
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
 from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
-from dreamsboard.document_loaders.structured_storyboard_loader import StructuredStoryboard
 
 from dreamsboard.engine.entity.dreams_personality.dreams_personality import DreamsPersonalityNode
 from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator
@@ -294,44 +293,22 @@ class TaskEngineBuilder:
         """
         构建MCTS树, 初始化当前任务相关的MCTS节点，并返回MCTS执行器
         """
-        task_step_all = self.task_step_store.task_step_all
-        task_step_all_list = [val.__dict__ for val in list(task_step_all.values())]
-        structured_storyboard = StructuredStoryboard(json_data=task_step_all_list) 
-        linked_list_node = structured_storyboard.get_task_step_node(self.task_step_id)
-        
+        task_step = self.task_step_store.get_task_step(self.task_step_id)
         mcts_node = MCTSNode(
-            base_path=self.base_path,
-            answer=linked_list_node.task_step_question_answer,
-            linked_list_node=linked_list_node,
-            storage_context=self.storage_context, 
+            answer=task_step.task_step_question_answer,
             parent=None, 
             children=[], 
             visits=0, 
             Q=0, 
             reward_samples=[]
-        )
-        # 构建MCTS树, 初始化当前节点的顶层节点
-        while linked_list_node is not None and linked_list_node.prev is not None:
-            linked_list_node = linked_list_node.prev
-            parent_node = MCTSNode(
-                base_path=self.base_path,
-                answer=linked_list_node.task_step_question_answer, 
-                linked_list_node=linked_list_node,
-                storage_context=self.storage_context, 
-                parent=None, 
-                children=[], 
-                visits=0, 
-                Q=0, 
-                reward_samples=[]
-            )
-            mcts_node.parent = parent_node
-
-            
-        task_step = self.task_step_store.get_task_step(self.task_step_id)
+        ) 
         mctsr = MCTSrStoryboard.model_construct(
+            base_path=self.base_path,
+            task_step_id=self.task_step_id,
+            storage_context=self.storage_context, 
+            root=mcts_node,
             llm_runable=self.llm_runable,
             problem=task_step.task_step_name, 
             max_rollouts=2
-        )
-        mctsr.initialize(mcts_node)
+        ) 
         return mctsr

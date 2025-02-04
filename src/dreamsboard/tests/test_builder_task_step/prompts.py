@@ -74,13 +74,7 @@ EDREAMS_EVOLUTIONARY_TEMPLATE = """作为一个计算机科学领域的学者，
 
 # 05-性格分析 `dreams_personality_context`.txt
 EDREAMS_PERSONALITY_TEMPLATE = """作为一个计算机科学领域的学者，您已经查阅了近3年内计算机顶会（如CVPR, NeurIPS, ICML）和顶刊（如IEEE T-PAMI, JMLR）及arXiv上的相关文献，尝试通过参考文献中定义的前沿技术，结合最新的模型框架与算法，总结下方片段：
-计算机科学研究相关内容分成如下步骤：
-
-研究计算机网络与通信媒介中的语义信息
-研究计算机算法的非理性表现与优化技术中的偶然性
-研究人工智能系统中的反馈机制与实际应用的转化关系
-研究算法和数据结构的固定形式与预期结果的因果性，是否存在可拓展性和反向推理的潜力
-
+ 
 根据上述信息,总结片段中人物的性格
 你可以尝试分步思考然后告诉我答案，Step by Step Decomposition
 
@@ -94,7 +88,7 @@ DREAMS_GEN_TEMPLATE = """# 分析计算机科学领域的研究内容
 
 作为一个计算机科学领域的研究学者，尝试使用学术性的结构化思维来分析近3年内计算机顶会（如CVPR, NeurIPS, ICML）和顶刊（如IEEE T-PAMI, JMLR）以及arXiv上的文献PDF全文。下面的内容中已经整理了关于{user_id}的`研究主题梗概`，`研究情境`，`研究场景`，请告诉我如何系统地分析这些文献并提炼出相关信息。
 
-你可以尝试分步思考然后告诉我答案，**Step by Step Decomposition**
+你可以尝试分步思考然后告诉我答案
 
 例如：
 
@@ -124,5 +118,7 @@ DREAMS_GEN_TEMPLATE = """# 分析计算机科学领域的研究内容
 
 {scene_monologue_context}
 
+
+Step by Step Decomposition
 """
 
