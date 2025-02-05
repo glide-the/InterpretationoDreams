@@ -37,9 +37,9 @@ logging_conf = get_config_dict(
 logging.config.dictConfig(logging_conf)  # type: ignore
 
 llm = ChatOpenAI(
-    openai_api_base=os.environ.get("HUOSHAN_API_BASE"),
-    model=os.environ.get("HUOSHAN_API_MODEL"),
-    openai_api_key=os.environ.get("HUOSHAN_API_KEY"),
+    openai_api_base=os.environ.get("GUIJI_API_BASE"),
+    model=os.environ.get("GUIJI_API_MODEL"),
+    openai_api_key=os.environ.get("GUIJI_API_KEY"),
     verbose=True,
     temperature=0.1,
     top_p=0.9,
