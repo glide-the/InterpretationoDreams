@@ -319,9 +319,18 @@ def test_builder_task_step_mctsr_threads(setup_log):
     # kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
     llm = ChatOpenAI(
-        openai_api_base=os.environ.get("QIANFAN_API_BASE"),
-        model=os.environ.get("QIANFAN_API_MODEL"),
-        openai_api_key=os.environ.get("QIANFAN_API_KEY"),
+        openai_api_base=os.environ.get("HUOSHAN_API_BASE"),
+        model=os.environ.get("HUOSHAN_API_MODEL"),
+        openai_api_key=os.environ.get("HUOSHAN_API_KEY"),
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    ) 
+    
+    guiji_llm = ChatOpenAI(
+        openai_api_base=os.environ.get("GUIJI_API_BASE"),
+        model=os.environ.get("GUIJI_API_MODEL"),
+        openai_api_key=os.environ.get("GUIJI_API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
@@ -359,11 +368,13 @@ def test_builder_task_step_mctsr_threads(setup_log):
 
      
     # 初始化任务引擎
-    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
 
     def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore):
         owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
         logger.info(f"{owner}，任务开始")
+        if step & 2 ==0:
+            task_engine.llm_runable=guiji_llm
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()

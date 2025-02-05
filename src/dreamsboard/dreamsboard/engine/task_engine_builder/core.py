@@ -65,7 +65,7 @@ class TaskEngineBuilder:
     task_step_id: str
     csv_file_path: str
     storyboard_executor: StructuredDreamsStoryboard
-    llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    _llm_runable: Runnable[LanguageModelInput, BaseMessage]
 
     def __init__(self,
                 base_path: str,
@@ -80,7 +80,7 @@ class TaskEngineBuilder:
         self.start_task_context = start_task_context
         self.task_step_store = task_step_store
         self.task_step_id = task_step_id
-        self.llm_runable = llm_runable
+        self._llm_runable = llm_runable
         self.cross_encoder = cross_encoder
         self.collection = collection
         self.client = None
@@ -91,6 +91,14 @@ class TaskEngineBuilder:
             persist_dir=f"{self.base_path}/storage/{self.task_step_id}"
         )
         self.storage_context.task_step_store = self.task_step_store
+
+    @property 
+    def llm_runable(self) -> Runnable[LanguageModelInput, BaseMessage]:
+        return self._llm_runable
+
+    @llm_runable.setter
+    def llm_runable(self, llm_runable:Runnable[LanguageModelInput, BaseMessage]) -> None:
+        self._llm_runable = llm_runable
 
     def check_engine_init(self):
         """
