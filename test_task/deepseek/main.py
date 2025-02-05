@@ -37,9 +37,18 @@ logging_conf = get_config_dict(
 logging.config.dictConfig(logging_conf)  # type: ignore
 
 llm = ChatOpenAI(
-    openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
-    model=os.environ.get("DEEPSEEK_API_MODEL"),
-    openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
+    openai_api_base=os.environ.get("HUOSHAN_API_BASE"),
+    model=os.environ.get("HUOSHAN_API_MODEL"),
+    openai_api_key=os.environ.get("HUOSHAN_API_KEY"),
+    verbose=True,
+    temperature=0.1,
+    top_p=0.9,
+) 
+
+guiji_llm = ChatOpenAI(
+    openai_api_base=os.environ.get("GUIJI_API_BASE"),
+    model=os.environ.get("GUIJI_API_MODEL"),
+    openai_api_key=os.environ.get("GUIJI_API_KEY"),
     verbose=True,
     temperature=0.1,
     top_p=0.9,
@@ -82,6 +91,8 @@ task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
 def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore, buffer_queue):
     owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
     logger.info(f"{owner}，任务开始")
+    if step & 2 ==0:
+        task_engine.llm_runable=guiji_llm
     if not task_engine.check_engine_init():
         task_engine.init_task_engine()
         task_engine.init_task_engine_dreams()
