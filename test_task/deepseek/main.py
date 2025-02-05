@@ -91,14 +91,14 @@ task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
 def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore, buffer_queue):
     owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
     logger.info(f"{owner}，任务开始")
-    if step & 2 ==0:
-        task_engine.llm_runable=guiji_llm
-    if not task_engine.check_engine_init():
-        task_engine.init_task_engine()
-        task_engine.init_task_engine_dreams()
-        task_engine.init_task_engine_storyboard_executor()
-
     try:
+        if step & 2 ==0:
+            task_engine.llm_runable=guiji_llm
+        if not task_engine.check_engine_init():
+            task_engine.init_task_engine()
+            task_engine.init_task_engine_dreams()
+            task_engine.init_task_engine_storyboard_executor()
+
         logger.info(f"{owner}，storyboard_code_gen_builder")
         code_gen_builder = task_engine.storyboard_code_gen_builder()
         task_step = task_engine.task_step_store.get_task_step(task_engine.task_step_id)
