@@ -54,9 +54,9 @@ os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
 
 
 # 存储
-cross_encoder_path = "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
-embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
-start_task_context = "MCTS在PRM偏好策略模型微调的应用探索综述"
+cross_encoder_path = os.environ.get("cross_encoder_path")
+embed_model_path =  os.environ.get("embed_model_path") 
+start_task_context = os.environ.get("start_task_context")
 builder = StructuredTaskStepStoryboard.form_builder(
     llm_runable=llm_with_tools,
     kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
@@ -113,6 +113,18 @@ def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskS
     buffer_queue.task_done()
 
 if __name__ == "__main__":
+        
+    from dreamsboard.utils import get_config_dict, get_log_file, get_timestamp_ms
+    import logging.config
+ 
+    logging_conf = get_config_dict(
+        "DEBUG",
+        get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
+        122,
+        111,
+    )
+
+    logging.config.dictConfig(logging_conf)  # type: ignore
     buffer_queue = queue.Queue(maxsize=2)  # Create the buffer queue with max size of 2
     threads = []
     step = 0
