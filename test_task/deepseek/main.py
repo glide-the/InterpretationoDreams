@@ -13,7 +13,9 @@ from dreamsboard.common import _get_assistants_tool
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
 import logging
-import multiprocessing
+
+from dreamsboard.utils import get_config_dict, get_log_file, get_timestamp_ms
+import logging.config
 import os
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
 logger = logging.getLogger(__name__)
@@ -25,6 +27,14 @@ handler.setLevel(logging.DEBUG)
 
 logger.addHandler(handler)
 
+logging_conf = get_config_dict(
+    "DEBUG",
+    get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
+    122,
+    111,
+)
+
+logging.config.dictConfig(logging_conf)  # type: ignore
 
 llm = ChatOpenAI(
     openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
@@ -114,17 +124,6 @@ def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskS
 
 if __name__ == "__main__":
         
-    from dreamsboard.utils import get_config_dict, get_log_file, get_timestamp_ms
-    import logging.config
- 
-    logging_conf = get_config_dict(
-        "DEBUG",
-        get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
-        122,
-        111,
-    )
-
-    logging.config.dictConfig(logging_conf)  # type: ignore
     buffer_queue = queue.Queue(maxsize=2)  # Create the buffer queue with max size of 2
     threads = []
     step = 0
