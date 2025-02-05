@@ -1,5 +1,5 @@
 import threading
-   
+import queue
 from dreamsboard.engine.storage.task_step_store.simple_task_step_store import SimpleTaskStepStore
 from langchain_community.chat_models import ChatOpenAI
 from dreamsboard.dreams.builder_task_step.base import StructuredTaskStepStoryboard
@@ -69,7 +69,7 @@ builder = StructuredTaskStepStoryboard.form_builder(
 # 初始化任务引擎
 task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
 
-def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore):
+def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore, buffer_queue):
     owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
     logger.info(f"{owner}，任务开始")
     if not task_engine.check_engine_init():
@@ -108,21 +108,33 @@ def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskS
 
     logger.info(f"{owner}，任务结束")
 
+    # After completing the task, remove an item from the buffer queue
+    buffer_queue.get()
+    buffer_queue.task_done()
 
 if __name__ == "__main__":
+    buffer_queue = queue.Queue(maxsize=2)  # Create the buffer queue with max size of 2
     threads = []
-
-    step =0
+    step = 0
+    
     task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
-        
         task_engine = task_engine_builder.get()
         step += 1
+        
+        # Add a task to the buffer queue to simulate running threads
+        buffer_queue.put(1)  # This will block if the buffer is full (i.e., 2 threads are active)
+        
+        # Create and start a new worker thread
         t = threading.Thread(target=worker,
-                                kwargs={"step": step, "task_engine": task_engine, "task_step_store": task_step_store},
+                                kwargs={"step": step, 
+                                        "task_engine": task_engine, 
+                                        "task_step_store": task_step_store
+                                        "buffer_queue": buffer_queue},
                                 daemon=True)
         t.start()
-        threads.append(t) 
-
+        threads.append(t)
+    
+    # Wait for all threads to finish
     for t in threads:
         t.join()
