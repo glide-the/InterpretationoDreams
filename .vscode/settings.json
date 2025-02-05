@@ -3,7 +3,9 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "python.testing.pytestArgs": [],
+    "python.testing.pytestArgs": [
+        "src"
+    ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.testing.cwd": "${cwd}",
