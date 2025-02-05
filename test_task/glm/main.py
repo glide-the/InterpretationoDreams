@@ -58,7 +58,7 @@ if 'glm' in os.environ.get("ZHIPUAI_API_MODEL"):
     tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
 else:
     tools = []
-llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
+llm_with_tools = llm
 kor_dreams_task_step_llm_with_tools = guiji_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
 
