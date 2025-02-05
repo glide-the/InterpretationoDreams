@@ -303,6 +303,7 @@ class TaskEngineBuilder:
         """
         task_step = self.task_step_store.get_task_step(self.task_step_id)
         mcts_node = MCTSNode(
+            task_step_id=self.task_step_id,
             answer=task_step.task_step_question_answer,
             parent=None, 
             children=[], 
