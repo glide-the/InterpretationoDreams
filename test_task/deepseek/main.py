@@ -129,7 +129,7 @@ if __name__ == "__main__":
         t = threading.Thread(target=worker,
                                 kwargs={"step": step, 
                                         "task_engine": task_engine, 
-                                        "task_step_store": task_step_store
+                                        "task_step_store": task_step_store,
                                         "buffer_queue": buffer_queue},
                                 daemon=True)
         t.start()
