@@ -77,6 +77,7 @@ def searx_query(query, top_k):
         num_results=top_k,
 
     )
+    logger.info(results)
     
     properties_list = [
         
