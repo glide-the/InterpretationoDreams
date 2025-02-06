@@ -84,6 +84,7 @@ def searx_query(query, top_k):
         {
              "chunk_text":  item.get("snippet", ""),
              "ref_id":  get_query_hash(item.get("link", "")),
+             "chunk_id":  get_query_hash(item.get("link", "")),
              "title":  item.get("title", ""),
              "link":  item.get("link"),
              "engines":  item.get("engines"),
