@@ -63,7 +63,7 @@ def searx_query(query, top_k):
     # 第一步：模糊查询论文
     logger.info(f"Searching papers for query: {query}")
  
-    s = SearxSearchWrapper(searx_host="https://127.0.0.1:8888")
+    s = SearxSearchWrapper(searx_host="http://127.0.0.1:8080")
    
     # {
     #     "snippet": result.get("content", ""),
