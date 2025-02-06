@@ -543,7 +543,7 @@ class MCTSrStoryboard(MCTSr):
                     "llm_runable": self.llm_runable,
                     "system_prompt": gpt_prompt_config.critic_system_prompt,
                     "user_prompt": user_prompt,
-                    "storage_context": node.storage_context,
+                    "storage_context": self.storage_context,
                 },
         )
   
@@ -583,7 +583,7 @@ class MCTSrStoryboard(MCTSr):
                     "llm_runable": self.llm_runable,
                     "system_prompt": gpt_prompt_config.refine_system_prompt,
                     "user_prompt": refine_system_prompt,
-                    "storage_context": node.storage_context,
+                    "storage_context": self.storage_context,
                 },
         )
   
@@ -672,7 +672,7 @@ class MCTSrStoryboard(MCTSr):
                             "llm_runable": self.llm_runable,
                             "system_prompt": gpt_prompt_config.evaluate_system_prompt,
                             "user_prompt": user_prompt,
-                            "storage_context": node.storage_context,
+                            "storage_context": self.storage_context,
                         },
                 )
          
