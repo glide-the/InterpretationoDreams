@@ -350,7 +350,7 @@ class MCTSr(BaseModel):
 class MCTSrStoryboard(MCTSr): 
     """
     
-    resource_id=f"resource_{node.linked_list_node.task_step_id}"
+    resource_id=f"resource_{node.task_step_id}"
     """
     
     @staticmethod
@@ -518,18 +518,18 @@ class MCTSrStoryboard(MCTSr):
         structured_storyboard = _build_structured_storyboard(self.storage_context.task_step_store)
              
         context_linked_list_node = structured_storyboard.head
-        past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.linked_list_node.task_step_id)
-
+        past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.task_step_id)
+        task_step_node = self.storage_context.task_step_store.get_task_step(self.task_step_id)
         user_prompt = critic_system_prompt_template.format(
             problem=self.problem,
             current_answer=node.answer,
             context=past_context,
             past_steps=past_steps,
-            start_task_context=node.linked_list_node.start_task_context,
-            aemo_representation_context=node.linked_list_node.aemo_representation_context,
-            task_step_name=node.linked_list_node.task_step_name,
-            task_step_description=node.linked_list_node.task_step_description,
-            task_step_level=node.linked_list_node.task_step_level
+            start_task_context=task_step_node.start_task_context,
+            aemo_representation_context=task_step_node.aemo_representation_context,
+            task_step_name=task_step_node.task_step_name,
+            task_step_description=task_step_node.task_step_description,
+            task_step_level=task_step_node.task_step_level
         ) 
 
              
@@ -538,7 +538,7 @@ class MCTSrStoryboard(MCTSr):
         
         results = call_func(
             self._get_ai_message,
-            resource_id=f"resource_critic_{node.linked_list_node.task_step_id}",
+            resource_id=f"resource_critic_{self.task_step_id}",
             kwargs={
                     "llm_runable": self.llm_runable,
                     "system_prompt": gpt_prompt_config.critic_system_prompt,
@@ -578,7 +578,7 @@ class MCTSrStoryboard(MCTSr):
         
         results = call_func(
             self._get_ai_message,
-            resource_id=f"resource_refine_{node.linked_list_node.task_step_id}",
+            resource_id=f"resource_refine_{node.task_step_id}",
             kwargs={
                     "llm_runable": self.llm_runable,
                     "system_prompt": gpt_prompt_config.refine_system_prompt,
@@ -621,11 +621,9 @@ class MCTSrStoryboard(MCTSr):
         self.refinements.append(refined_answer)
 
         # ```thought \n{refined_answer.thought} ```\n\n ```answer_score \n{refined_answer.answer_score} ```
-        return MCTSNode(
-            base_path=node.base_path,
+        return MCTSNode( 
             answer=f"{refined_answer.answer}",
-            linked_list_node=node.linked_list_node,
-            storage_context=node.storage_context,
+            task_step_id=self.task_step_id, 
             parent=node,
             children=[],
             visits=0,
@@ -652,7 +650,7 @@ class MCTSrStoryboard(MCTSr):
         structured_storyboard = _build_structured_storyboard(self.storage_context.task_step_store)
              
         context_linked_list_node = structured_storyboard.head
-        past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.linked_list_node.task_step_id)
+        past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.task_step_id)
 
         user_prompt = evaluate_system_prompt_template.format(
             problem=self.problem,
@@ -669,7 +667,7 @@ class MCTSrStoryboard(MCTSr):
                 
                 results = call_func(
                     self._get_ai_message,
-                    resource_id=f"resource_evaluate_{node.linked_list_node.task_step_id}",
+                    resource_id=f"resource_evaluate_{node.task_step_id}",
                     kwargs={
                             "llm_runable": self.llm_runable,
                             "system_prompt": gpt_prompt_config.evaluate_system_prompt,
