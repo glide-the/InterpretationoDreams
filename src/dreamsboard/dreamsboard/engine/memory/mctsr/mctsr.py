@@ -76,7 +76,6 @@ from dreamsboard.dreams.task_step_md.prompts import TASK_MD_TEMPLATE,TASK_STEP_M
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
 from dreamsboard.engine.storage.storage_context import StorageContext
-
 from dreamsboard.document_loaders.structured_storyboard_loader import StructuredStoryboard
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.common.callback import (call_func)

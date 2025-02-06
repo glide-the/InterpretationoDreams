@@ -24,6 +24,7 @@ from dreamsboard.dreams.task_step_to_question_chain.prompts import (
 from dreamsboard.engine.entity.task_step.task_step import TaskStepContext
 
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import exe_query, get_query_hash
+from dreamsboard.dreams.task_step_to_question_chain.searx.searx import searx_query
 
 import threading
 from dreamsboard.common.callback import (event_manager)
@@ -65,6 +66,7 @@ class TaskStepToQuestionChain(ABC):
     task_step_question_to_graphql_chain: Chain
     collection: CollectionService
     cross_encoder: CrossEncoder
+    data_base: str
     def __init__(self,
                  base_path: str,
                  start_task_context: str,
@@ -72,7 +74,9 @@ class TaskStepToQuestionChain(ABC):
                  task_step_to_question_chain: Chain,
                  task_step_question_to_graphql_chain: Chain,
                  collection: CollectionService,
-                 cross_encoder: CrossEncoder):
+                 cross_encoder: CrossEncoder,
+                 data_base: str,
+                 ):
         self.base_path = base_path
         self.start_task_context = start_task_context
         self.task_step_store = task_step_store
@@ -80,6 +84,7 @@ class TaskStepToQuestionChain(ABC):
         self.task_step_question_to_graphql_chain = task_step_question_to_graphql_chain
         self.collection = collection
         self.cross_encoder = cross_encoder
+        self.data_base = data_base
 
     @classmethod
     def from_task_step_to_question_chain(
@@ -89,7 +94,8 @@ class TaskStepToQuestionChain(ABC):
             llm_runable: Runnable[LanguageModelInput, BaseMessage],
             task_step_store: BaseTaskStepStore,
             collection: CollectionService,
-            cross_encoder: CrossEncoder
+            cross_encoder: CrossEncoder,
+            data_base: str = 'search_papers',
     ) -> TaskStepToQuestionChain:
         """
 
@@ -145,7 +151,8 @@ class TaskStepToQuestionChain(ABC):
             task_step_to_question_chain=task_step_to_question_chain,
             task_step_question_to_graphql_chain=task_step_question_to_graphql_chain,
             collection=collection,
-            cross_encoder=cross_encoder
+            cross_encoder=cross_encoder,
+            data_base=data_base,
         )
 
     def invoke_task_step_to_question(self, task_step_id: str) -> None:
@@ -200,12 +207,18 @@ class TaskStepToQuestionChain(ABC):
         3、增加项目
         """
 
+        from langchain_community.utilities import SearxSearchWrapper
         task_step_node = self.task_step_store.get_task_step(task_step_id)
         if task_step_node.task_step_question_context is not None and len(task_step_node.task_step_question_context) > 0:
             return
 
         top_k =30  # 可选参数，默认查询返回前 30个结果
-        properties_list = exe_query(task_step_node.task_step_question,top_k)
+        if self.data_base == 'search_papers':
+
+            properties_list = exe_query(task_step_node.task_step_question,top_k)
+        elif self.data_base == 'searx':
+
+            properties_list = searx_query(task_step_node.task_step_question,top_k)
 
         # 插入数据到数据库
         owner = f"register_event thread {threading.get_native_id()}"

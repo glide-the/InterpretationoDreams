@@ -59,6 +59,7 @@ class TaskEngineBuilder:
     """
     base_path: str
     cross_encoder: CrossEncoder
+    data_base: str
     collection: CollectionService
     storage_context: StorageContext
     task_step_store: BaseTaskStepStore
@@ -75,11 +76,13 @@ class TaskEngineBuilder:
                 start_task_context: str,
                 task_step_store: BaseTaskStepStore,
                 task_step_id: str,
+                data_base: str = 'search_papers'
     ):
         self.base_path = base_path
         self.start_task_context = start_task_context
         self.task_step_store = task_step_store
         self.task_step_id = task_step_id
+        self.data_base = data_base
         self._llm_runable = llm_runable
         self.cross_encoder = cross_encoder
         self.collection = collection
@@ -145,7 +148,8 @@ class TaskEngineBuilder:
             llm_runable=self.llm_runable, 
             task_step_store=self.task_step_store,
             collection=self.collection,
-            cross_encoder=self.cross_encoder
+            cross_encoder=self.cross_encoder,
+            data_base=self.data_base,
         )
         self.task_step_to_question_chain.invoke_task_step_to_question(self.task_step_id)
         self.task_step_to_question_chain.invoke_task_step_question_context(self.task_step_id)

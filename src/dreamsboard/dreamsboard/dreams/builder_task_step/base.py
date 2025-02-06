@@ -51,6 +51,7 @@ class StructuredTaskStepStoryboard:
     start_task_context: str
     cross_encoder: CrossEncoder
     collection: CollectionService
+    data_base: str
     llm_runable: Runnable[LanguageModelInput, BaseMessage]
     aemo_representation_chain: AEMORepresentationChain
 
@@ -62,6 +63,7 @@ class StructuredTaskStepStoryboard:
                  collection: CollectionService,
                  aemo_representation_chain: AEMORepresentationChain,
                  task_step_store: BaseTaskStepStore,
+                 data_base: str,
                  ):
         """
 
@@ -76,6 +78,7 @@ class StructuredTaskStepStoryboard:
         self.start_task_context = start_task_context
         self.aemo_representation_chain = aemo_representation_chain
         self.task_step_store = task_step_store
+        self.data_base = data_base
 
     @classmethod
     def form_builder(cls,
@@ -83,6 +86,7 @@ class StructuredTaskStepStoryboard:
                      cross_encoder_path: str,
                      embed_model_path: str,
                      start_task_context: str,
+                     data_base: str = 'search_papers',
                      kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage] | None = None,
                      task_step_store: BaseTaskStepStore | None = None,
                      ) -> StructuredTaskStepStoryboard: 
@@ -117,6 +121,7 @@ class StructuredTaskStepStoryboard:
                    start_task_context=start_task_context,
                    cross_encoder=cross_encoder,
                    collection=collection,
+                   data_base=data_base,
                    aemo_representation_chain=aemo_representation_chain,
                    task_step_store=task_step_store)
 
@@ -148,7 +153,8 @@ class StructuredTaskStepStoryboard:
                     start_task_context=self.start_task_context,
                     task_step_store=self.task_step_store,
                     task_step_id=task_step_id,
-                    base_path=self.base_path
+                    base_path=self.base_path,
+                    data_base=self.data_base,
                 ))
 
         else:
@@ -182,7 +188,8 @@ class StructuredTaskStepStoryboard:
                     start_task_context=self.start_task_context,
                     task_step_store=self.task_step_store,
                     task_step_id=task_step_id,
-                    base_path=self.base_path
+                    base_path=self.base_path,
+                    data_base=self.data_base,
                 ))
 
         return iter_builder_queue

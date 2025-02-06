@@ -88,6 +88,7 @@ builder = StructuredTaskStepStoryboard.form_builder(
     start_task_context=start_task_context,
     cross_encoder_path=cross_encoder_path,
     embed_model_path=embed_model_path
+    data_base='search_papers'
 )
 
     
