@@ -4,7 +4,7 @@ from dreamsboard.dreams.task_step_md.base import TaskStepMD
 from dreamsboard.engine.storage.task_step_store.simple_task_step_store import SimpleTaskStepStore
 
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import get_query_hash
-
+import os
 
 if __name__ == "__main__":
         
