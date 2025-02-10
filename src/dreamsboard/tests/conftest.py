@@ -10,8 +10,8 @@ def setup_log():
     logging_conf = get_config_dict(
         "DEBUG",
         get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
-        122,
-        111,
+        100*1024*1024, 
+        100*1024*1024,
     )
 
     logging.config.dictConfig(logging_conf)  # type: ignore
