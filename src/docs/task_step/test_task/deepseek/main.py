@@ -86,7 +86,8 @@ builder = StructuredTaskStepStoryboard.form_builder(
 
     
 # 初始化任务引擎
-task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
+allow_init=os.environ.get("allow_init", 'true')
+task_engine_builder = builder.loader_task_step_iter_builder(allow_init=allow_init == 'true' )
 
 def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskStepStore, buffer_queue):
     owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
