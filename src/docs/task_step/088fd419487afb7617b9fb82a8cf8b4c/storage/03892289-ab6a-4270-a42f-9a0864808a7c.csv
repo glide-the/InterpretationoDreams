@@ -1,0 +1,101 @@
+角色,内容,分镜
+03892289-ab6a-4270-a42f-9a0864808a7c,评估论文中提出的未来研究方向与挑战,5
+03892289-ab6a-4270-a42f-9a0864808a7c,为了实现探索更高效的 MCTS 搜索算法以降低计算复杂度这一未来研究方向，可能会面临哪些具体的技术难题？ ,5
+03892289-ab6a-4270-a42f-9a0864808a7c,"ref_ids: 455026805307867280, chunk_ids: 0, Score: 0.6367, Text: # BLIMITATION AND FUTURE WORK
+Currently, our method TS-LLM still cannot scale to really large-scale scenarios due to the extra computation burdens introduced by node expansion and value evaluation. Additional engineering work such as key value caching is required to accelerate the tree-search. In addition, we do not cover all feasible action-space designs for tree search and it is flexible to propose advanced algorithms to automatically construct a tree mixed with both sentence-level expansion and token-level expansion, etc. We leave such exploration for future work. For MCTS aggregation, the current method still struggles to improve under large aggregation numbers. some new algorithms that can encourage multi-search diversity might be needed. Currently, we are still actively working on scaling up our method both during inference and training (especially multi-iteration training).
+
+# CBACKGROUND OF MONTE CARLO TREE -SEARCH A LGORIHTMS
+Once we build the tree, we can use various search algorithms to find a high-reward trace. However, it’s not easy to balance between exploration and exploitation during the search process, especially when the tree is sufficiently deep. Therefore we adopt Monte Carlo Tree Search(MCTS) variants as choices for strategic and principled search. Instead of the four operations in traditional MCTS (Kocsis & Szepesv´ari, 2006; Coulom, 2006), we refer to the search process in AlphaZero (Silver et al., 2017a) and introduce 3 basic operations of a standard search simulation in it as follows, when searching actions from current state node $s_{0}$ :  
+
+Select It begins at the root node of the search tree, of the current state, $s_{0}$ , and finishes when reaching a leaf node $s_{L}$ at timestep $L$ . At each of these $L$ timesteps(internal nodes), an action(child node) is selected according to $a_{t}=\\arg\\operatorname*{max}_{a}\\left(Q(s_{t},a)+U(s_{t},a)\\right)$ where $U(s_{t},a)$ is calculated by a variant of PUCT algorithm (Rosin, 2011):  
+
+$$
+U(s,a)=c_{\\mathrm{puct}}\\cdot\\pi_{\\theta}(s,a)\\frac{\\sqrt{\\sum_{b}N(s,b)}}{1+N(s,a)}
+$$  
+
+$N(s,a)$ isit count of selecting action $a$ at node $s$ , and $\\begin{array}{r}{c_{\\mathrm{puct}}\\,=\\,\\log((\\sum_{b}N(s,b)\\,+\\,}\\end{array}$ P$c_{\\mathrm{base}}+1)/c_{\\mathrm{base}})+c_{\\mathrm{init}}$ is controlled by visit count and two constants. This search control strategy initially prefers actions with high prior probability and low visit count, but asymptotically prefers actions with high action-value.  
+
+Expand and evaluate After encountering a leaf node $s_{L}$ by select , if $s_{L}$ is not a terminal node, it will be expanded by the language model policy. The state of the leaf node is evaluated by the value network, noted as $v(s_{L})$ . If $s_{L}$ is a terminal node, if there is an oracle reward function $R$ , then $v(s_{L})=R(s_{L})$ , otherwise, in this paper, we use an ORM $\\hat{r}$ as an approximation of it.  
+
+Backup After expand and evaluate on a leaf node, backward the statistics through the path $s_{L},s_{L-1},\\ldots,s_{0}$ , for each node, increase the visit count by $N(s_{t},a_{t})\\,=\\,N(s_{t},a_{t})+1$ , and the total action-value are updated as $W(s_{t},a_{t})\\,=\\,W(s_{t},a_{t})\\,\\dot{+}\\,v(s_{L})$ , the mean action-value are updated as $Q(s_{t},a_{t})=W(s_{t},a_{t})/N(s_{t},a_{t})$ .  
+
+In this paper, we introduce 3 variants of MCTS based on the above basic operations.
+
+# DEXPERIMENT DETAILS
+
+# D.1 TASK SETUPS
+GSM8k GSM8k (Cobbe et al., 2021) is a commonly used numerical reasoning dataset, Given a context description and a question, it takes steps of mathematical reasoning and computation to arrive at a final answer. There are about $7.5\\mathrm{k}$ problems in the training dataset and $1.3\\mathrm{k}$ problems in the test dataset.  
+
+Game24 We also test our methods on Game24(Yao et al., 2023) which has been proven to be hard even for state-of-the-art LLMs like GPT-4. Each problem in Game24 consists of 4 integers between 1 and 13. And LLMs are required to use each number exactly once by $(+\\mathrm{~-~}\\times\\div)$ to get a result equal to 24 We follow Yao et al. (2023) by using a set of 1362 problems sorted from easy to hard according to human solving time. We split the first 1k problems as the training dataset and the last 362 hard problems as the test dataset. For each problem in the training dataset, we collect data for SFT by enumerating all possible correct answers.  
+
+PrOntoQA PrOntoQA (Saparov & He, 2022) is a typical logical reasoning task in which a language model is required to verify whether a hypothesis is true or false given a set of facts and logical rules. There are 4k problems in the training dataset and 500 problems in the test dataset.  
+
+RLHF We choose a synthetic RLHF dataset Dahoas 1 serving as the query data. We split the dataset to 30000/3000 as training and test set respectively. For the reward model, we choose reward-modeldeberta-v3-large$\\cdot\\mathbf{V}2^{2}$ from OpenAssistant, which is trained from several RLHF datasets.
+
+# D.2 SFT AND VALUE TRAINING DETAILS
+SFT in GSM8k, Game24 and PrOntoQA : For GSM8k, Game24 and PrOntoQA, we first train LLaMA2-7b on the training dataset The training is conducted on 8 NVIDIA A800 GPUs, using a cosine scheduler decaying from $\\scriptstyle{\\mathrm{lr}=2\\ e-5}$ to 0.0 with a warmup ratio of 0.03, batch size 128 for 3 epochs. For GSM8k and Game24 we use the checkpoint at the last epoch as the direct policy in experiments, while for PrOntoQA we use the checkpoint at the 1st epoch since the others overfit.  
+
+Value training in GSM8k, Game24 and PrOntoQA : Then we train the value function on the data rollout by the SFT policy. In GSM8k and Game24, For each model checkpoints of 3 epochs during SFT, we first collect 100 outputs per problem in the training dataset, then duplicate the overlapped answers, labeled each answer with our training set outcome reward ocracle. For data sampled by ech model checkpoint, we subsample 17 answers per problem, which is in total at most 51 answers per problem after deduplication. In PrOntoQA, we only sample 50 answers per problem with the first epoch model checkpoint and then do deduplication.  
+
+The value functions are trained in the same setting as supervised finetuning. We set the reward to be 1 when the output answer is correct and -1 otherwise. Then we use MC with $\\gamma=1$ to compute the returns. We do model selection on a validation dataset sampled from the direct policy model. For GSM8k, we train the value function and ORM for one epoch, while for Game24 and PrOntoQA we train the value function and ORM for 3 epochs.  
+
+SFT in RLHF alignment : We utilize GPT2-open-instruct 3 , a GPT2-Small model supervisedfinetuned over several instruction-tuning dataset.  
+
+Value training in RLHF alignment : Based on the SFT model, we collect 50 rollouts by the SFT policy for each question in the training set and label their final reward with the reward model. Then we train the value function and ORM for 2 epochs.  
+
+Note that here we start training the value function and ORM from the data sampled by the SFT policy model through direct decoding just as an initialization of the value function and ORM. After that TS-LLM can optimize the policy model, value function, and ORM simultaneously by adding new data sampled from tree search into the training buffer.",5
+03892289-ab6a-4270-a42f-9a0864808a7c,"ref_ids: 455026805323333778, chunk_ids: 1, Score: 0.5508, Text: # Conclusion
+We developed new methods for non-convex optimization problems by leveraging analytic and sampling-based information in an MCTS framework, enabling efficient exploration and exploitation of the state space. Experiments results on standard benchmark problem sets demonstrated clear benefits of the proposed approach. Future work can focus on reducing the overhead of various numerical computation involved in the proposed algorithm and further optimizing the search tree.
+#
+Alefeld, G.; and Herzberger, J. 2012. Introduction to interval computation . Academic press.   
+Araya, I.; and Reyes, V. 2016. Interval branch-and-bound algorithms for optimization and constraint satisfaction: a survey and prospects. Journal of Global Optimization , 65: 837– 866.   
+Bao, T. Q.; and Mordukhovich, B. S. 2010. Set-valued optimization in welfare economics. Advances in mathematical economics , 113–153.   
+Byrd, R. H.; Lu, P.; Nocedal, J.; and Zhu, C. 1995. A limited memory algorithm for bound constrained optimization. SIAM Journal on scientific computing , 16(5): 1190–1208. Campi, M. C.; Garatti, S.; and Ramponi, F. A. 2015. Nonconvex scenario optimization with application to system identification. In 2015 54th IEEE Conference on Decision and Control (CDC) , 4023–4028. IEEE.   
+De Boer, P.-T.; Kroese, D. P.; Mannor, S.; and Rubinstein, R. Y. 2005. A Tutorial on the Cross-Entropy Method. Annals of operations research , 134(1): 19–67.   
+Eriksson, D.; Pearce, M.; Gardner, J.; Turner, R. D.; and Poloczek, M. 2019. Scalable Global Optimization via Local Bayesian Optimization. In Advances in Neural Information Processing Systems , 5496–5507.   
+Gablonsky, J. M.; and Kelley, C. T. 2000. A locally-biased form of the DIRECT algorithm. Technical report, North Carolina State University. Center for Research in Scientific Computation.   
+Gao, F.; and Han, L. 2012. Implementing the Nelder-Mead Simplex Algorithm with Adaptive Parameters. Comput. Optim. Appl. , 51(1): 259–277.   
+Gurobi Optimization, L. 2023. Gurobi Optimizer Reference Manual .  
+Hansen, N.; yoshihikoueno; ARF1; Kadlecov´a, G.; Nozawa, K.; Rolshoven, L.; Chan, M.; Akimoto, Y.; brieglhostis; and Brockhoff, D. 2023. CMA-ES/pycma: r3.3.0.   
+Henderson, D.; Jacobson, S. H.; and Johnson, A. W. 2003. The Theory and Practice of Simulated Annealing , 287–319. Boston, MA: Springer US.   
+Hickey, T.; Ju, Q.; and Van Emden, M. H. 2001. Interval arithmetic: From principles to implementation. Journal of the ACM (JACM) , 48(5): 1038–1068.   
+Jain, P.; Kar, P.; et al. 2017. Non-convex optimization for machine learning. Foundations and Trends® in Machine Learning , 10(3-4): 142–363.   
+Lavezzi, G.; Guye, K.; and Ciarci\\`a, M. 2022. Nonlinear Programming Solvers for Unconstrained and Constrained Optimization Problems: a Benchmark Analysis.   
+Liu, X.; and Lu, P. 2014. Solving nonconvex optimal control problems by convex optimization. Journal of Guidance, Control, and Dynamics , 37(3): 750–765.   
+Mistakidis, E. S.; and Stavroulakis, G. E. 2013. Nonconvex optimization in mechanics: algorithms, heuristics and engineering applications by the FEM , volume 21. Springer Science & Business Media. Munos, R. 2011. Optimistic Optimization of a Deterministic Function without the Knowledge of its Smoothness. In Shawe-Taylor, J.; Zemel, R.; Bartlett, P.; Pereira, F.; and Weinberger, K. Q., eds., Advances in Neural Information Processing Systems , volume 24. Curran Associates, Inc. Ninin, J. 2016. Global optimization based on contractor programming: An overview of the IBEX library. In Mathematical Aspects of Computer and Information Sciences: 6th International Conference, MACIS 2015, Berlin, Germany, November 11-13, 2015, Revised Selected Papers 6 , 555–559. Springer.   
+Olson, B.; Hashmi, I.; Molloy, K.; and Shehu, A. 2012. Basin hopping as a general and versatile optimization framework for the characterization of biological macromolecules. Advances in Artificial Intelligence , 2012: 3–3.   
+Pant, M.; Zaheer, H.; Garcia-Hernandez, L.; Abraham, A.;et al. 2020. Differential Evolution: A review of more than two decades of research. Engineering Applications of Artificial Intelligence , 90: 103479.   
+Puranik, Y.; and Sahinidis, N. V. 2017. Bounds tightening based on optimality conditions for nonconvex boxconstrained optimization. Journal of Global Optimization ,67: 59–77.   
+Sahinidis, N. 2023. BARON: Global Optimization of MixedInteger Nonlinear Programs, User’s Manual. The Optimization Firm, LLC, .   
+Storn, R.; and Price, K. 1997. Differential evolution-a simple and efficient heuristic for global optimization over continuous spaces. Journal of global optimization , 11(4): 341. Tawarmalani, M.; and Sahinidis, N. V. 2005. A polyhedral branch-and-cut approach to global optimization. Mathematical Programming , 103: 225–249.   
+The Optimization Firm. 2023. NLP and MINLP Test Problems. https://minlp.com/nlp-and-minlp-test-problems. Accessed: Aug.10, 2023.   
+Wang, L.; Fonseca, R.; and Tian, Y. 2020a. Learning Search Space Partition for Black-box Optimization using Monte Carlo Tree Search. arXiv preprint arXiv:2007.00708 .  
+Wang, L.; Fonseca, R.; and Tian, Y. 2020b. Learning search space partition for black-box optimization using monte carlo tree search. Advances in Neural Information Processing Systems , 33: 19511–19522.   
+Xiang, Y.; Gubian, S.; Suomela, B.; and Hoeng, J. 2013. Generalized simulated annealing for global optimization: the GenSA package. R J. , 5(1): 13.   
+Yang, T. 2019. Advancing non-convex and constrained learning: Challenges and opportunities. AI Matters , 5(3): 29–39.   
+Yanover, C.; Meltzer, T.; Weiss, Y.; Bennett, K. P.; and Parrado-Hern´andez, E. 2006. Linear Programming Relaxations and Belief Propagation–An Empirical Study. Journal of Machine Learning Research , 7(9).   
+Zhai, Y.; and Gao, S. 2022. Monte Carlo Tree Descent for Black-Box Optimization. In Advances in Neural Information Processing Systems .  
+
+Zhu, C.; Byrd, R. H.; Lu, P.; and Nocedal, J. 1997. Algorithm 778: L-BFGS-B: Fortran subroutines for largescale bound-constrained optimization. ACM Transactions on mathematical software (TOMS) , 23(4): 550–560.",5
+03892289-ab6a-4270-a42f-9a0864808a7c,"ref_ids: 454984236218718770, chunk_ids: 0, Score: 0.4902, Text: # 2.2 Acceleration of MCTS
+MCTS-based methods have proved their strong capability of solving complex games or tasks. However, the high computational cost of MCTS hinders its application to some real-time and more general scenarios. Therefore, numerous works are devoted to accelerating MCTS. For example, to make the selection stage more effective, some heuristic pruning methods [ 14 ,33 ,29 ,1 ,2 ] aim to reduce the width and depth of the search tree with some heuristic functions. Furthermore, for more efficient evaluations, Lorentz [ 22 ] proposed early playout termination of MCTS (MCTS-EPT) to stop the random playouts early and use an evaluation function to assess win or loss. Moreover, Hsueh et al. [18 ] applied MCTS-EPT to the Chinese dark chess and proved its effectiveness. Afterward, similar ideas have been applied in the evaluation stage of AlphaGoZero [ 32 ] and later MCTS-based methods [31 ,27 ,34 ]. They evaluate the $Q$ -values through a learnable evaluation network instead of running playouts to the end. Grill et al. [15 ] propose a novel regularized policy optimization method based on AlphaZero to decrease the search budget of MCTS, which is from the optimization perspective. Danihelka et al. [10 ] propose a policy improvement algorithm based on sampling actions without replacement, named Gumbel trick to achieve better performance when planning with few simulations. However, these methods mentioned above focus on the specific stage of the search iteration or reduce the total budget through pruning and optimization methods, which are orthogonal to us. And few works targets at the search loop. Lan et al. [21 ] propose DS-MCTS, which defines the uncertainty of MCTS and approximates it by extra DNNs with specific features for board games in training. During the evaluation, DS-MCTS will check periodically and stop the search if the state is certain.
+
+# 3 Background
+The AlphaGo series of work [ 30 ,32 ,31 ,27 ] are all MCTS-based reinforcement learning algorithms. Those algorithms assume the environment transition dynamics are known or learn the environment dynamics. Based on the dynamics, they use the Monte-Carlo tree search (MCTS) as the policy improvement operator. I.e., taking in the current policy, MCTS returns a better policy with the search algorithm. The systematic search allows the MCTS-based RL algorithm to quickly improve the policy and perform much better in the setting where heavy reasoning is required.
+
+# 3.1 MCTS
+This part briefly introduces the MCTS method implemented in reinforcement learning applications. As mentioned in the related works, modern MCTS-based RL algorithms include four stages in the search loop, namely selection, expansion, evaluation, and backpropagation.  
+
+MCTS takes in the current states and generates a policy after the search loop of $N$ iterations. Here $N$ is a constant number of iterations set by the designer, regarded as the total budget. In the selection stage of each iteration, an action will be selected by maximizing over UCB. Specifically, AlphaZero [31 ] and MuZero [ 27 ] are developed based on a variant of UCB, P-UCT [ 25 ] and have achieved great success on board games and Atari games. The formula of P-UCT is the Eq (1):  
+
+$$
+a^{k}=\\arg\\operatorname*{max}_{a\\in\\mathcal{A}}Q(s,a)+P(s,a)\\frac{\\sqrt{\\sum_{b\\in\\mathcal{A}}N(s,b)}}{1+N(s,a)}(c_{1}+\\log((\\sum_{b\\in\\mathcal{A}}N(s,b)+c_{2}+1)/c_{2})),
+$$  
+
+where $k$ is the index of iteration, $\\boldsymbol{\\mathcal{A}}$ is the acti $Q(s,a)$ is the estimated Q-value, $P(s,a)$ is the policy prior obtained from neural networks, $N(s,a)$ is the visitations to select the action a from the state $s$ and $c_{1},c_{2}$ are hyper-parameters. The output of MCTS is the visitation of each action of the root node. After $N$ search iterations, the final policy $\\pi(s)$ is defined as the normalized root visitation distribution simplification, we use $\\pi_{N}(s)$ $\\pi_{k}$ in place of , where $\\begin{array}{r}{\\pi_{k}(s,a)=N(s,a)/\\sum_{b\\in\\mathcal{A}}N(s,b)=N(s,a)/k,a\\in\\mathcal{A}}\\end{array}$ $\\pi_{k}(s)$ sometimes. And the detailed procedure of MCTS is ∈A . For introduced in Appendix. In our method, we propose to approximate the final policy $\\pi_{N}(s)$ with $\\hat{\\pi}_{k}(s)$ ,which we name as a virtual expanded policy, through a new expansion method and a termination rule. In this way, the number of iterations in MCTS can be reduced from $N$ to $k$ .
+
+# 3.2 Computation Requirement
+Most of the computations in MCTS-based RL are in the MCTS procedure. Each action taken by MCTS requires $N$ times neural network evaluations, where $N$ is a constant number of iterations in the search loop. Traditional RL algorithms, such as PPO [ 28 ] or DQN [ 23 ], only need a single neural network evaluation per action. Thus, MCTS-based RL is roughly $N$ times computationally more expensive than traditional RL algorithms. In practice, training a single Atari game needs 12 hours of computation time on 40 TPUs [ 27 ]. The computation need is roughly two orders of magnitude more than traditional RL algorithms [28], although the final performance of MuZero is much better.
+
+# 4 Method
+We aim to spend more search time on harder states and less on easier states. Intuitively, human knows when to make a quick decision or a slow decision under different circumstances. Unfortunately, this situation-aware behavior is absent in current MCTS algorithms. Therefore, we propose an MCTS variant that terminates the search iteration adaptively. It consists of two components: a novel expansion method named virtual expansion to estimate the final visitation based on the current partial tree; a termination rule that decides when to terminate based on the hardness of the current scenario. And we will display the adaptive mechanism through visualizations in Section 5.5.",5

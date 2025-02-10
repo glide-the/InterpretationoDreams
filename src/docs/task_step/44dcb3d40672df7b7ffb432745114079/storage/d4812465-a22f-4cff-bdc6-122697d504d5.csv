@@ -1,0 +1,137 @@
+角色,内容,分镜
+d4812465-a22f-4cff-bdc6-122697d504d5,分析最新算法的稳定性与容错性,4
+d4812465-a22f-4cff-bdc6-122697d504d5,在复杂动态环境下，最新算法具体是如何通过改进蒸馏过程中的参数更新策略来提升算法稳定性的？ ,4
+d4812465-a22f-4cff-bdc6-122697d504d5,"ref_ids: 454847713005147828, chunk_ids: 5, Score: 0.2451, Text: # A DYNAMIC GRADIENT -BASED UPDATE
+The current practice of dynamic benchmarking aims at diversifying the benchmark by dynamically adding new hard examples to it. The hope is to obtain better models from the benchmark every time new samples are added. As we observed, despite the initial benefit this method has, there exist arbitrarily long dynamic benchmarks with no significant improvement after the first few steps.  
+
+But if the ultimate goal is to obtain improved models, there is a more direct way to do it. Instead of keeping all the adversarial feedback in the form of a dynamic benchmark, the model-in-the-loop itself can carry all the information by becoming more and more complex throughout the process. In other words, rather than updating the benchmark by adversarial examples, these examples can be collected in a way that can be directly used to update the model. Dynamic adversarial feedback from annotators is helpful here by providing fresh examples at each round that prevent overfitting. This phenomenon is also close to the boosting technique in machine learning.  
+
+In this section, we discuss how directly updating the model using adversarial data can be formulated within our framework and why they are not practical. Since we use gradient-based techniques to update the model, we call these methods dynamic gradient-based updating. We first formally introduce a vector notation for functions and distributions, which makes our arguments easier to follow. Then we discuss how a classifier’s risk with respect to the zero-one loss would be represented with this notation. In search of a classifier that minimizes this risk, we minimize surrogate convex losses rather than directly optimizing for zero-one risk. Here we discuss two popular choices, to be named hinge and exponential losses, and for each, discuss the corresponding method with its strengths and limitations.  
+
+  
+Figure 4: Dynamic gradient-based update: hinge loss minimization.  
+
+Notation. Let $h:\\mathcal{X}\\,\\rightarrow\\,\\{-1,1\\}$ nary classifier fined on the finite set $\\mathcal{X}$ . The vec rrepresentation of hin Xis $\\pmb{h}=(h(x))_{x\\in\\mathcal{X}}$ let Pbe a probability distribution over $\\mathcal{X}$ and The vector representations to write the risk with respect to the zero-one loss. Risk of a binary classifier $h_{2}$ ctor representat is denoted by $h_{1}\\circ h_{2}$ ◦$\\mathcal{P}$ . For an underlying distribution in Xis $\\bar{P^{\\prime}}=(\\mathcal{P}(x))_{x\\in\\mathcal{X}}$ P∈X . The Dand true classifier rywise product of t $f$ , we can u o vectors $h_{1}$ hon $\\mathcal{D}$ is $\\begin{array}{r}{\\dot{R}_{\\mathcal{D}}(h)\\,=\\,\\frac{1}{2}\\langle\\mathbf{1}-h\\circ f,{D}\\rangle}\\end{array}$ ⟩. For a general $h:\\mathcal{X}\\to\\mathbb{R}$ , still we can define the risk with respect to the zero-one loss as $\\begin{array}{r}{R_{\\mathscr D}(h)\\,=\\,\\frac{1}{2}\\langle\\mathbf1-\\mathrm{sign}(h\\circ f),D\\rangle}\\end{array}$ , where $\\mathrm{{sign}(\\cdot)}$ is an entrywise operator.  
+
+Upper-bounded risk. There are many ways to upper-bound $R_{\\cal D}(h)$ . F mple, for any ntrywise function $l(\\cdot)$ such that $\\begin{array}{r}{l(x)\\geq\\mathbb{1}\\lbrace\\bar{x}\\leq\\mathbf{\\bar{\\upsilon}}\\rbrace=\\frac{\\mathbf{\\bar{\\alpha}}}{2}-\\frac{1}{2}\\operatorname{sign}(x)}\\end{array}$ for all $x\\in\\mathbb R$ ∈R, the risk of hwith respect to the zero-one loss can be upper-bounded by  
+
+$$
+R_{\\mathcal{D}}(h)\\leq R_{\\mathcal{D}}^{l}(h)=\\langle l(h\\circ f),D\\rangle.
+$$
+
+# A.1 MINIMIZING HINGE LOSS
+A popula nction to upper-bound the zero-one risk is the hinge loss: $l(x)\\,=\\,\\operatorname*{max}(1\\,-\\,x,0)$ .Plugging $l(\\cdot)$ ·into Equation 6 gives:  
+
+$$
+R_{\\mathcal{D}}(h)\\leq R_{\\mathcal{D}}^{\\mathrm{hinge}}(h)=\\langle\\mathrm{max}(\\mathbf{1}-h\\circ f,\\mathbf{0}),D\\rangle,
+$$  
+
+form direction and a small step size guarantees consistent decrease of where $h:=h+\\Delta h$ $\\operatorname*{max}(\\cdot)$ is element-wise maximization. Let to reduce $R_{\\mathcal{D}}^{\\mathrm{hinge}}(h)$ D, any direction such that $\\pmb{g}\\mathrm{~=~}\\nabla_{h}R_{\\mathcal{D}}^{\\mathrm{hinge}}$ D$R_{\\mathcal{D}}^{\\mathrm{hinge}}$ $\\langle\\pmb{g},\\Delta\\pmb{h}\\rangle\\,<\\,0$ . Looking for an update of the . As we will show in the will be a descent proof of Lemma A.1, directly applying gradient descent, i.e., incorporates summation of a distribution and a classifier vector. Unlike classifiers which are known $\\Delta h\\,=\\,-\\eta\\,g$ −, is not practical, as it for every point in the domain, in practice, distributions are limited to the available samples and this summation is not implem table. Alternatively, let $E_{h}=\\{x\\in\\mathcal{X}\\mid h(x)f(x)<1\\}$ be the set of margin errors of classifier h. We task an otators to return $\\overline{{\\mathcal{D}}}_{h}=\\mathcal{D}|_{E_{h}}$ given h. Let $\\overline{{h}}=\\mathcal{A}(\\overline{{\\mathcal{D}}}_{h})$ be the model built on the vulnerabilities of h. Next lemma shows his a descent direction for the hinge loss.  
+
+emma A.1. For any hypot sis class $\\mathcal{H}$ , true classifier $f\\ \\in\\ \\mathcal H$ , current classifier $h\\ \\in\\ \\mathcal{H}$ ϵ-approximate risk minimizer A , and any underlying distribution D, the vector representation hof the classifier $\\overline{{h}}=\\mathcal{A}(\\mathcal{D}|_{h(x)f(x)<1})$ is a descent direction for $R_{\\mathcal{D}}^{\\mathrm{hinge}}(h)$ .  
+
+See proof on page 22.  
+
+This lemma lets us write the updating rule $h:=h+\\eta\\,R_{\\mathcal{D}}^{\\mathrm{hinge}}(h)\\,\\overline{{h}}$ , depicted graphically in Figure 4. Since gradient dominance condition holds for this update and hinge loss is D1 -Lipschitz, $^h$ will converge to $\\pmb{f}$ with the rate of $O({\\frac{|{\\mathcal{X}}|}{t^{2}}})$ . Although this method guarantees convergence, the dependence on the domain size makes the bound useless for continuous or very large domains.
+
+# A.2 MINIMIZING EXPONENTIAL LOSS
+Another candidate function to upper-bound the zero-one risk is the exponential loss: $l(x)\\;=\\;$ $\\exp(-x)$ his leads to a similar analysis as the AdaBoost algorithm (Schapire & Singer, 1999). Plugging $l(\\cdot)$ ·into Equation 6 gives:  
+
+$$
+R_{\\mathcal{D}}(h)\\leq R_{\\mathcal{D}}^{\\mathrm{exp}}(h)=\\langle\\exp(-h\\circ f),D\\rangle,
+$$  
+
+where $\\exp(\\cdot)$ is element-wise exponential function Similar to the hinge loss minimization, we show in the proof of Lemma A.2 that directly updating hwith a gradient term is not implementable. So, we search in the hypothesis class for a classifier $\\tilde{h}$ such that $\\tilde{h}$ minimizes $\\langle\\tilde{h},g\\rangle$ , where $\\begin{array}{r}{\\pmb{g}=\\nabla_{h}R_{\\mathcal{D}}^{\\mathrm{exp}}}\\end{array}$ .Next lemma finds such a classifier along with the optimal step size. DLemma A.2. For any hypoth is class $\\mathcal{H}$ , true classifier $f\\ \\in\\ {\\mathcal{H}}$ current classifier $h\\ \\in\\ \\mathcal{H}$ ,$\\epsilon$ -approximate risk minimizer A , and any underlying distribution D,$\\tilde{h}\\ =\\ A({\\mathcal D}_{h})$ is the solu$\\begin{array}{r}{\\eta=\\frac{1}{2}\\log(\\frac{1}{R_{\\mathscr{D}_{h}}(\\tilde{h})}-1)}\\end{array}$ tion of $\\operatorname*{min}_{\\tilde{h}\\in\\mathcal{H}}~\\langle\\tilde{h},g\\rangle$ is the best step size for the update rule .Here ${\\mathcal D}_{h}(x)~\\propto~{\\mathcal D}(x)\\exp(-h(x)f(x))$ $\\boldsymbol{h}:=\\boldsymbol{h}+\\eta\\,\\tilde{\\boldsymbol{h}}$ and $\\pmb{g}~=~\\nabla_{h}R_{\\mathcal{D}}^{\\mathrm{exp}}$ .D.Further,  
+
+See proof on page 23.  
+
+Let $h_{t}$ be the final classifier obtained after $t$ updates according to the updating rule of Lemma A.2. An analysis similar to the analysis of AdaBoost shows $\\begin{array}{r}{R_{\\overline{{T}}}(\\bar{h_{t}})\\leq\\exp(-\\frac{(1-2\\epsilon)^{2}t}{2})}\\end{array}$ . This method, despite the exponential convergence rate, is not practical for two reasons. First, it is computationally hard as reweighting a distribution requires the calculation of a normalization factor which is a sum over the whole domain. Second, it requires sampling from $\\mathcal{D}$ which might not be possible.  
+
+In summary, gradient-based updates guarantee convergence of the updated classifier to the true classifier; however, they either suffer from slow convergence or computational hardness.",4
+d4812465-a22f-4cff-bdc6-122697d504d5,"ref_ids: 454845536381442298, chunk_ids: 8, Score: 0.2090, Text: # 3.2.2 Compression Policy Update
+As the predicted accuracy and the complexity of compressed models can both be obtained by the differentiable calculation, we leverage the gradient that maximizes the objective (5) with momentum to update the compression policy:  
+
+$$
+\\boldsymbol{s}_{t+1}=\\boldsymbol{s}_{t}+\\boldsymbol{\\epsilon}_{t}\\cdot\\frac{\\boldsymbol{g}_{t}}{||\\boldsymbol{g}_{t}||_{2}}
+$$  
+
+where $s_{t}$ means the compression policy in the $t_{t h}$ step during the optimization. $\\scriptstyle g_{t}$ illustrates the accumulated gradient in the $t_{t h}$ step, and $\\epsilon_{t}$ is defined as the stepsize in the $t_{t h}$ step which is adaptively assigned. As indicated in (Dong et al., 2018) that integrating the momentum into iterative processes of input update can boost optimization, we adopt the accumulated gradients in the following that escape from the local maximum (Duch and Korczak, 1998; Sutskever et al., 2013):  
+
+$$
+\\begin{array}{r}{\\mathbf{g}_{t+1}=\\mu\\cdot\\mathbf{g}_{t}+(1-\\mu)\\cdot\\frac{\\nabla_{s}J^{*}}{||\\nabla_{s}J^{*}||_{2}}}\\end{array}
+$$  
+
+where $\\mu$ is a hyperparameter that balances the momentum and the current gradient in the accumulated gradients. In order to stabilize the training process (Kingma and Ba, 2014), the stepsize for compression policy update in each step should be adjusted with respect to the complexity difference between the current lightweight model and the computational complexity constraint. When the current policy is far from the complexity constraint, the stepsize should be large in order to accelerate training. On the contrary, the stepsize should be small for policy optimization near the computational cost budget due to the extremely large barrier complexity loss, so that fine-grained optimization is adopted to stably search the optimal policy within the complexity constraint. We present the adaptive stepsize at the $t_{t h}$ step as follows:  
+
+$$
+\\epsilon_{t}=\\eta\\cdot(C_{0}-C(\\pmb{\\mathscr{N}}_{s_{t}}))
+$$  
+
+where $\\eta$ is a hyperparameter and $C(\\mathbf{\\mathcal{N}}_{s_{t}})$ demonstrates the complexity of the lightweight models compressed by the policy in the $t_{t h}$ iterative update step. Figure 2 (c) and (d) illustrate the vanilla gradient ascent and the presented compression policy optimization respectively, where our optimization process escapes from the local maximum and stably obtains the policy with the highest accuracy within the complexity constraint.  
+
+The compression policy update process stops until reaching the computational cost constraint or achieving the maximum iteration steps. The detailed procedures of ultrafast compression policy optimization are shown in Algorithm 1, where flexible deployment across different hardware configurations and battery levels is achieved since the gradient of the performance predictor consisting of several MLPs is calculated with extremely little computational cost.
+
+# 3.3 Learning Performance Predictor via Active Compression Policy Evaluation
+The acquisition of the optimal lightweight model via differentiable compression policy optimization requires the learned performance predictor to be precise, where the gap between the predicted and actual performance is negligible. Conventional accuracy predictors for network architecture search (Dai et al., 2019; Wen et al., 2020) randomly sample compression policies, and acquire the actual performance by exhaustively training the lightweight models. Then the actual accuracy is employed to supervise the performance predictor that regresses the accuracy of the compression policy. However, the number of sampled lightweight models for evaluation is extremely small compared with the large space of compression policies due to the limited computational resources. Randomly sampled compression policies fail to provide informative supervision for performance predictor learning. On the contrary, we actively select the uncertain compression policy for evaluation to obtain its actual accuracy, and train the performance predictor with the sampled policy that offers informative supervision. We first demonstrate the performance predictor learning with policy uncertainty, and then depict the active selection for uncertain policy.  
+
+  
+Fig. 3 The pipeline of learning the performance predictor via active compression policy evaluation, where we iteratively search the most uncertain compression policy defined by (15) via evolutionary algorithms, obtain the actual accuracy of sampled lightweight models via exhaustive training and update the performance predictor with the actual accuracy of sampled compression policy according to (12).
+
+# 3.3.1 Performance Predictor Learning with Policy Uncertainty
+Training the performance predictor via compression policies with uncertain prediction provides informative supervision, since the performance predictor obtains more knowledge from those samples (Beluch et al., 2018; Gal et al., 2017). Therefore, exhaustively training models compressed by those policies makes significant contribution to enhance the precision of the performance predictor. Figure 3 illustrates the pipeline of performance predictor learning in our SeerNet. For a given backbone, we iteratively search the uncertain compression policy via evolutionary algorithms, evaluate the sampled lightweight models to obtain the actual accuracy, and update the performance predictor with the actual accuracy of sampled compression policies. The welltrained performance predictor is employed for ultrafast compression policy optimization, so that flexible network deployment with different resource constraint is achieved without complicated compression policy search and evaluation.  
+
+The influence of the compression policy perturbation on predicted performance reveals prediction uncertainty, where that sensitive to perturbation indicates highly uncertain prediction (Abbasnejad et al., 2020; Vijayanarasimhan and Grauman, 2014). Hence, the training loss of more uncertain compression policies should be weighted more greatly to strengthen the supervision informativeness. We employ the importance sampling by reweighting samples in the objective function $R(w)$ to train the performance predictor with the parameters $\\mathbf{\\deltau}$ (Abbasnejad et al., 2020; Goyal et al., 2019):  
+
+$$
+\\begin{array}{r l}&{\\underset{\\pmb{w}}{\\operatorname*{min}}\\,R(\\pmb{w})=\\mathbb{E}_{\\pmb{s}\\sim p(\\pmb{s})}\\mathbb{E}_{\\pmb{a}\\sim p(\\boldsymbol{a}|\\pmb{s})}l(f(\\pmb{s}),\\boldsymbol{a})}\\\\ &{\\quad\\quad\\quad\\quad\\quad=\\mathbb{E}_{\\pmb{s}\\sim p(\\pmb{s})}\\mathbb{E}_{\\pmb{a}\\sim p(\\boldsymbol{a}|\\pmb{\\hat{s}})}l(f(\\pmb{s}),\\boldsymbol{a})\\frac{p(\\boldsymbol{a}|\\pmb{s})}{p(\\boldsymbol{a}|\\pmb{\\hat{s}})}}\\end{array}
+$$  
+
+where $a$ means the actual accuracy and $\\hat{s}$ represents the perturbed counterpart of $\\textbf{s}$ .$p(s)$ is the prior distribution of the compression policy. $p(a|s)$ and $p(a|\\hat{\\boldsymbol{s}})$ demonstrate the posterior distribution of accuracy given the compression policy $\\textbf{s}$ and the perturbed one $\\hat{s}$ respectively. $l(f(\\pmb{s}),a)$ is the loss function of accuracy prediction, which is defined as the mean squared error (MSE). In the importance sampling, the compression policy whose accuracy varies more significantly with the perturbation acquires larger weights in the learning objective. Since we leverage deterministic neural networks to predict the accuracy of various lightweight models, we optimize the following alternative objective $R^{*}(w)$ for the performance predictor, which is mathematically formulated in the appendix. The goal of (11) is to heavily weight the compression policy whose predicted accuracy is very different from the perturbed one, and we present the $L_{2}$ difference between predicted accuracies of the vanilla compression policy and the perturbed one as importance weights in the alternative objective:  
+
+$$
+\\operatorname*{min}_{w}R^{*}(\\pmb{w})=\\sum_{i=1}^{N}\\sum_{\\hat{s}^{i}}(f(\\pmb{s}^{i})-a^{i})^{2}\\cdot||f(\\pmb{s}^{i})-f(\\hat{\\pmb{s}}^{i})||_{2}^{2}
+$$  
+
+where $N$ is the number of actively sampled compression policies for performance predictor training. $s^{i}$ and $\\hat{\\pmb{s}}^{i}$ mean the $i^{t h}$ sampled compression policy and its perturbed counterpart. $a^{i}$ represents the actual accuracy of the $i_{t h}$ compressed model obtained via exhaustively training. The $L_{2}$ difference of the predicted accuracy between the compression policy $s^{i}$ and the perturbed counterparts reflects the importance weight. By penalizing the compression policy that is more sensitive to perturbation, the accurate performance predic  
+
+Algorithm 2 Active performance predictor learning   
+Input: Backbone Network $\\mathcal{N}$ , the number of compression policy sampling $K$ , performance predictor learning round Max ro , evolution round Max iter .  
+Output: Accurate performance predictor $f^{*}$ .Initialize: Randomly assign the weights of $f$ .for $t=1,2,\\ldots$ , Max ro do Randomly sample K/Max ro compression policy $\\textbf{\\em s}$ .for $i=1,2,\\dots$ , Max iter do Generate perturbed compression policy $\\hat{s}$ via (13). Predict the performance $f(s)$ and $f(\\hat{\\pmb{s}})$ .Select the top$\\cdot\\mathrm{k}$ compression policy with the highest fitness according to (15). Mutation and crossover for the next generation $\\textbf{\\em s}$ .end for Train and validate $\\mathcal{N}_{s}$ for actual performance. Train $f$ with the actual performance of $\\pmb{s}$ via (12). end for return the performance predictor $f$ .",4
+d4812465-a22f-4cff-bdc6-122697d504d5,"ref_ids: 454847434321422896, chunk_ids: 5, Score: 0.1973, Text: # 4.4. Ablation Study
+We discuss the importance of different modules in our method including the update manner of $c_{i}$ , the design of diversity regularization, and the effect of temperature.  
+
+Update Manner of $c_{i}$ In this part, we discuss the ways to update $c_{i}$ (Eq. 6 ) which denotes the parameter closest to each sample $\\mathbf{f}_{i}$ in the feature space. In Alg. 1 , it is updated in each iteration. Alternatively, we remain $c_{i}$ unchanged as the initial state in the optimization process. Results in Tab. 5a shows that this stationary strategy does not work well. In this case, it would rely heavily on the initial state. The frequent update of $c_{i}$ could help to relieve some harmful biases inside the initial state.  
+
+Table 6. Effect of Temperatures: We try different temperatures in our method. Experiments are conducted on CIFAR10 with pretrained DeiT-Small model.   
+
+
+<html><body><table><tr><td>Ratio</td><td>T = 0.04</td><td>T = 0.07</td><td>T=0.2</td><td>T =0.5</td></tr><tr><td>0.5%</td><td>85.6</td><td>85.0</td><td>84.1</td><td>83.5</td></tr><tr><td>1%</td><td>87.4</td><td>88.2</td><td>85.3</td><td>86.1</td></tr><tr><td>2%</td><td>90.3</td><td>90.1</td><td>89.6</td><td>89.0</td></tr></table></body></html>  
+
+Regularization Design We try two alternative strategies to design the regularization term $R(\\cdot)$ in Eq. 11 .S1) $\\mathbf{No}$ Regularization: We only optimize the first term $D(\\cdot,\\cdot)$ in Eq. 11 .S2) InfoNCE [ 44 ]: We get inspiration from [ 44 ] to design a contrastive loss to approximate the distribution $p_{f_{u}}$ Tab. with 5b $p_{\\theta_{S}}$ , we evaluate these three strategies. We find that both $\\begin{array}{r}{:\\;L\\,=\\,-\\underset{\\mathbf{f}_{i}\\in\\mathcal{F}^{u}}{E}\\left[\\log\\frac{\\exp(\\mathbf{f}_{i}^{T}\\theta_{S}^{c_{i}}/\\tau)}{\\sum_{k\\in[N]}\\exp(s i m(\\mathbf{f}_{k}^{T}\\theta_{S}^{c_{i}}/\\tau)}\\right]}\\end{array}$ P. In S1 and S2 fails, and only our applied strategy S3 succeeds. It justifies our design of the regularization strategy.  
+
+Temperature $\\tau$ We analyze the effect of different temperatures in Eq. 11 . Pointed out in Assumption 1 , a small $\\tau$ is a pre-requisite for our derivation. Tab. 6 shows the results on CIFAR10 with different temperatures. When the temperature is relatively low (e.g. $\\tau\\ <\\!0.1)$ , the performance of ActiveFT is great. However, as it becomes higher (e.g. $\\tau\\,=\\,0.5)$ ), the performance drops. The results are in line with our theoretical derivation.
+
+# 5. Conclusion
+To fill in the gap inside the pretraining-finetuning paradigm, we define the active finetuning task, which selects samples from an unlabeled data pool for supervised model finetuning. To solve this problem, we propose a model-agnostic algorithm, ActiveFT. By optimizing a parametric model, ActiveFT chooses diverse data samples distributing similarly with the original pool for annotation. It is mathematically justified that ActiveFT helps to bring close the distributions of the selected subset and entire data pool by reducing the Earth Mover’s distance. Our experiments on classification and segmentation show the state-of-the-art performance of ActiveFT, with an extremely high data selection efficiency. We believe ActiveFT can help to exploit the annotation budget for supervised finetuning in practical use and make a solid contribution to the popular pretrainingfinetuning paradigms in various tasks.
+
+
+
+# A. Ablation Study on Iteration Number
+We conduct an additional ablation study of the maximal iteration number $T$ (in Alg. 1 of the main paper) of the parametric model optimization process in ActiveFT. The experiments are conducted on ImageNet [ 38 ] with sampling ratio $1\\%$ . Results are demonstrated in Tab. 7 . The quality of samples selected by ActiveFT continuously improves in the early stage as the optimization of our parametric model $p_{\\theta_{S}}$ goes, and then converges in the late stage. This result verifies that our model optimization gradually brings close the distributions of our selected samples to the entire unlabeled pool as well as ensures the diversity of the selected subset in the whole optimization process.  
+
+Table 7. Ablation Study of Iteration Numbers: Experiments are conducted on ImageNet [ 38 ] dataset ( ${}_{\\left.\\rightmoon}$ sampling ratio) with DeiT-Small [ 43 ] model pretrained with DINO [ 6 ] framework. When iteration number is 0 , it is same as random selection.   
+
+
+<html><body><table><tr><td rowspan=""2"">Sel. Ratio</td><td colspan=""6"">Iteration Number</td></tr><tr><td>0</td><td>50</td><td>75</td><td>100</td><td>200</td><td>300</td></tr><tr><td>1%</td><td>45.1</td><td>46.7</td><td>48.4</td><td>50.2</td><td>50.1</td><td>50.1</td></tr></table></body></html>
+
+# B. Additional Implementation Details
+
+# B.1. Unsupervised Pretraining Details
+In our main paper, the DeiT-Small model (path size 16x16) [ 43 ] is pretrained on ImageNet [ 38 ] with DINO framework 1 [6 ] for 300 epochs using AdamW optimizer [28 ] and batch size 1024. The learning rate is linearly ramped up to $5\\mathrm{e}{-4}\\times$ batch size/256 in the first 10 epochs and decays with a cosine scheduler later.  
+
+In Tab. 4 of our main paper, the DeiT-Small model [ 43 ]is pretrained with iBOT framework 2 [52 ] on ImageNet [ 38 ]for 800 epochs. The ResNet-50 model [ 16 ] is pretrained with DINO framework [ 6 ] on ImageNet for 300 epochs. The optimizer is AdamW [ 28 ] and the batch size is 1024 in both cases. The learning rate is linearly ramped up to $5\\mathrm{e}{-4}\\times$ batch size/256 in the first 10 epochs too.
+
+# B.2. Supervised Finetuning Details
+We typically follow the protocols in [ 43 ] to finetune the DeiT-Small model. For CIFAR10 and CIFAR100 [ 23 ]datasets, the pretrained models are supervisedly finetuned for 1000 epochs using SGD optimizer $(\\mathrm{lr}{=}1\\mathrm{e}{-}3$ , weightdecay=1e-4, momentum $\\scriptstyle=\\left0.9$ ) with batch size 512 and cosine learning rate decay on selected subsets of training data. For ImageNet [ 38 ] dataset, to ensure convergence, the models are finetuned for 1000 epochs when the sampling ratio is $1\\%$ and for 300 epochs when the sampling ratio is $5\\%$ ,using the same SGD optimizer as CIFAR. The images are resized to $224\\!\\!\\times\\!224$ in line with the pretraining. The supervised finetuning is implemented based on the official code of DeiT 3 . For ResNet-50 model in Tab. 4 of our main paper, we use the code base of mmclassification 4 . We follow their settings to finetune the model with SGD optimizer ( $\\mathrm{1r{=}1e-}$ 2, weight-decay=1e-4, momentum $_{1=0.9}$ ) with batch size 512 and cosine learning rate decay on selected subsets of training data for 100 epochs.  
+
+On the semantic segmentation task, we follow [ 41 ] to train the model for 127 epochs ( i.e. 16k and $32\\mathbf{k}$ iterations on $5\\%$ and $10\\%$ of training data). The model is trained using SGD optimizer $(\\mathrm{lr}{=}1\\mathrm{e}{-}3$ , momentum $_{1=0.9}$ ) with batch size 8 and polynomial learning rate decay. The code base is mmsegmentation 5 .",4
