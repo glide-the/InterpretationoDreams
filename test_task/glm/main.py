@@ -37,9 +37,9 @@ logging_conf = get_config_dict(
 logging.config.dictConfig(logging_conf)  # type: ignore
 
 llm = ChatOpenAI(
-    openai_api_base=os.environ.get("API_BASE"),
-    model=os.environ.get("API_MODEL"),
-    openai_api_key=os.environ.get("API_KEY"),
+    openai_api_base=os.environ.get("ZHIPUAI_API_BASE"),
+    model=os.environ.get("ZHIPUAI_API_MODEL"),
+    openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
     verbose=True,
     temperature=0.1,
     top_p=0.9,
@@ -58,7 +58,7 @@ if 'glm' in os.environ.get("ZHIPUAI_API_MODEL"):
     tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
 else:
     tools = []
-llm_with_tools = llm
+llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 kor_dreams_task_step_llm_with_tools = guiji_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
 
