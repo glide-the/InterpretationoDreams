@@ -2,7 +2,7 @@ import logging
 
 import langchain
 
-from dreamsboard.dreams.task_step_md.prompts import TASK_MD_TEMPLATE,TASK_STEP_MD_TITLE_TEMPLATE,TASK_STEP_MD_DESC_TEMPLATE,TASK_STEP_MD_LIST_TEMPLATE, TASK_STEP_MD_TEMPLATE
+from dreamsboard.dreams.task_step_md.prompts import (TASK_MD_TEMPLATE,TASK_STEP_MD_TITLE_TEMPLATE,TASK_STEP_MD_DESC_TEMPLATE,TASK_STEP_MD_LIST_TEMPLATE, TASK_STEP_MD_TEMPLATE, TASK_REF_TEMPLATE)
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 from langchain_core.prompt_values import StringPromptValue
@@ -43,6 +43,14 @@ _PROMPT_TEMPLATE_2 = PromptTemplate(
     ],
     template=TASK_MD_TEMPLATE)
 
+_REF_TEMPLATE = PromptTemplate(
+    input_variables=[
+        "task_step_level",
+        "ref_id",
+        "chunk_id",
+        "score"
+    ],
+    template=TASK_REF_TEMPLATE)
 
 class TaskStepMD:
 
@@ -58,9 +66,21 @@ class TaskStepMD:
             # 使用 TASK_STEP_MD_TEMPLATE 格式化每个任务步骤
             formatted_task_steps = [
             ]
+            ref_list = []
             for step in list(self.task_step_store.task_step_all.values()):
                # 计算层级关系
                 level_count = step.task_step_level.count('>')
+          
+                for ref_data in step.task_step_question_context:
+                 
+                    ref_txt = _REF_TEMPLATE.format(
+                        task_step_level=step.task_step_level,
+                        ref_id=ref_data['ref_id'],
+                        chunk_id=ref_data['chunk_id'],
+                        score=ref_data['score']
+                    )
+                    ref_list.append(ref_txt)
+
 
                 if level_count == 0:
                     # 一级，格式化为标题 #
@@ -109,10 +129,14 @@ class TaskStepMD:
 
             # 将格式化的步骤列表转换为字符串
             context_placeholder = "".join(formatted_task_steps)
+            references = "".join(ref_list)
             return {
                 "start_task_context": list(self.task_step_store.task_step_all.values())[0].start_task_context,
                 "aemo_representation_context": list(self.task_step_store.task_step_all.values())[0].aemo_representation_context,
-                "context_placeholder": context_placeholder
+                "context_placeholder": context_placeholder,
+                "references": references,
+                
+
             }
  
 
