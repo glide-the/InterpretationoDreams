@@ -129,7 +129,7 @@ class TaskStepMD:
 
             # 将格式化的步骤列表转换为字符串
             context_placeholder = "".join(formatted_task_steps)
-            references = "".join(ref_list)
+            references = "\r\n".join(ref_list)
             return {
                 "start_task_context": list(self.task_step_store.task_step_all.values())[0].start_task_context,
                 "aemo_representation_context": list(self.task_step_store.task_step_all.values())[0].aemo_representation_context,

@@ -37,9 +37,9 @@ logging_conf = get_config_dict(
 logging.config.dictConfig(logging_conf)  # type: ignore
 
 llm = ChatOpenAI(
-    openai_api_base=os.environ.get("PPINFRA_API_BASE"),
-    model=os.environ.get("PPINFRA_API_MODEL"),
-    openai_api_key=os.environ.get("PPINFRA_API_KEY"),
+    openai_api_base=os.environ.get("ZHIPUAI_API_BASE"),
+    model=os.environ.get("ZHIPUAI_API_MODEL"),
+    openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
     verbose=True,
     temperature=0.1,
     top_p=0.9,
@@ -96,8 +96,8 @@ def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskS
     owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
     logger.info(f"{owner}，任务开始")
     try:
-        if step & 2 ==0:
-            task_engine.llm_runable=guiji_llm
+
+        task_engine.llm_runable=guiji_llm
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()

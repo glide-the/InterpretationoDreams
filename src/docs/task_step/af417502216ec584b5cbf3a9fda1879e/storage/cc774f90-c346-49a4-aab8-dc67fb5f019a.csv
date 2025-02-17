@@ -1,0 +1,98 @@
+角色,内容,分镜
+cc774f90-c346-49a4-aab8-dc67fb5f019a,未来方向,5>1
+cc774f90-c346-49a4-aab8-dc67fb5f019a,"### 问题
+
+在探讨大模型中的LayerNorm和RMSNorm的区别时，结合未来研究方向（如可解释AI、联邦学习、隐私保护等），如何评估这两种归一化方法在这些新兴研究领域中的适用性和潜在影响？具体来说，LayerNorm和RMSNorm在可解释性、分布式训练中的效率以及隐私保护方面有哪些优势和局限性？",5>1
+cc774f90-c346-49a4-aab8-dc67fb5f019a,"ref_ids: 454895489145650410, chunk_ids: 1, Score: 0.3867, Text: # 5.3 LAYER NORM TUNING HAS SMALLER GRADIENT VARIANCE
+A well accepted view about LayerNorm is that, as the neural network goes deeper, the mean of LayerNorm gradients should goes to zero as the LayerNorm itself is designed to normalize all training parameters. In the meantime, the variance of LayerNorm gradients should be small to ensure a better generalization ability of the model ( Xu et al. ,2019 ) (See the proof in Appendix A.2.2 ). As we presented in fig. 4 , MLLM with LayerNorm tuning method has a more concentrated LayerNorm gradients than fine-tuning during the training process. This result gives another view on the effectiveness of LayerNorm from the optimization perspective. More visualizations are listed in Appendix A.2.2 .
+
+# 6 CONCLUSION AND DISCUSSIONS
+LayerNorm is effective and sufficient built upon MLLM pre-training. MLLM training typically involves pre-training on image-text pairs followed by finetuning on visual instruction data. While the second stage of training receives more attention, it is worth noting that the function of the first stage pre-training is non-negligible for training a competent MLLM. We have presented in the paper only a small portion of parameter activation is sufficient to tune a well-behaved MLLM. However, other models such as I NSTRUCT BLIP ( Dai et al. ,2023 ) and M INI GPT4 ( Zhu et al. ,2023 ) only tune the vision-language connector, leaving the LLM untouched during the second stage of training. These models have yielded strong performances when given a large-scale finetuning dataset. In Sec. 5.1 , we demonstrate that tuning LayerNorm may be a more effective means for the second stage training, especially when compared to existing parameter-efficient methods for training MLLMs.  
+
+Limitations. One shortcoming of these parameter-efficient finetuning methods is that they are more sensitive to hyper-parameters ( e.g ., learning rate, training epoch) than finetuning. Since the number of trainable parameters of LayerNorm is small, the model performance of LayerNorm method also varies when twitching the training hyper-parameters. This drawback calls for potential future investigations on the LayerNorm tuning method. In the Appendix A.1 , we give a hint for the grid search range of learning rate on both 7B and 13B scaled models using LayerNorm tuning based on our experimental results.  
+
+Conclusion. Our studies demonstrate LayerNorm tuning as a simple yet effective tuning method for adapting LLMs comprehend multi-modal content across various model variants. Compared to LoRA tuning or full parameter finetuning, LayerNorm tuning reduces the trainable parameters by a significant $41.9\\%$ , enabling efficient finetuning of MLLMs on consumer-grade GPUs. Moreover, we demonstrate that MLLMs can achieve exceptional performance with minimal “right” data and parameters, showcasing the potential of LayerNorm tuning method in real-world applications. Given the empirical success of LayerNorm tuning, we revisited the MLLM finetuning from a domain adaptation perspective and showed that LayerNorm plays a critical role in adapting LLMs to the multi-modal domain. Additionally, our research illustrates the expressive power and optimization potential of LayerNorm tuning from layer similarities and the gradient variance. We hope that our work could inspire future works on designing improved PEFT methods that enable more diverse application scenarios for MLLMs.
+
+
+
+# A A PPENDIX
+
+# A.1 TRAINING DETAILS
+For the first stage, we set the learning rate to 2e-3 for all variants. During the second stage, we search learning the learning rate from [2e-3, 1e-3, 6e-4, 3e-4, 1e-4, 5e-5, 2e-5, 1e-5, 6e-6, 1e-6, 1e-7] for all models and pick the best learning rate based on their performances on the CIDEr score on the Flickr $30\\,\\mathrm{k}$ task.  
+
+According to our tryouts based on Flickr $30\\,\\mathrm{k}$ results in Table A1 , the recommended learning rate for 7B scale is between 6e-4 to 2e-3, while on the 13B, the learning rate should be searched in the range of 3e-6 to 6e-5.  
+
+Table A1: Performance of MLLMs (LayerNorm-simp.) trained with different learning rates and scales on the Flickr30k task.   
+
+
+<html><body><table><tr><td>Learning Rate</td><td>3e-6</td><td>1e-5</td><td>3e-5</td><td>6e-5</td></tr><tr><td>MM-LLAMA2 7B</td><td>21.42</td><td>32.45</td><td>43.04</td><td>28.24</td></tr><tr><td>Learning Rate</td><td>6e-4</td><td>1e-3</td><td>2e-3</td><td></td></tr><tr><td>MM-LLAMA213B</td><td>37.35</td><td>46.88</td><td>44.15</td><td></td></tr></table></body></html>
+
+# A.2INSIGHTS OFLAYERNORMTUNING
+
+# A.2.1 VISUALIZATION EXAMPLES OF LAYER SIMILARITIES
+Lower similarities between different layers of the transformer indicates more expressive power ( Pires et al. ,2023 ). In section 5.2 , we have shown the computed cosine similarity between layers on a Vicuna model, here we show the layer similarities between layers on LL A MA2 and LL A MA2 CHAT models in fig. A1 and fig. A2 . It is clear that, LayerNorm tuning again allows the model to learn dissimilar layer representations, improving the expressive power of the model.
+
+# A.2.2 GRADIENTS OF LAYER NORM
+Visualization examples of LayerNorm gradients. In fig. A3 and fig. A4 , we present the gradients of the LayerNorm parameters during the training process. Similar to the one we have shown in the main text, LayerNorm tuning demonstrates a smaller gradient variance which is important for converging to a better local minimum ( Xu et al. ,2019 ).  
+
+Proof of smaller variance in LayerNorm . As stated in Sec. 5.3 , deeper the network is, the variance of LayerNorm in the model should be naturally smaller ( $\\mathrm{\\DeltaXu}$ et al. ,2019 ). We first let $\\mathbf{y}\\,=\\,(y_{1},y_{2},...,y_{N})$ be the normalized vector, meaning the mean and variance of $\\mathbf{y}$ is 0 and 1 ,respectively. We can then formulate the standard LayerNorm as follow:  
+
+$$
+{\\mathbf{y}}={\\frac{\\mathbf{x}-{\\boldsymbol{\\mu}}}{\\sigma}},\\quad{\\boldsymbol{\\mu}}={\\frac{1}{N}}\\sum_{i=1}^{N}x_{i},\\quad\\sigma={\\sqrt{{\\frac{1}{N}}\\sum_{i=1}^{N}\\left(x_{i}-{\\boldsymbol{\\mu}}\\right)^{2}}},
+$$  
+
+where $\\mathbf{x}=(x_{1},x_{2},...,x_{N})$ is the input vector and $N$ is the dimension of $\\mathbf{x}$ .$\\mu$ and $\\sigma$ are the mean and standard deviation of $\\mathbf{x}$ .  
+
+We first define $\\mathbf{1}_{N}=\\underbrace{(1,1,...,1)^{\\intercal}}_{N}$ . For calculating the gradients of the normalized vector $\\mathbf{y}$ , we first simulate the backward propagation regarding the loss {z }$\\ell$ :  
+
+$$
+{\\frac{\\partial\\ell}{\\partial\\mathbf{x}}}=\\left({\\frac{\\partial\\mathbf{y}}{\\partial\\mathbf{x}}}+{\\frac{\\partial\\mu}{\\partial\\mathbf{x}}}{\\frac{\\partial\\mathbf{y}}{\\partial\\mu}}+{\\frac{\\partial\\sigma}{\\partial\\mathbf{x}}}{\\frac{\\partial\\mathbf{y}}{\\partial\\sigma}}\\right){\\frac{\\partial\\ell}{\\partial\\mathbf{y}}}={\\frac{1}{\\sigma}}\\left(I-{\\frac{\\mathbf{y}\\mathbf{y}^{\\intercal}}{N}}-{\\frac{\\mathbf{1}_{N}\\mathbf{1}_{N}^{\\intercal}}{N}}\\right){\\frac{\\partial\\ell}{\\partial\\mathbf{y}}}.
+$$  
+
+  
+Figure A1: Layer similarities between different LLM layers in (a) Finetuned and (b) LayerNormtuned MM-LL A MA2-7B.  
+
+Here we define $\\begin{array}{r l r}{\\frac{\\partial\\ell}{\\partial\\mathbf x}}&{{}\\!\\!=}&{\\!\\!(a_{1},a_{2},...,a_{N})}\\end{array}$ with mean $\\bar{a}$ and standard deviation $D_{a}$ , and $\\begin{array}{r l}{\\frac{\\partial\\ell}{\\partial\\mathbf{y}}}&{{}=}\\end{array}$ $(b_{1},b_{2},...,b_{N})$ with mean $\\bar{b}$ and standard deviation $D_{b}$ . We set $\\begin{array}{r}{W_{1}\\;=\\;I\\,-\\,\\frac{{\\bf y}{\\bf y}^{\\intercal}}{N}\\,-\\,\\frac{{\\bf1}_{N}{\\bf1}_{N}^{\\intercal}}{N}}\\end{array}$ −, we can verify that:  
+
+$$
+\\lfloor\\mathbf{\\Pi}_{N}^{\\mathsf{T}}W_{1}=\\mathbf{1}_{N}^{\\mathsf{T}}{\\frac{1}{\\sigma}}\\left(I-{\\frac{\\mathbf{1}_{N}\\mathbf{1}_{N}^{\\mathsf{T}}+\\mathbf{y}\\mathbf{y}^{\\mathsf{T}}}{N}}\\right)={\\frac{1}{\\sigma}}\\left(\\mathbf{1}_{N}-{\\frac{\\mathbf{1}_{N}^{\\mathsf{T}}\\mathbf{1}_{N}}{N}}\\mathbf{1}_{N}^{\\mathsf{T}}-{\\frac{\\mathbf{1}_{N}^{\\mathsf{T}}\\mathbf{y}}{N}}\\mathbf{y}^{\\mathsf{T}}\\right)={\\frac{\\mathbf{1}_{N}-\\mathbf{1}_{N}-0}{\\sigma}}=0
+$$  
+
+Therefore, we can easily proof that $N\\bar{a}\\propto{\\bf1}_{N}^{\\top}W_{1}\\bar{b}=0$ , which means the mean of $\\frac{\\partial\\ell}{\\partial\\mathbf{x}}$ should be zero. Then we dive into proofing the variance of LayerNorm gradients should be small when the number of network parameters $N$ becomes large.  
+
+$$
+\\begin{array}{l}{{\\displaystyle{D_{a}=\\sum_{i=1}^{N}(a_{i}-\\bar{a})^{2}/N=\\sum_{i=1}^{N}a_{i}^{2}/N}\\ ~}}\\\\ {{\\displaystyle{=\\left\\|{(a_{1},a_{2},\\ldots,a_{N})^{\\top}}\\right\\|^{2}/N}\\ ~}}\\\\ {{\\displaystyle{=\\left\\|{W_{1}\\left(b_{1},b_{2},\\ldots,b_{N}\\right)^{\\top}}\\right\\|^{2}/N}\\ ~}}\\\\ {{\\displaystyle{=\\left\\|{W_{1}\\left(b_{1}-\\bar{b},b_{2}-\\bar{b},\\ldots,b_{N}-\\bar{b}\\right)^{\\top}+W_{1}\\bar{b}{\\bf1}_{N}}\\right\\|^{2}/N}\\ }}\\\\ {{\\displaystyle{=\\left\\|{W_{1}\\left(g_{1}-\\bar{b},g_{2}-\\bar{b},\\ldots,g_{N}-\\bar{b}\\right)^{\\top}}\\right\\|^{2}/N}\\ ~}}\\\\ {{\\displaystyle{\\leq W_{1}^{2}\\sum_{i=1}^{N}(b_{i}-\\bar{b})^{2}/N}\\ }}\\end{array}
+$$  
+
+Since the projection matrix $W_{1}$ is idempotent, we have $W_{1}^{2}=W_{1}$ . That is to say, when $N$ is large enough, there stands the network parameter $\\begin{array}{r}{D_{a}\\le\\big(I-\\frac{\\mathbf{y}\\mathbf{y}^{\\top}+\\mathbf{1}_{N}\\mathbf{1}_{N}^{\\top}}{N}\\big)\\sum_{i=1}^{N}(b_{i}-\\bar{b_{}})^{2}/N\\propto1/N^{2}}\\end{array}$ Nis large, the gradient variance of LayerNorm should be small. P−. As a consequence, when  
+
+  
+Figure A2: Layer similarities between different LLM layers in (a) Finetuned and (b) LayerNormtuned MM-LL A MA2-7B CHAT .  
+
+  
+Figure A3: The gradients of both input and post LayerNorm in 21st layer of the MM-V ICUNA as the training proceeds.  
+
+  
+Figure A4: The gradients of both input and post LayerNorm in 11th layer of the MM-V ICUNA as the training proceeds.",5>1
+cc774f90-c346-49a4-aab8-dc67fb5f019a,"ref_ids: 454847042436311108, chunk_ids: 4, Score: 0.3145, Text: # A Robust Game-Theoretical Federated Learning Framework With Joint Differential Privacy
+Lefeng Zhang, Tianqing Zhu , Ping Xiong, Wanlei Zhou ,Senior Member, IEEE , and Philip S. Yu ,Fellow, IEEE  
+
+Abstract— Federated learning is a promising distributed machine learning paradigm that has been playing a significant role in providing privacy-preserving learning solutions. However, alongside all its achievements, there are also limitations. First, traditional frameworks assume that all the clients are voluntary and so will want to participate in training only for improving the model’s accuracy. However, in reality, clients usually want to be adequately compensated for the data and resources they will use before participating. Second, today’s frameworks do not offer sufficient protection against malicious participants who try to skew a jointly trained model with poisoned updates. To address these concerns, we have developed a more robust federated learning scheme based on joint differential privacy. The framework provides two game-theoretic mechanisms to motivate clients to participate in training. These mechanisms are dominant-strategy truthful, individual rational, and budget-balanced. Further, the influence an adversarial client can have is quantified and restricted, and data privacy is similarly guaranteed in quantitative terms. Experiments with different training models on real-word datasets demonstrate the effectiveness of the proposed approach.  
+
+Index Terms— Differential privacy, game theory, federated learning",5>1
+cc774f90-c346-49a4-aab8-dc67fb5f019a,"ref_ids: 454846876251686832, chunk_ids: 1, Score: 0.1543, Text: # 1 Introduction
+The explosive increase in the use of deep neural network (DNN)-based models for applications across domains has resulted in a very strong need to find ways to interpret the decisions made by these models (Gade et al. 2020; Tang et al. 2021; Yap et al. 2021; Oviedo et al. 2022; Oh and Jeong 2020). Interpretability is an important aspect of responsible and trustworthy AI, and model explanation methods (also known as attribution methods) are an important aspect of the community’s efforts towards explaining and debugging real-world AI/ML systems. Attribution methods (Zeiler et al. 2010; Simonyan, Vedaldi, and Zisserman 2014; Bach et al. 2015; Selvaraju et al. 2017; Chattopadhyay et al. 2018; Sundararajan, Taly, and Yan 2017; Shrikumar et al. 2016; Smilkov et al. 2017; Lundberg and Lee 2017) attempt to explain the decisions made by DNN models through inputoutput attributions or saliency maps. (Lipton 2018; Samek et al. 2019; Fan et al. 2021; Zhang et al. 2020) present detailed surveys on these methods. Recently, the growing numbers of attribution methods has led to a concerted focus on studying the robustness of attributions to input perturbations to handle potential security hazards (Chen et al. 2019; Sarkar, Sarkar, and Balasubramanian 2021; Wang and Kong 2022; Agarwal et al. 2022). One could view these efforts as akin to adversarial robustness that focuses on defending against attacks on model predictions, whereas attributional robustness focuses on defending against attacks on model explanations. For example, an explanation for a predicted credit card failure cannot change significantly for a small human-imperceptible change in input features, or the saliency maps explaining the COVID risk prediction from a chest X-ray should not change significantly with a minor human-imperceptible change in the image.  
+
+DNN-based models are known to have a vulnerability to imperceptible adversarial perturbations (Biggio et al. 2013; Szegedy et al. 2014; Goodfellow, Shlens, and Szegedy 2015), which make them misclassify input images. Adversarial training (Madry et al. 2018) is widely understood to provide a reasonable degree of robustness to such perturbation attacks. While adversarial robustness has received significant attention over the last few years (Ozdag 2018; Silva and Najafirad 2020), the need for stable and robust attributions, corresponding explanation methods and their awareness are still in their early stages at this time (Ghorbani, Abid, and $Z_{\\mathrm{ou}}~2019$ ; Chen et al. 2019; Slack et al. 2020; Sarkar, Sarkar, and Balasubramanian 2021; Lakkaraju, Arsov, and Bastani 2020; Slack et al. 2021a,b). In an early effort, (Ghorbani, Abid, and Zou 2019) provided a method to construct a small imperceptible perturbation which when added to an input $x$ results in a change in attribution map of the original map to that of the perturbed image. This is measured through top$k$ intersection, Spearman’s rank-order correlation or Kendall’s rank-order correlation between the two attribution maps (of original and perturbed images). See Figure 1 for an example. Defenses proposed against such attributional attacks (Chen et al. 2019; Singh et al. 2020; Wang et al. 2020; Sarkar, Sarkar, and Balasubramanian 2021) also leverage the same metrics to evaluate the robustness of attribution methods.  
+
+While these efforts have showcased the need and importance of studying the robustness of attribution methods, we note in this work that the metrics used, and hence the methods, can be highly sensitive to minor local changes in attributions (see Fig 1 row 2 ). We, in fact, show (in Appendix B.1) that under existing metrics to evaluate robustness of attributions, a random perturbation can be as strong an attributional attack as existing benchmark methods. This may not be a true indicator of the robustness of a model’s attributions, and can mislead further research efforts in the community. We hence focus our efforts in this work on rethinking metrics and methods to study the robustness of model attributions (in particular, we study image-based attribution methods to have a focused discussion and analysis). Beyond highlighting this important issue, we propose locality-sensitive improvements of the above metrics that incorporate the locality of attributions along with their rank order. We show that such a locality-sensitive distance is upper-bounded by a metric based on symmetric set difference. We also introduce a new measure top$k$ -div that incorporates diversity of a model’s attributions. Our key contributions are summarized below:  
+
+  
+Figure 1: Sample images from Flower dataset with Integrated Gradients (IG) before and after attributional attack. The attack used here is the top$k$ attributional attack of Ghorbani, Abid, and Zou (2019) on a ResNet model. Robustness of attribution measured by top$k$ intersection is small, and ranges from 0.04 (first image) to 0.45 (third image) as it penalizes for both local changes in attribution and concentration of top pixels in a small region. Visually, we can observe that such overpenalization leads to a wrong sense of robustness as the changes are within the object of importance.  
+
+• Firstly, we observe that existing robustness metrics for model attributions overpenalize minor drifts in attribution, leading to a false sense of fragility. • In order to address this issue, we propose LocalitysENSitive (LENS) improvements of existing metrics, namely, LENS-top${\\cdot k}$ , LENS-Spearman and LENSKendall, that incorporate the locality of attributions along  
+
+with their rank order. Besides avoiding overpenalizing attribution methods for minor local drifts, we show that our proposed LENS variants are well-motivated by metrics defined on the space of attributions.   
+• We subsequently introduce a second measure based on diversity that enriches model attributions by preventing the localized grouping of top model attributions. LENS can be naturally applied to this measure, thereby giving a method to incorporate both diversity and locality in measuring attributional robustness.   
+• Our comprehensive empirical results on benchmark datasets and models used in existing work clearly support our aforementioned observations, as well as the need to rethink the evaluation of the robustness of model attributions using locality and diversity.   
+• Finally, we also show that existing methods for robust attributions implicitly support such a locality-sensitive metric for evaluating progress in the field.",5>1

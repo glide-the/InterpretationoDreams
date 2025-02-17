@@ -1,0 +1,86 @@
+角色,内容,分镜
+51c8b9ac-a041-4af7-b164-9d6e7eb750af,技术进步,2>1
+51c8b9ac-a041-4af7-b164-9d6e7eb750af,"### 问题
+
+在大模型中，LayerNorm和RMSNorm作为两种常用的归一化方法，它们在提升模型性能和计算效率方面有哪些具体的技术进步？特别是在大规模数据集和复杂任务中，这两种方法如何影响模型的训练稳定性和泛化能力？",2>1
+51c8b9ac-a041-4af7-b164-9d6e7eb750af,"ref_ids: 454847042436311108, chunk_ids: 4, Score: 0.3359, Text: # 2 Problem Formulation
+
+# 2.1 Related Work
+Large Language Models (LLMs). The advent of LLMs has led to a paradigm shift in the study of natural language processing (NLP), computer vision, information retrieval, and other domains[Menghani, 2023, Chen et al., 2023, Jiang et al., 2023]. The impressive effectiveness and generalizability of LLMs has come at the price of a drastic increase in LLM sizes [Treviso et al., 2023] and consequent challenges, including huge amounts of computational resources and data required to train, and prohibitive expenses at both training and deployment stages [Bender et al., 2021].  
+
+Efficient Machine Learning (ML) Inference. LLMs belong to a class of models called foundation models [Bommasani et al., 2021] – models that are trained once and can then be used to serve a wide variety of tasks. As such, we expect inference cost to dominate the overall cost of such models and hence focus on works that reduce the cost of ML inference [Menghani, 2023]. The most common approach for efficient ML inference is model compression i.e., replacing a large model with a smaller model of comparable accuracy. Common techniques for model compression include (i) model pruning [Hassibi et al., 1993, LeCun et al., 1989] which drops parts of the model with minimal accuracy loss, (ii) quantization [Jacob et al., 2018, Vanhoucke et al., 2011] which reduces model memory footprints and inference latency by reducing the precision of data representation (e.g., FP32 to INT8), (iii) knowledge distillation [Hinton et al., 2015, Urban et al., 2016] which trains small student models to mimic large teacher models, and (iv) Neural Architecture Search [Elsken et al., 2019, Zoph and Le, 2016] which tunes model architecture to improve model performance, under inference cost constraints. Such static efficiency optimizations typically produce a fixed model with lower inference cost and lower accuracy compared to the large model which may not suffice for foundation models like LLMs, whose core premise is that the same model will serve a range of tasks, each with its own accuracy/cost constraints. This is already manifesting in inference platforms described in Section 1 which need more dynamic optimizations to meet the demands of all users.  
+
+Hybrid ML Inference. Recent works [Kag et al., 2022, Ding et al., 2022] have introduced a new inference paradigm called hybrid inference which uses two models of different sizes instead of a single model for inference. The smaller model (e.g. Llama2 [Touvron et al., 2023]) generally has lower inference cost but also lower accuracy than the larger model (e.g. GPT-4 [OpenAI, 2023]). The key idea is to identify and route easy queries to the small model so that inference cost can be reduced while maintaining response quality. By tuning a threshold on query difficulty we can dynamically trade off quality and cost for the same inference setup. [Kag et al., 2022] study this setup for image classification and propose to train the small model, large model, and router from scratch. However LLM training is expensive and retraining LLMs from scratch for every scenario goes against the very premise of inference with pre-trained foundation models. Moreover text generation [Iqbal and Qureshi, 2022] is often more ambiguous and challenging than image classification due to which novel techniques are required for effective hybrid LLM inference for text generation.  
+
+Inference with Multiple LLMs. Some recent works [Jiang et al., 2023, Chen et al., 2023, Leviathan et al., 2023, Kim et al., 2023] use multiple LLMs for inference but these approaches typically call more than one LLM for a single query that can incur significant computational overheads. Specifically [Jiang et al., 2023] calls an ensemble of LLMs at inference time due to which the inference cost will be proportional to the number of models in the system. [Chen et al., 2023] performs inference using a cascade of LLMs where responses to the query are generated sequentially by the LLMs in the cascade until one of the models has a confidence score higher than a predefined threshold. Our work provides high quality responses while always making a single LLM call for all queries and will thus incur much lower computational cost than both of these works on average. Speculative decoding, introduced in [Leviathan et al., 2023, Kim et al., 2023] speeds up decoding of expensive models by invoking small-and-efficient decoders on the “easy” decoding steps. Instead, in our work we are interested in query routing which assigns “easy” queries to small models to reduce overall inference costs while maintaining high performance. While the two approaches have different goals, an interesting line of future work would be to combine these so that our router assigns queries to the small or large model based on query difficulty and then speculative decoding is applied on top to speed up inference for queries assigned to the large model thereby leading to further cost reduction.",2>1
+51c8b9ac-a041-4af7-b164-9d6e7eb750af,"ref_ids: 454845744505973136, chunk_ids: 6, Score: 0.3340, Text: # 6 Conclusion
+LLM-based RL algorithms have shown generalization across multiple tasks and games. We argue that this ability comes from implicit memory that fits a large number of parameters to the training data, which is inefficient in terms of model size. In contrast, we propose a new approach inspired by the concept of “working memory” called Decision Transformers with Memory (DT-Mem), which stores training experience explicitly in a content-addressable matrix module for later retrieval and use. Evaluation demonstrates that DT-Mem achieves better generalization on Atari games with only $10\\%$ of the model parameters compared to the state-of-the-art method. Furthermore, we demonstrate that fine-tuning DT-Memwith a small amount of data can produce state-of-the-art results on both Atari games and the Meta-World environment, when compared to MDT [22], PDT [37], and HDT [38].  
+
+Limitations The first limitation of our work is the sample efficiency of memory fine-tuning. The $10\\%$ fine-tuning dataset is still sizeable, and we plan to explore more sample-efficient methods in the future. We could for instance consider a setting with more tasks, each one with less data so that the inter-task generalization would be even more crucial to its performance. Additionally, this work does not propose a control strategy for collecting data on a new task. For future work, we plan to investigate online data collection methods, which includes the design and learning of exploration strategies for an efficient fine-tuning on new tasks. Finally, the approach has been intuitively motivated, but it would be valuable to have a theoretical grounding that would show the structural limits of large models and how equipping them with a memory component overcomes them.  
+
+Societal Impact We do not foresee any significant societal impact resulting from our proposed method. The current algorithm is not designed to interact with humans, nor any realistic environment yet. If one chooses to extend our methods to such situations, caution should be exercised to ensure that any safety and ethical concerns are appropriately addressed. As our work is categorized in the offline-RL domain, it is feasible to supplement its training with a dataset that aligns with human intents and values. However, one must be wary that the way our architecture generalizes across tasks is still not well understood and as a consequence we cannot guarantee the generalization of its desirable features: performance, robustness, fairness, etc. By working towards methods that improve the computational efficiency of large models, we contribute to increase their access and reduce their ecological impact.
+
+
+
+# A Implementation Details
+
+# A.1 DT-Mem network architecture
+Table 3 summarizes the different model configurations used for evaluation. In this section, we describe these model configurations in detail. While Table 3 provides a summary, we will also provide additional information here. DT-Mem, PDT and HDT are all share the same transformer architectures. However, for task-adaptation, HDT utilizes a pre-trained $2.3\\mathbf{M}$ hyper-network, while DT-Mem introduces 147K LoRA parameters. To compare with MDT, we use the same parameter size as reported in [22].  
+
+Table 3: Detailed Model Sizes   
+
+
+<html><body><table><tr><td>Model</td><td>Layers</td><td>Hidden size (d)</td><td>Heads</td><td>Params</td><td>Memory Size</td><td>Memory Module Params</td></tr><tr><td>HDT</td><td>4</td><td>512</td><td>8</td><td>13M</td><td>N.A.</td><td>N.A.</td></tr><tr><td>MDT-200M</td><td>10</td><td>1280</td><td>20</td><td>200M</td><td>N.A.</td><td>N.A.</td></tr><tr><td>DT-Mem</td><td>4</td><td>512</td><td>8</td><td>13M</td><td>559K</td><td>7M</td></tr></table></body></html>
+
+# A.2 Hyper-parameters
+In this section, we will delve into the specifics of the model parameters. Understanding these parameters is key to understanding the workings of the model. It is worth noting that the source code for this model is publicly available at https://github.com/luciferkonn/DT_Mem/tree/main .This allows for a deeper understanding of the model’s inner workings and may facilitate the replication of its results.  
+
+Table 4: Hyperparameters for DT-Mem training   
+
+
+<html><body><table><tr><td>Hyperparameters</td><td>Value</td></tr><tr><td>K (length of context)</td><td>28</td></tr><tr><td>dropoutrate</td><td>0.1</td></tr><tr><td>maximum epochs</td><td>1000</td></tr><tr><td>steps for each epoch</td><td>1000</td></tr><tr><td>optimizer learning rate</td><td>1e-4</td></tr><tr><td>weight decay</td><td>1e-4</td></tr><tr><td>gradient norm clip</td><td>1.</td></tr><tr><td>data points for each dataset</td><td>500,000</td></tr><tr><td>batch size</td><td>64</td></tr><tr><td>memory slots</td><td>1290</td></tr><tr><td>activation</td><td>GELU</td></tr><tr><td>optimizer</td><td>Adamw</td></tr><tr><td>scheduler</td><td>LambdaLR</td></tr></table></body></html>
+
+# A.3 Training and fine-tuning algorithm
+In this section, we present the pre-training DT-Memin Appendix A.3 and fine-tuning DT-Mem with LoRA in Appendix 5.5.  
+
+We pre-train DT-Mem on multiple offline datasets. Each gradient update of the DT-Memmodel considers information from each training task.  
+
+We fine-tune the memory module to adapt to each downstream task. To achieve this, we fix the pre-trained DT-Mem model parameters and add additional LoRA parameters for the memory module feed-forward neural networks. The fine-tune dataset is used to update these LoRA parameters only.
+
+# Algorithm 1 Pre-train DT-Mem
+1: for T episodes do   
+2: 3: 4: for Sample trajectories Split trajectories into different segments with length K and calculate return-to-go in the Task $\\mathcal{T}_{i}\\in T^{t r a i n}\\;.$ do $\\tau=(s_{0},a_{0},r_{0},\\cdot\\cdot\\cdot\\,,s_{H},a_{H},r_{H})$ m the dataset $\\mathcal{D}_{i}$ .  
+input sequence.   
+5: Given $\\hat{\\tau}_{t+1:t+K}$ , compute the sequence embedding $e_{s e q}$ .  
+6: Update the working memory and retrieve the relative information as $E_{o u t}$   
+7: Given $E_{o u t}$ , predict actions $\\tilde{a}_{t}$ , reward $\\tilde{r}_{t}$ , and return-to-go ${\\tilde{R}}_{t}$ .  
+8: Compute the loss according to Eqn. 1.   
+9: Update all modules parameters.   
+10: end for   
+11: end for  
+
+Algorithm 2 Fine-tuning DT-Mem  
+
+$\\hat{B}^{q},\\hat{B}^{k},\\hat{B}^{v},\\hat{A}^{q},\\hat{A}^{k},\\hat{A}^{v},B^{q},A^{q},B^{k},A^{k}$ Require: Fine-tuning dataset $\\mathcal{T}^{i}~\\in~T^{t e s t}$ .dataset $\\mathcal{D}^{i}$ for $\\mathcal{T}^{i}$ .Initialize LoRA parameters 1: for T steps do   
+2: Split trajectories into different segments with length $\\mathbf{K}$ and calculate return-to-go in the input sequence.   
+3: Given $\\hat{\\tau}_{t+1:t+K}$ , compute the sequence embedding $e_{s e q}$ .  
+4: Update working memory using $\\hat{Q}\\,=\\,M(\\hat{W}^{q}+\\hat{B}^{q}\\bar{A}^{q})$ ,$\\hat{K}\\,=\\,M(\\hat{W}^{k}\\,+\\,\\hat{B}^{k}\\hat{A}^{k}),\\hat{V}\\,=$ $M(\\hat{W}^{v}+\\hat{B}^{v}\\hat{A}^{v})$ ,$Q=M(W^{q}+B^{q}A^{q}),K=M(W^{k}+B^{k}A^{k})$   
+5: Retrieve the relative information as $E_{o u t}$   
+6: Given $E_{o u t}$ , predict actions $\\tilde{a}_{t}$ , reward $\\tilde{r}_{t}$ , and return-to-go ${\\tilde{R}}_{t}$ .  
+7: Compute the loss according to Eqn. 1.   
+8: Update LoRA parameters only.   
+9: end for",2>1
+51c8b9ac-a041-4af7-b164-9d6e7eb750af,"ref_ids: 455038427524247598, chunk_ids: 4, Score: 0.2129, Text: # 8 Discussion
+The worst group performance of a model is affected by two factors: the quality of the representation of the core features produced by the feature extractor and the weight assigned to the core features in the last classification layer. In contrast to prior work, we consider the quality of the feature extractor in isolation, focusing on realistic datasets and large-scale models. We find that many of the popular group robustness methods improve the worst group performance primarily by learning a better last layer and not by learning a better feature representation. Similarly, regularization techniques such as early stopping and strong weight decay can improve the worst group accuracy by learning a better last layer, but do not lead to a consistent improvement in terms of the quality of the learned feature representations. On the other hand, the base model architecture and pre-training strategy have a major effect on the quality of the feature representations.  
+
+Our observations suggest an important open question: is it possible to significantly improve upon standard ERM in terms of the quality of the learned representations for a given base model? In future work, it would be interesting to evaluate methods such as Rich Feature Construction [ 99 ], gradient starvation [ 68 ], ensembling [ 47 ] and other techniques for increasing feature diversity [e.g. 48 ]. We hope that our work will also inspire new group robustness methods targeted specifically at improving the quality of the core feature representations.
+
+
+
+# Appendix Outline
+This appendix is structured as follows. In Section A we describe the datasets, augmentation policies and models used in this paper. In Section Bwe provide details on the methods, implementations and hyper-parameters, as well as detailed results for the experiments in Section 5 . In Section Cwe provide additional details on the experiments in Section 6 . In Section Dwe provide additional details and results for the experiments in Section 7 . In Section Ewe provide additional results on the MultiNLI dataset. Finally, in Section Fwe describe the limitation, broader impact, compute and licenses.  
+
+Tools and packages. During the work on this paper, we used the following tools and packages: NumPy[24],SciPy[87],PyTorch[67],TorchVision[55],Jupyter notebooks[42],Matplotlib[33],Pandas [57 ], Weights&Biases [7 ], timm [90 ], transformers [92 ], vissl [21 ].
+
+# A Data and Models
+In this section, we describe the datasets, data augmentation policies and models used throughout the paper.",2>1

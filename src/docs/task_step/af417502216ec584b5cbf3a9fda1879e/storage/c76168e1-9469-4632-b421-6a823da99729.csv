@@ -1,0 +1,152 @@
+角色,内容,分镜
+c76168e1-9469-4632-b421-6a823da99729,变体,1>2
+c76168e1-9469-4632-b421-6a823da99729,"### 问题：
+在大模型中，LayerNorm和RMSNorm作为归一化方法的变体，分别针对哪些特定任务或场景进行了优化？它们在处理长序列数据或多模态数据时，各自的优势和局限性是什么？",1>2
+c76168e1-9469-4632-b421-6a823da99729,"ref_ids: 454895409734360760, chunk_ids: 3, Score: 0.3359, Text: # 5 I NTUITIONS BEHIND LAYER NORM TUNING
+In this section, driven by the empirical success of LayerNorm tuning, we explore the intuitions behind LayerNorm from three perspectives, domain adaptation, expressive power, and gradient variance.  
+
+Table 3: Model performance on different data types. Methods with 80K and Conv.20K suffix are tuned on the full 80K data and the 20K conversational data, respectively.   
+
+
+<html><body><table><tr><td>Method</td><td>MME</td><td>VQAv2</td><td>MSCOCO</td><td>Flickr30k</td><td>POPE</td></tr><tr><td colspan=""6"">MM-V1CUNA-7B</td></tr><tr><td>Finetune-80K</td><td>625.2/270.7</td><td>15.40</td><td>67.50</td><td>34.61</td><td>73.8/76.5/66.5</td></tr><tr><td>LayerNorm-80K</td><td>723.2/253.2</td><td>17.06</td><td>80.89</td><td>48.01</td><td>76.1/81.1/70.8</td></tr><tr><td>LayerNorm-Conv. 20K</td><td>777.1/231.4</td><td>15.39</td><td>67.30</td><td>40.33</td><td>75.2/79.2/68.8</td></tr><tr><td colspan=""6"">MM-LLAMA2-7B</td></tr><tr><td>Finetune-80K</td><td>661.3/237.1</td><td>16.09</td><td>65.08</td><td>31.64</td><td>56.3/65.0/55.4</td></tr><tr><td>LayerNorm-80K</td><td>583.2/200.7</td><td>16.78</td><td>88.85</td><td>49.24</td><td>66.6/68.5/64.9</td></tr><tr><td>LayerNorm-Conv. 20K</td><td>376.2/157.5</td><td>16.19</td><td>86.80</td><td>44.88</td><td>50.5/50.7/50.3</td></tr><tr><td colspan=""6"">MM-LLAMA2-CHAT-7B</td></tr><tr><td>Finetune-80K</td><td>805.4/234.6</td><td>15.29</td><td>57.40</td><td>26.70</td><td>60.3/69.8/57.9</td></tr><tr><td>LayerNorm-80K</td><td>651.3/219.3</td><td>16.60</td><td>75.34</td><td>43.75</td><td>71.3/72.4/67.8</td></tr><tr><td>LayerNorm-Conv. 20K</td><td>482.9/172.1</td><td>13.88</td><td>66.85</td><td>41.95</td><td>62.7/71.7/61.3</td></tr><tr><td colspan=""6"">MM-LLAMA2-13B</td></tr><tr><td>Finetune-80K</td><td>402.3/199.3</td><td>18.33</td><td>73.88</td><td>45.33</td><td>51.6/51.1/52.2</td></tr><tr><td>LayerNorm-80K</td><td>526.0/177.5</td><td>15.31</td><td>82.92</td><td>48.42</td><td>60.0/69.1/58.9</td></tr><tr><td>LayerNorm-Conv. 20K</td><td>646.0/242.9</td><td>16.01</td><td>76.50</td><td>44.86</td><td>70.0/76.9/68.6</td></tr><tr><td colspan=""6"">MM-LLAMA2-CHAT-13B</td></tr><tr><td>Finetune-80K</td><td>623.3/221.4</td><td>15.17</td><td>64.19</td><td>41.82</td><td>67.6/64.8/64.5</td></tr><tr><td>LayerNorm-80K</td><td>929.3/254.3</td><td>16.10</td><td>74.96</td><td>42.79</td><td>78.9/83.9/74.3</td></tr><tr><td>LayerNorm-Conv. 20K</td><td>769.7/227.5</td><td>15.57</td><td>73.30</td><td>43.08</td><td>68.2/72.8/65.3</td></tr></table></body></html>  
+
+Table 4: Results of models with LayerNorm and/or vision-language Connector activated.   
+
+
+<html><body><table><tr><td>Method</td><td>MME</td><td>VQAv2</td><td>MSCOCO</td><td>Flickr30k</td><td>POPE</td></tr><tr><td colspan=""6"">MM-LLAMA2-7B</td></tr><tr><td>LayerNorm + Connector</td><td>583.2/200.7</td><td>16.78</td><td>88.85</td><td>49.24</td><td>66.6/68.5/64.9</td></tr><tr><td>Connector</td><td>311.1/105.4</td><td>12.72</td><td>60.43</td><td>35.91</td><td>67.9/73.7/66.9</td></tr><tr><td>LayerNorm</td><td>395.0/191.4</td><td>18.18</td><td>80.13</td><td>41.68</td><td>50.3/51.3/50.2</td></tr><tr><td colspan=""6"">MM-LLAMA2-13B</td></tr><tr><td>LayerNorm + Connector</td><td>526.0/177.5</td><td>15.31</td><td>82.92</td><td>48.42</td><td>60.0/69.1/58.9</td></tr><tr><td>Connector</td><td>507.0/187.9</td><td>15.22</td><td>62.60</td><td>25.13</td><td>60.9/66.8/60.1</td></tr><tr><td>LayerNorm</td><td>405.0/188.6</td><td>16.51</td><td>70.41</td><td>39.86</td><td>50.9/52.7/51.0</td></tr></table></body></html>
+
+# 5.1 LAYER NORM TUNING A DAPTS LLM S TO MULTI -M ODAL
+Influence of the Vision-Language Connector The vision-language connector serves as the converter to project features from the vision encoder to the LLM domain. In our previous experiments, we focused on finetuning the LLM component of the MLLMs while keeping the vision-language connector activated by default. To determine which component plays a more important role for domain adaptation of LLM to multi-modal domain, we performed an ablation study by activating the two components separately. Results are presented in table 4 , tuning LayerNorm in attention blocks without activating the vision-language connector resulted in only a $4.2\\%$ and $5.4\\%$ decrease in performance on three traditional multi-modal tasks and the MME benchmark, respectively. This decrease is significantly lower than the $15.6\\%$ and $9.2\\%$ downgrade observed when only activating the Connector on the same tasks. This observation highlights the vital role LayerNorm plays in transforming knowledge from the vision domain to language, indicating LayerNorm as a strong domain adaptor for the LLM architecture.  
+
+  
+
+Figure 3: Layer similarities between different LLM layers in (a) Finetuned and (b) LayerNorm-tuned MM-V ICUNA -7B. The average layer similarity of two models are 0.624 and 0.585, respectively.  
+
+Table 5: Results of models with LL A MA2 Finetuned/LayerNorm-tuned with ViT pre-trained on ImageNet (Deng et al. ,2009 ), which have not been aligned with the language domain.   
+
+
+<html><body><table><tr><td></td><td>MME</td><td>VQAv2</td><td>MSCOCO</td><td>Flickr30k</td><td>POPE</td></tr><tr><td>Finetune-7B</td><td>406.79/182.5</td><td>15.05</td><td>47.75</td><td>18.97</td><td>50.0/51.6/50.1</td></tr><tr><td>LayerNorm-7B</td><td>301.51/127.14</td><td>15.48</td><td>66.22</td><td>31.73</td><td>50.0/50.1/50.1</td></tr><tr><td>Finetune-13B</td><td>375.41/171.79</td><td>25.38</td><td>51.26</td><td>25.96</td><td>50.3/51.1/51.0</td></tr><tr><td>LayerNorm-13B</td><td>445.98/150.0</td><td>15.59</td><td>64.63</td><td>32.17</td><td>51.2/53.0/50.8</td></tr></table></body></html>  
+
+Switching Visual Features. We employ the ViT encoder from CLIP ( Radford et al. ,2021 ) by default in our previous experiments. CLIP ( Radford et al. ,2021 ) models are trained with image-text contrastive loss, thus its feature space is already aligned with language. Since LayerNorm has shown its effectiveness as a domain adaptor, we are interested in testing whether or not LayerNorm tuning can adapt a LLM to image features that are not pretrained to align with language. The vision encoder is switched to a ViT model that was pretrained on ImageNet (Dosovitskiy et al. ,2021 ;Deng et al. ,2009 ). Results in table 5 demonstrate that both LayerNorm and finetuning approaches can yield high performance. Interestingly, we observe that by LayerNorm tuning with ImageNet trained ViT, which has not been aligned with language, the model is able to achieve comparable performance to full parameter finetuning , i.e ., results show that LayerNorm tuning outperforms finetuning by $12.0\\%$ on captioning tasks, but performs slightly worse by $5.0\\%$ on the MME benchmark. These results again indicates the domain adaptor role of the LayerNorm , hinting the reason behind the empircal success of LayerNorm tuning. Furthermore, it is worth noting that the performance of MLLMs incorporating ViT pretrained on ImageNet is generally inferior to that of CLIP’s vision encoder. This observation provides compelling evidence that, despite differences in tokenizer and training paradigm between CLIP’s text encoder and LL A MA’s, ViT from CLIP has the capacity to learn general patterns of language formulation during pre-training. Thus, significantly enhance MLLM abilities.
+
+# 5.2 LAYER NORM TUNING I MPROVES THE EXPRESSIVE POWER
+It is shown in Pires et al. (2023 ) that a Transformer model incorporating anisotropic layer representation can capture a wider range of learning patterns. By computing the cosine similarities between all layers in the LLM of a finetuned MLLM, we aim to investigate whether the improved efficiency is the results of the improved expressive power. In table 6 , we present the average layer similarity of three 7B scale MLLMs, and in fig. 3 we present the visualization of per layer similarity scores of MM-V ICUNA -7B. Our analysis reveals that the transformer layers in the MLLMs with LayerNorm tuning exhibit a clear distinction from one another ( i.e ., an average $10.6\\%$ lower layer similarities comparing finetuning), indicating superior generalization ability and expressive power compared to finetuning. This finding sheds light on why tuning LayerNorm is effective for multi-modal LLM training. For additional visualizations, please refer to the Appendix A.2.1 .  
+
+  
+Figure 4: Gradients of the input LayerNorm in the 11th layer of the MM-V ICUNA as training proceeds. LayerNorm-tuned model has lower gradient variance than full parameter finetuning.  
+
+Table 6: Layer representation similarity of LayerNorm and finetuning methods on three 7B MLLMs.   
+Lower the similarity is, the better expressive power a model possesses.  
+
+<html><body><table><tr><td>Model</td><td>LayerNorm Sim.</td><td>Finetuning Sim.</td></tr><tr><td>MM-VICUNA</td><td>0.585</td><td>0.624</td></tr><tr><td>MM-LLAMA2</td><td>0.504</td><td>0.591</td></tr><tr><td>MM-LLAMA2-CHAT</td><td>0.550</td><td>0.617</td></tr></table></body></html>",1>2
+c76168e1-9469-4632-b421-6a823da99729,"ref_ids: 454847042436311108, chunk_ids: 4, Score: 0.3086, Text: # 3.3 A TRANSFORMATION PER BLOCK
+Now that every LayerNorm in the transformer has been converted to RMSNorm, we can select any $\\mathbf{Q}$ to modify the model. Our initial plan was to collect signals from the model, construct an orthogonal matrix using those signals and to delete parts of the network. We quickly saw that the signals at different blocks of the network were not aligned, and that we would need to apply a different orthogonal matrix at each block, $\\mathbf{Q}_{\\ell}$ .  
+
+Allowing the orthogonal matrix used in each block to differ can be shown to leave the model unchanged using the same proof as Theorem 1 ,  
+
+  
+Figure 3: Converting a transformer network from LayerNorm to RMSNorm: the scale matrix diag $(\\alpha)$ is absorbed into the subsequent matrix $\\mathbf{W}_{\\mathrm{in}}$ . Figure shows the block in combined colors. We use $(\\alpha)$ for brevity. The mean-subtraction matrix $\\mathbf{M}$ is applied to each matrix $\\mathbf{W}_{\\mathrm{out}}$ . Layernorm becomes RMSNorm, up to a constant $\\bar{\\sqrt{D}}$ (not shown). Here, the scaling $(\\alpha^{\\prime})$ comes from the previous block.  
+
+  
+Figure 4: With the network converted to RMSNorm (see Figure 3 ), we apply the computational-invariance idea. The input weight matrices $\\mathrm{diag}(\\alpha)\\mathbf{W}_{\\mathrm{in}}$ are pre-multiplied by $\\mathbf{Q}^{\\top}$ . The output matrices $\\mathbf{W}_{\\mathrm{out}}\\mathbf{M}$ are post-multiplied by $\\mathbf{Q}$ . In the skip-connection, a new linear layer is added $\\mathbf{Q}_{\\ell}^{\\top}\\mathbf{Q}_{\\ell+1}$ . After these modifications, the matrices can be sliced (hatched areas).  
+
+with the exception of line 5 of Algorithm 1 . Here we see that the residual connection and the output of the block must have the same rotation. To fix this, we modify the residual connection by applying the linear transformation applied to different blocks with the additional linear operation in the residual connection. Unlike the $\\mathbf{Q}_{\\ell-1}^{\\top}\\mathbf{Q}_{\\ell}$ −to the residual. Figure 4 shows how different rotations can be modifications to the weight matrices, these additional operations cannot be pre-computed and add a small $(D\\times D)$ overhead to the model. Nonetheless, they are needed to allow slicing the model (Section 3.4 ) and we see real speedup overall (Section 4 ).  
+
+To compute the matrices $\\mathbf{Q}_{\\ell}$ , we use PCA. We select a calibration dataset from the training set, run it through the model (after converting LayerNorm operations into RMSNorm), and extract the orthogonal matrix of the layer. We use the output of the transformed network to calculate the orthogonal matrices of the next layers. More precisely, if $\\mathbf{X}_{\\ell,i}$ is the output of the $\\ell^{\\mathrm{th}}$ RMSNorm block for the $i^{\\mathrm{th}}$ sequence in the calibration dataset, we compute  
+
+$$
+\\mathbf{C}_{\\ell}=\\sum_{i}\\mathbf{X}_{\\ell,i}^{\\top}\\mathbf{X}_{\\ell,i}
+$$  
+
+and set $\\mathbf{Q}_{\\ell}$ to the be the eigenvectors of $\\mathbf{C}_{\\ell}$ , sorted by decreasing eigenvalues.
+
+# 3.4 SLICING
+The goal of Principal Component Analysis is usually to take a data matrix $\\mathbf{X}$ and compute a lower dimensional representation $\\mathbf{Z}$ , and an approximate reconstruction $\\tilde{\\mathbf{X}}$ :  
+
+$$
+\\mathbf{Z}=\\mathbf{X}\\mathbf{Q}\\mathbf{D}\\,,\\qquad\\tilde{\\mathbf{X}}=\\mathbf{Z}\\mathbf{D}^{\\top}\\mathbf{Q}^{\\top}\\,.
+$$  
+
+where $\\mathbf{Q}$ is the ectors of ${\\bf X}^{\\top}{\\bf X}$ , and $\\mathbf{D}$ is a $D\\times D_{\\mathrm{small}}$ deletion matrix (containing $D_{\\mathrm{small}}$ The reconstruction is columns of the $D\\times D$ ×$L_{2}$ identity matrix), which removes some of the columns of the matrix to the left. optimal, in the sense that QD is a linear mapping that minimizes $\\lVert\\mathbf{X}-\\tilde{\\mathbf{X}}\\rVert^{2}$ .  
+
+When we apply PCA to the signal matrix $\\mathbf{X}$ bween blocks, we never materialize the $N\\times D$ signal matrix, but we apply the deletion matrix Dto the operations preceding and succeeding the construction of that matrix, which have already been multiplied by $\\mathbf{Q}$ in the above. We delete rows of $\\mathbf{W}_{\\mathrm{in}}$ that we have inserted into the residual connection (see Figure and columns of $\\mathbf{W}_{\\mathrm{out}}$ and $\\mathbf{W}_{\\mathrm{embd}}$ . We also delete both rows 4 ). and columns of the matrix $\\mathbf{Q}_{\\ell-1}^{\\top}\\mathbf{Q}_{\\ell}$ −
+
+# 4 EXPERIMENTAL VALIDATION
+Setup We use HuggingFace Transformers ( Wolf et al. ,2019 ) to implement our code with PyTorch (Paszke et al. ,2019 ). The computation of $\\mathbf{Q}$ is performed on a single H100 GPU with 80GB of memory, taking approximately 3.5 hours to complete for the L LAMA -2 70B model. During the PCA calculation, we use double precision for computing the eigenvectors of the covariance matrix. We find that using single precision for eigenvector calculations in PyTorch leads to a discrepancy in the final accuracy, as detailed in Appendix A.2 .  
+
+We experiment with two different calibration sets: 1024 samples from the WikiText-2 training dataset ( Merity et al. ,2016 ) and 5000 samples from the Alpaca training dataset ( Taori et al. ,2023 ). Sequence lengths are chosen as the maximum of each language model. An ablation study on the calibration set size and sequence length is presented in Appendix A.3 .  
+
+Models, Tasks, and GPUs We evaluate all our experiments on OPT ( Zhang et al. ,2022 ), L LAMA -2 (Touvron et al. ,2023 ) model families, and additionally evaluate Phi-2 (in our zero-shot task) experiments. We exclude OPT 175B, as it is outperformed by smaller L LAMA -2 models. Nonetheless, we anticipate that this larger model will yield improved results, as larger models typically offer more promising opportunities for compression (see Section 4.1 ). We evaluate our scheme on both language generation as well as popular zero-shot tasks. To demonstrate the comprehensive speedup achieved by SliceGPT we use: Quadro RTX6000 GPUs with 24GB of memory as a representative example of consumer-level GPUs; 40GB A100s and 80GB H100s to provide datacenter-level benchmarks.  
+
+Baseline Setup We initially planned to compare our results against a scheme that pruned columns (or rows) with the smallest norm but found that this baseline was very poor, with the perplexity of the model soaring into the 1000s after pruning just a few columns. Instead, we compare SliceGPT against SparseGPT ( Frantar & Alistarh ,2023 ) employing a 2:4 sparsity ratio, as this is the only sparsity scheme which achieves speedup ( Mishra et al. ,2021 ).",1>2
+c76168e1-9469-4632-b421-6a823da99729,"ref_ids: 454847819065993190, chunk_ids: 1, Score: 0.2812, Text: # 5.3 LAYER NORM TUNING HAS SMALLER GRADIENT VARIANCE
+A well accepted view about LayerNorm is that, as the neural network goes deeper, the mean of LayerNorm gradients should goes to zero as the LayerNorm itself is designed to normalize all training parameters. In the meantime, the variance of LayerNorm gradients should be small to ensure a better generalization ability of the model ( Xu et al. ,2019 ) (See the proof in Appendix A.2.2 ). As we presented in fig. 4 , MLLM with LayerNorm tuning method has a more concentrated LayerNorm gradients than fine-tuning during the training process. This result gives another view on the effectiveness of LayerNorm from the optimization perspective. More visualizations are listed in Appendix A.2.2 .
+
+# 6 CONCLUSION AND DISCUSSIONS
+LayerNorm is effective and sufficient built upon MLLM pre-training. MLLM training typically involves pre-training on image-text pairs followed by finetuning on visual instruction data. While the second stage of training receives more attention, it is worth noting that the function of the first stage pre-training is non-negligible for training a competent MLLM. We have presented in the paper only a small portion of parameter activation is sufficient to tune a well-behaved MLLM. However, other models such as I NSTRUCT BLIP ( Dai et al. ,2023 ) and M INI GPT4 ( Zhu et al. ,2023 ) only tune the vision-language connector, leaving the LLM untouched during the second stage of training. These models have yielded strong performances when given a large-scale finetuning dataset. In Sec. 5.1 , we demonstrate that tuning LayerNorm may be a more effective means for the second stage training, especially when compared to existing parameter-efficient methods for training MLLMs.  
+
+Limitations. One shortcoming of these parameter-efficient finetuning methods is that they are more sensitive to hyper-parameters ( e.g ., learning rate, training epoch) than finetuning. Since the number of trainable parameters of LayerNorm is small, the model performance of LayerNorm method also varies when twitching the training hyper-parameters. This drawback calls for potential future investigations on the LayerNorm tuning method. In the Appendix A.1 , we give a hint for the grid search range of learning rate on both 7B and 13B scaled models using LayerNorm tuning based on our experimental results.  
+
+Conclusion. Our studies demonstrate LayerNorm tuning as a simple yet effective tuning method for adapting LLMs comprehend multi-modal content across various model variants. Compared to LoRA tuning or full parameter finetuning, LayerNorm tuning reduces the trainable parameters by a significant $41.9\\%$ , enabling efficient finetuning of MLLMs on consumer-grade GPUs. Moreover, we demonstrate that MLLMs can achieve exceptional performance with minimal “right” data and parameters, showcasing the potential of LayerNorm tuning method in real-world applications. Given the empirical success of LayerNorm tuning, we revisited the MLLM finetuning from a domain adaptation perspective and showed that LayerNorm plays a critical role in adapting LLMs to the multi-modal domain. Additionally, our research illustrates the expressive power and optimization potential of LayerNorm tuning from layer similarities and the gradient variance. We hope that our work could inspire future works on designing improved PEFT methods that enable more diverse application scenarios for MLLMs.
+
+
+
+# A A PPENDIX
+
+# A.1 TRAINING DETAILS
+For the first stage, we set the learning rate to 2e-3 for all variants. During the second stage, we search learning the learning rate from [2e-3, 1e-3, 6e-4, 3e-4, 1e-4, 5e-5, 2e-5, 1e-5, 6e-6, 1e-6, 1e-7] for all models and pick the best learning rate based on their performances on the CIDEr score on the Flickr $30\\,\\mathrm{k}$ task.  
+
+According to our tryouts based on Flickr $30\\,\\mathrm{k}$ results in Table A1 , the recommended learning rate for 7B scale is between 6e-4 to 2e-3, while on the 13B, the learning rate should be searched in the range of 3e-6 to 6e-5.  
+
+Table A1: Performance of MLLMs (LayerNorm-simp.) trained with different learning rates and scales on the Flickr30k task.   
+
+
+<html><body><table><tr><td>Learning Rate</td><td>3e-6</td><td>1e-5</td><td>3e-5</td><td>6e-5</td></tr><tr><td>MM-LLAMA2 7B</td><td>21.42</td><td>32.45</td><td>43.04</td><td>28.24</td></tr><tr><td>Learning Rate</td><td>6e-4</td><td>1e-3</td><td>2e-3</td><td></td></tr><tr><td>MM-LLAMA213B</td><td>37.35</td><td>46.88</td><td>44.15</td><td></td></tr></table></body></html>
+
+# A.2INSIGHTS OFLAYERNORMTUNING
+
+# A.2.1 VISUALIZATION EXAMPLES OF LAYER SIMILARITIES
+Lower similarities between different layers of the transformer indicates more expressive power ( Pires et al. ,2023 ). In section 5.2 , we have shown the computed cosine similarity between layers on a Vicuna model, here we show the layer similarities between layers on LL A MA2 and LL A MA2 CHAT models in fig. A1 and fig. A2 . It is clear that, LayerNorm tuning again allows the model to learn dissimilar layer representations, improving the expressive power of the model.
+
+# A.2.2 GRADIENTS OF LAYER NORM
+Visualization examples of LayerNorm gradients. In fig. A3 and fig. A4 , we present the gradients of the LayerNorm parameters during the training process. Similar to the one we have shown in the main text, LayerNorm tuning demonstrates a smaller gradient variance which is important for converging to a better local minimum ( Xu et al. ,2019 ).  
+
+Proof of smaller variance in LayerNorm . As stated in Sec. 5.3 , deeper the network is, the variance of LayerNorm in the model should be naturally smaller ( $\\mathrm{\\DeltaXu}$ et al. ,2019 ). We first let $\\mathbf{y}\\,=\\,(y_{1},y_{2},...,y_{N})$ be the normalized vector, meaning the mean and variance of $\\mathbf{y}$ is 0 and 1 ,respectively. We can then formulate the standard LayerNorm as follow:  
+
+$$
+{\\mathbf{y}}={\\frac{\\mathbf{x}-{\\boldsymbol{\\mu}}}{\\sigma}},\\quad{\\boldsymbol{\\mu}}={\\frac{1}{N}}\\sum_{i=1}^{N}x_{i},\\quad\\sigma={\\sqrt{{\\frac{1}{N}}\\sum_{i=1}^{N}\\left(x_{i}-{\\boldsymbol{\\mu}}\\right)^{2}}},
+$$  
+
+where $\\mathbf{x}=(x_{1},x_{2},...,x_{N})$ is the input vector and $N$ is the dimension of $\\mathbf{x}$ .$\\mu$ and $\\sigma$ are the mean and standard deviation of $\\mathbf{x}$ .  
+
+We first define $\\mathbf{1}_{N}=\\underbrace{(1,1,...,1)^{\\intercal}}_{N}$ . For calculating the gradients of the normalized vector $\\mathbf{y}$ , we first simulate the backward propagation regarding the loss {z }$\\ell$ :  
+
+$$
+{\\frac{\\partial\\ell}{\\partial\\mathbf{x}}}=\\left({\\frac{\\partial\\mathbf{y}}{\\partial\\mathbf{x}}}+{\\frac{\\partial\\mu}{\\partial\\mathbf{x}}}{\\frac{\\partial\\mathbf{y}}{\\partial\\mu}}+{\\frac{\\partial\\sigma}{\\partial\\mathbf{x}}}{\\frac{\\partial\\mathbf{y}}{\\partial\\sigma}}\\right){\\frac{\\partial\\ell}{\\partial\\mathbf{y}}}={\\frac{1}{\\sigma}}\\left(I-{\\frac{\\mathbf{y}\\mathbf{y}^{\\intercal}}{N}}-{\\frac{\\mathbf{1}_{N}\\mathbf{1}_{N}^{\\intercal}}{N}}\\right){\\frac{\\partial\\ell}{\\partial\\mathbf{y}}}.
+$$  
+
+  
+Figure A1: Layer similarities between different LLM layers in (a) Finetuned and (b) LayerNormtuned MM-LL A MA2-7B.  
+
+Here we define $\\begin{array}{r l r}{\\frac{\\partial\\ell}{\\partial\\mathbf x}}&{{}\\!\\!=}&{\\!\\!(a_{1},a_{2},...,a_{N})}\\end{array}$ with mean $\\bar{a}$ and standard deviation $D_{a}$ , and $\\begin{array}{r l}{\\frac{\\partial\\ell}{\\partial\\mathbf{y}}}&{{}=}\\end{array}$ $(b_{1},b_{2},...,b_{N})$ with mean $\\bar{b}$ and standard deviation $D_{b}$ . We set $\\begin{array}{r}{W_{1}\\;=\\;I\\,-\\,\\frac{{\\bf y}{\\bf y}^{\\intercal}}{N}\\,-\\,\\frac{{\\bf1}_{N}{\\bf1}_{N}^{\\intercal}}{N}}\\end{array}$ −, we can verify that:  
+
+$$
+\\lfloor\\mathbf{\\Pi}_{N}^{\\mathsf{T}}W_{1}=\\mathbf{1}_{N}^{\\mathsf{T}}{\\frac{1}{\\sigma}}\\left(I-{\\frac{\\mathbf{1}_{N}\\mathbf{1}_{N}^{\\mathsf{T}}+\\mathbf{y}\\mathbf{y}^{\\mathsf{T}}}{N}}\\right)={\\frac{1}{\\sigma}}\\left(\\mathbf{1}_{N}-{\\frac{\\mathbf{1}_{N}^{\\mathsf{T}}\\mathbf{1}_{N}}{N}}\\mathbf{1}_{N}^{\\mathsf{T}}-{\\frac{\\mathbf{1}_{N}^{\\mathsf{T}}\\mathbf{y}}{N}}\\mathbf{y}^{\\mathsf{T}}\\right)={\\frac{\\mathbf{1}_{N}-\\mathbf{1}_{N}-0}{\\sigma}}=0
+$$  
+
+Therefore, we can easily proof that $N\\bar{a}\\propto{\\bf1}_{N}^{\\top}W_{1}\\bar{b}=0$ , which means the mean of $\\frac{\\partial\\ell}{\\partial\\mathbf{x}}$ should be zero. Then we dive into proofing the variance of LayerNorm gradients should be small when the number of network parameters $N$ becomes large.  
+
+$$
+\\begin{array}{l}{{\\displaystyle{D_{a}=\\sum_{i=1}^{N}(a_{i}-\\bar{a})^{2}/N=\\sum_{i=1}^{N}a_{i}^{2}/N}\\ ~}}\\\\ {{\\displaystyle{=\\left\\|{(a_{1},a_{2},\\ldots,a_{N})^{\\top}}\\right\\|^{2}/N}\\ ~}}\\\\ {{\\displaystyle{=\\left\\|{W_{1}\\left(b_{1},b_{2},\\ldots,b_{N}\\right)^{\\top}}\\right\\|^{2}/N}\\ ~}}\\\\ {{\\displaystyle{=\\left\\|{W_{1}\\left(b_{1}-\\bar{b},b_{2}-\\bar{b},\\ldots,b_{N}-\\bar{b}\\right)^{\\top}+W_{1}\\bar{b}{\\bf1}_{N}}\\right\\|^{2}/N}\\ }}\\\\ {{\\displaystyle{=\\left\\|{W_{1}\\left(g_{1}-\\bar{b},g_{2}-\\bar{b},\\ldots,g_{N}-\\bar{b}\\right)^{\\top}}\\right\\|^{2}/N}\\ ~}}\\\\ {{\\displaystyle{\\leq W_{1}^{2}\\sum_{i=1}^{N}(b_{i}-\\bar{b})^{2}/N}\\ }}\\end{array}
+$$  
+
+Since the projection matrix $W_{1}$ is idempotent, we have $W_{1}^{2}=W_{1}$ . That is to say, when $N$ is large enough, there stands the network parameter $\\begin{array}{r}{D_{a}\\le\\big(I-\\frac{\\mathbf{y}\\mathbf{y}^{\\top}+\\mathbf{1}_{N}\\mathbf{1}_{N}^{\\top}}{N}\\big)\\sum_{i=1}^{N}(b_{i}-\\bar{b_{}})^{2}/N\\propto1/N^{2}}\\end{array}$ Nis large, the gradient variance of LayerNorm should be small. P−. As a consequence, when  
+
+  
+Figure A2: Layer similarities between different LLM layers in (a) Finetuned and (b) LayerNormtuned MM-LL A MA2-7B CHAT .  
+
+  
+Figure A3: The gradients of both input and post LayerNorm in 21st layer of the MM-V ICUNA as the training proceeds.  
+
+  
+Figure A4: The gradients of both input and post LayerNorm in 11th layer of the MM-V ICUNA as the training proceeds.",1>2
