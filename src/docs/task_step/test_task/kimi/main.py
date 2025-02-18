@@ -43,6 +43,7 @@ llm = ChatOpenAI(
     verbose=True,
     temperature=0.1,
     top_p=0.9,
+    max_tokens=8192,
 ) 
 
 zhipu_llm = ChatOpenAI(

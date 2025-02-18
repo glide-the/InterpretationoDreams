@@ -4,6 +4,7 @@
 
 import logging
 import threading
+import re
 
 from langchain.schema import AIMessage
 from langchain_core.language_models import LanguageModelInput
@@ -329,7 +330,8 @@ class TaskEngineBuilder:
         )
 
         _ai_message = results[0]
-        task_step.task_step_question_answer = _ai_message.content
+        cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
+        task_step.task_step_question_answer = cleaned_text
         self.task_step_store.add_task_step([task_step])
         # 每处理一个任务步骤，就持久化一次
         task_step_store_path = concat_dirs(
