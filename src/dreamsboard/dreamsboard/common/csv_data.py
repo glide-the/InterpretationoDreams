@@ -9,7 +9,6 @@ from io import StringIO
 from typing import Any, Dict, List
 
 import pandas as pd
-
 from kor.encoders.typedefs import SchemaBasedEncoder
 from kor.encoders.utils import unwrap_tag, wrap_in_tag
 from kor.exceptions import ParseError
@@ -100,7 +99,7 @@ class CSVEncoder(SchemaBasedEncoder):
                         keep_default_na=False,
                         sep=DELIMITER,
                         skipinitialspace=True,
-                        on_bad_lines='skip',
+                        on_bad_lines="skip",
                     )
                 except Exception as e:
                     raise ParseError(e)
@@ -116,7 +115,7 @@ class CSVEncoder(SchemaBasedEncoder):
         """Format instructions."""
         instructions = [
             "Please output the extracted information in CSV format in Excel dialect.",
-            f"Please use a {DELIMITER} as the delimiter."
+            f"Please use a {DELIMITER} as the delimiter.",
             # TODO(Eugene): Add this when we start supporting embedded columns.
             # "If a column corresponds to an array or an object,
             # use a JSON encoding to "

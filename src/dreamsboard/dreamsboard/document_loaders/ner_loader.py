@@ -1,23 +1,26 @@
 from __future__ import annotations
-from langchain_core.messages import ( 
-    BaseMessage,
-)
-from langchain_core.language_models import LanguageModelInput
-from langchain_core.runnables import Runnable
+
 from langchain.chains import LLMChain
 from langchain.chains.ernie_functions import create_structured_output_runnable
-from langchain_community.chat_models import ChatOpenAI
 from langchain.schema.language_model import BaseLanguageModel
+from langchain_community.chat_models import ChatOpenAI
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.messages import (
+    BaseMessage,
+)
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable
 
 from dreamsboard.document_loaders.protocol.ner_protocol import Personality
 
 
 class NerLoader:
     """实体关系抽取"""
+
     @classmethod
-    def form_ner_dreams_personality_builder(cls,
-                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
+    def form_ner_dreams_personality_builder(
+        cls, llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    ) -> LLMChain:
         """
         生成性格分析的抽取链
         :param llm:
@@ -25,7 +28,9 @@ class NerLoader:
         """
         prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", """根据您提供的信息，您的性格特点可以总结如下：
+                (
+                    "system",
+                    """根据您提供的信息，您的性格特点可以总结如下：
         
 1. 热情和温柔：您在描述天气和气氛时使用了"温柔长裙风"这样的形容词，表现出您对温暖和舒适的情感。
 
@@ -41,9 +46,13 @@ class NerLoader:
 
 总的来说，您的性格特点包括热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人。
             
-            """),
-                ("ai", """personality
-热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人"""),
+            """,
+                ),
+                (
+                    "ai",
+                    """personality
+热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人""",
+                ),
                 ("human", "{input}"),
             ]
         )

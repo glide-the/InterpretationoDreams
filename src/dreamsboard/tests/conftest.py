@@ -1,17 +1,19 @@
+import logging
+import logging.config
 import os
 
 import pytest
-import logging
+
 from dreamsboard.utils import get_config_dict, get_log_file, get_timestamp_ms
-import logging.config
+
 
 @pytest.fixture
 def setup_log():
     logging_conf = get_config_dict(
         "DEBUG",
         get_log_file(log_path="logs", sub_dir=f"local_{get_timestamp_ms()}"),
-        100*1024*1024, 
-        100*1024*1024,
+        100 * 1024 * 1024,
+        100 * 1024 * 1024,
     )
 
     logging.config.dictConfig(logging_conf)  # type: ignore

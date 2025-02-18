@@ -1,11 +1,11 @@
+import logging
 from typing import Optional
 
+import langchain
 from langchain.chains.openai_functions import create_structured_output_runnable
 from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
-import logging
-import langchain
 
 langchain.verbose = True
 logger = logging.getLogger(__name__)
@@ -26,13 +26,17 @@ class Personality(BaseModel):
 
 def test_create_structured_output_runnable() -> None:
     """Test create_structured_output_runnable. 测试创建结构化输出可运行对象。"""
-    llm = ChatOpenAI(openai_api_base='http://127.0.0.1:30000/v1',
-                     model="glm-4",
-                     openai_api_key="glm-4",
-                     verbose=True)
+    llm = ChatOpenAI(
+        openai_api_base="http://127.0.0.1:30000/v1",
+        model="glm-4",
+        openai_api_key="glm-4",
+        verbose=True,
+    )
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", """根据您提供的信息，您的性格特点可以总结如下：
+            (
+                "system",
+                """根据您提供的信息，您的性格特点可以总结如下：
     
 1. 热情和温柔：您在描述天气和气氛时使用了"温柔长裙风"这样的形容词，表现出您对温暖和舒适的情感。
 
@@ -48,14 +52,20 @@ def test_create_structured_output_runnable() -> None:
 
 总的来说，您的性格特点包括热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人。
         
-        """),
-            ("ai", """personality
-热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人"""),
+        """,
+            ),
+            (
+                "ai",
+                """personality
+热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人""",
+            ),
             ("human", "{input}"),
         ]
     )
     chain = create_structured_output_runnable(Personality, llm, prompt)
-    out = chain.invoke({"input": """根据您提供的信息，您的性格特点可以总结如下：
+    out = chain.invoke(
+        {
+            "input": """根据您提供的信息，您的性格特点可以总结如下：
     
 1. 热情和温柔：您在描述天气和气氛时使用了"温柔长裙风"这样的形容词，表现出您对温暖和舒适的情感。
 
@@ -69,7 +79,9 @@ def test_create_structured_output_runnable() -> None:
 
 6. 可能有一些难以理解的部分：在文本中也出现了一些不太清楚的情节，如呼救情节和提到"小肚小肚"，这可能表现出您的思维有时候会有些混乱或不太连贯。
 
-总的来说，您的性格特点包括热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人。"""})
+总的来说，您的性格特点包括热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人。"""
+        }
+    )
 
     logger.info(out)
     # -> Dog(name="Harry", color="brown", fav_food="chicken")

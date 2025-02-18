@@ -3,10 +3,10 @@
 
 """Utility functions for the OpenAI API."""
 
+import ast
 import json
 import logging
 import re
-import ast
 
 from json_repair import repair_json
 
@@ -70,9 +70,9 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
 
     # Remove JSON Markdown Frame
     if input.startswith("```"):
-        input = input[len("```"):]
+        input = input[len("```") :]
     if input.startswith("```json"):
-        input = input[len("```json"):]
+        input = input[len("```json") :]
     if input.endswith("```"):
         input = input[: len(input) - len("```")]
 
@@ -84,7 +84,6 @@ def try_parse_json_object(input: str) -> tuple[str, dict]:
 
         # Generate JSON-string output using best-attempt prompting & parsing techniques.
         try:
-
             if len(json_info) < len(input):
                 json_info, result = try_parse_ast_to_json(input)
             else:

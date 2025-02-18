@@ -48,42 +48,53 @@ MCTS中的约束规则如下，需要保证这些节点必须符合下面所定�
 
 """
 
-import random
+import logging
 import math
+import os
+import random
+import re
+import threading
 from collections import deque
-from enum import Enum 
+from enum import Enum
 from typing import Tuple
-from pydantic import BaseModel
-import tqdm
-from dreamsboard.engine.memory.mctsr.prompt import (
-    gpt_prompt_config,
-    RefineResponse,
-)
-from dreamsboard.engine.task_engine_builder.core import CodeGeneratorBuilder
-from dreamsboard.document_loaders.structured_storyboard_loader import LinkedListNode
 
-from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, BaseProgramGenerator
+import numpy as np
+import tqdm
+from langchain.prompts import PromptTemplate
 from langchain.schema import AIMessage
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.messages import (
+    BaseMessage,
+)
+from langchain_core.runnables import Runnable
+from pydantic import BaseModel
+
+from dreamsboard.common.callback import call_func
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
 from dreamsboard.document_loaders.kor_loader import KorLoader
 from dreamsboard.document_loaders.protocol.ner_protocol import TaskStepRefineNode
-from langchain.prompts import PromptTemplate
-from langchain_core.messages import ( 
-    BaseMessage,
+from dreamsboard.document_loaders.structured_storyboard_loader import (
+    LinkedListNode,
+    StructuredStoryboard,
 )
-from dreamsboard.dreams.task_step_md.prompts import TASK_MD_TEMPLATE,TASK_STEP_MD_TITLE_TEMPLATE,TASK_STEP_MD_DESC_TEMPLATE,TASK_STEP_MD_LIST_TEMPLATE, TASK_STEP_MD_TEMPLATE
-
-from langchain_core.language_models import LanguageModelInput
-from langchain_core.runnables import Runnable
+from dreamsboard.dreams.task_step_md.prompts import (
+    TASK_MD_TEMPLATE,
+    TASK_STEP_MD_DESC_TEMPLATE,
+    TASK_STEP_MD_LIST_TEMPLATE,
+    TASK_STEP_MD_TEMPLATE,
+    TASK_STEP_MD_TITLE_TEMPLATE,
+)
+from dreamsboard.engine.generate.code_generate import (
+    BaseProgramGenerator,
+    QueryProgramGenerator,
+)
+from dreamsboard.engine.memory.mctsr.prompt import (
+    RefineResponse,
+    gpt_prompt_config,
+)
 from dreamsboard.engine.storage.storage_context import StorageContext
-from dreamsboard.document_loaders.structured_storyboard_loader import StructuredStoryboard
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
-from dreamsboard.common.callback import (call_func)
-import numpy as np
-import logging
-import threading 
-import re
-import os
+from dreamsboard.engine.task_engine_builder.core import CodeGeneratorBuilder
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -97,46 +108,61 @@ logger.addHandler(handler)
 
 PATTERN = re.compile(r"thought:\s*(.*?)\nanswer:\s*([\d.]+)", re.DOTALL)
 
-PLAINTEXT_PATTERN = re.compile(r"```plaintext?([\s\S]*?)```[\s\S]*?answer: (\d+(\.\d+)?)", re.DOTALL)
+PLAINTEXT_PATTERN = re.compile(
+    r"```plaintext?([\s\S]*?)```[\s\S]*?answer: (\d+(\.\d+)?)", re.DOTALL
+)
 
-_PROMPT_TEMPLATE_1 = PromptTemplate(input_variables=[
-    "task_step_name",
-    "task_step_level",
-    "task_step_id",
-    "task_step_question_answer"],
-    template=TASK_STEP_MD_TITLE_TEMPLATE)
-_PROMPT_TEMPLATE_1_1 = PromptTemplate(input_variables=[
-    "task_step_name",
-    "task_step_level",
-    "task_step_id",
-    "task_step_question_answer"],
-    template=TASK_STEP_MD_DESC_TEMPLATE)
-_PROMPT_TEMPLATE_1_2 = PromptTemplate(input_variables=[
-    "task_step_name",
-    "task_step_level",
-    "task_step_id",
-    "task_step_question_answer"],
-    template=TASK_STEP_MD_LIST_TEMPLATE)
-_PROMPT_TEMPLATE_1_3 = PromptTemplate(input_variables=[
-    "task_step_name",
-    "task_step_level",
-    "task_step_id",
-    "task_step_question_answer"],
-    template=TASK_STEP_MD_TEMPLATE)
+_PROMPT_TEMPLATE_1 = PromptTemplate(
+    input_variables=[
+        "task_step_name",
+        "task_step_level",
+        "task_step_id",
+        "task_step_question_answer",
+    ],
+    template=TASK_STEP_MD_TITLE_TEMPLATE,
+)
+_PROMPT_TEMPLATE_1_1 = PromptTemplate(
+    input_variables=[
+        "task_step_name",
+        "task_step_level",
+        "task_step_id",
+        "task_step_question_answer",
+    ],
+    template=TASK_STEP_MD_DESC_TEMPLATE,
+)
+_PROMPT_TEMPLATE_1_2 = PromptTemplate(
+    input_variables=[
+        "task_step_name",
+        "task_step_level",
+        "task_step_id",
+        "task_step_question_answer",
+    ],
+    template=TASK_STEP_MD_LIST_TEMPLATE,
+)
+_PROMPT_TEMPLATE_1_3 = PromptTemplate(
+    input_variables=[
+        "task_step_name",
+        "task_step_level",
+        "task_step_id",
+        "task_step_question_answer",
+    ],
+    template=TASK_STEP_MD_TEMPLATE,
+)
 _PROMPT_TEMPLATE_2 = PromptTemplate(
     input_variables=[
         "start_task_context",
         "aemo_representation_context",
-        "context_placeholder"
+        "context_placeholder",
     ],
-    template=TASK_MD_TEMPLATE)
+    template=TASK_MD_TEMPLATE,
+)
 ROOT_UCT_SCORE = 10_000
 
 
 class MCTSNode(BaseModel):
     task_step_id: str
     answer: str
-    """当前任务的会话信息""" 
+    """当前任务的会话信息"""
     parent: MCTSNode | None = None
     children: list[MCTSNode] = []
     visits: int = 0
@@ -166,16 +192,13 @@ class SelectionPolicy(Enum):
     IMPORTANCE_SAMPLING = 2
     PAIRWISE_IMPORTANCE_SAMPLING = 3
 
- 
-
 
 class MCTSr(BaseModel):
-    
     base_path: str
     task_step_id: str
     """当前任务的id"""
     storage_context: StorageContext
-    """当前任务的会话存储""" 
+    """当前任务的会话存储"""
     llm_runable: Runnable[LanguageModelInput, BaseMessage]
     problem: str
     max_rollouts: int
@@ -184,7 +207,7 @@ class MCTSr(BaseModel):
     epsilon: float = 1e-10
     reward_limit: int = 95
     excess_reward_penalty: int = 5
-    selection_policy: SelectionPolicy = SelectionPolicy.GREEDY 
+    selection_policy: SelectionPolicy = SelectionPolicy.GREEDY
 
     root: MCTSNode | None = None
 
@@ -197,12 +220,14 @@ class MCTSr(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    @property 
+    @property
     def llm_runable(self) -> Runnable[LanguageModelInput, BaseMessage]:
         return self.llm_runable
 
     @llm_runable.setter
-    def llm_runable(self, llm_runable:Runnable[LanguageModelInput, BaseMessage]) -> None:
+    def llm_runable(
+        self, llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    ) -> None:
         self.llm_runable = llm_runable
 
     def self_refine(self, node: MCTSNode) -> Tuple[MCTSNode, RefineResponse]:
@@ -294,34 +319,35 @@ class MCTSr(BaseModel):
             return candidates[selected_candidate_idx]
         else:
             raise ValueError(f"Invalid selection policy: {self.selection_policy}")
- 
 
     def initialize(self):
-        """Generate a zero-shot answer.""" 
+        """Generate a zero-shot answer."""
         # 构建MCTS树,
-        structured_storyboard = _build_structured_storyboard(self.storage_context.task_step_store)
-            
+        structured_storyboard = _build_structured_storyboard(
+            self.storage_context.task_step_store
+        )
+
         linked_list_node = structured_storyboard.get_task_step_node(self.task_step_id)
         #  初始化当前节点self.root的上级节点
         mcts_tree = linked_list_to_tree(structured_storyboard.head)
 
-        matching_node = find_matching_node_in_tree_iterative(mcts_tree, linked_list_node)
+        matching_node = find_matching_node_in_tree_iterative(
+            mcts_tree, linked_list_node
+        )
         self.root = matching_node
 
-    def run(self): 
-          
+    def run(self):
         for _ in tqdm.tqdm(range(self.max_rollouts)):
             node = self.select_node()
             self.self_evaluate(node)
             child, refined_answer = self.self_refine(node)
             node.add_child(child)
-          
+
             if refined_answer.answer_score > self.reward_limit:
                 refined_answer.answer_score -= self.excess_reward_penalty
 
             child.add_reward(refined_answer.answer_score)
             self.backpropagate(child)
-
 
         owner = f"thread {threading.get_native_id()}, run end"
         logger.info(f"owner:{owner}")
@@ -345,161 +371,170 @@ class MCTSr(BaseModel):
         print_tree(self.root)
 
 
-
-class MCTSrStoryboard(MCTSr): 
+class MCTSrStoryboard(MCTSr):
     """
-    
+
     resource_id=f"resource_{node.task_step_id}"
     """
-    
+
     @staticmethod
     def _get_ai_message(callback, resource_id, **kwargs):
- 
-        code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=kwargs.get("storage_context"))
+        code_gen_builder = CodeGeneratorBuilder.from_template(
+            nodes=[], storage_context=kwargs.get("storage_context")
+        )
         _base_render_data = {
-            'system_prompt': kwargs.get("system_prompt"),
-            'messages': [kwargs.get("user_prompt")]
+            "system_prompt": kwargs.get("system_prompt"),
+            "messages": [kwargs.get("user_prompt")],
         }
-        code_gen_builder.add_generator(BaseProgramGenerator.from_config(cfg={
-            "code_file": "base_template_system.py-tpl",
-            "render_data": _base_render_data,
-        }))
+        code_gen_builder.add_generator(
+            BaseProgramGenerator.from_config(
+                cfg={
+                    "code_file": "base_template_system.py-tpl",
+                    "render_data": _base_render_data,
+                }
+            )
+        )
 
         executor = code_gen_builder.build_executor(
-            llm_runable=kwargs.get("llm_runable"),
-            messages=[]
+            llm_runable=kwargs.get("llm_runable"), messages=[]
         )
         executor.execute()
         _ai_message = executor.chat_run()
 
         logger.info("\033[1;32m" + f"{resource_id}: {_ai_message}" + "\033[0m")
-        assert executor._ai_message is not None 
+        assert executor._ai_message is not None
 
         callback(_ai_message)
 
     @staticmethod
-    def _wrapper_steps_unit(context_linked_list_node: LinkedListNode, continue_task_step_id: str):
+    def _wrapper_steps_unit(
+        context_linked_list_node: LinkedListNode, continue_task_step_id: str
+    ):
         # 使用 TASK_STEP_MD_TEMPLATE 格式化每个任务步骤
-        formatted_task_steps = [
-        ]
+        formatted_task_steps = []
         past_steps = []
 
-        past_steps.append(f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n')
+        past_steps.append(
+            f"{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n"
+        )
 
         # 计算层级关系
-        level_count = context_linked_list_node.task_step_level.count('>')
-        
+        level_count = context_linked_list_node.task_step_level.count(">")
+
         if level_count == 0:
             # 一级，格式化为标题 #
             step_text = _PROMPT_TEMPLATE_1.format(
-                task_step_name=f'### {context_linked_list_node.task_step_name}',
+                task_step_name=f"### {context_linked_list_node.task_step_name}",
                 task_step_level=context_linked_list_node.task_step_level,
                 task_step_description=context_linked_list_node.task_step_description,
                 task_step_id=context_linked_list_node.task_step_id,
-                task_step_question_answer=context_linked_list_node.task_step_question_answer
+                task_step_question_answer=context_linked_list_node.task_step_question_answer,
             )
-            formatted_task_steps.append(step_text.strip()+"\n\n")
+            formatted_task_steps.append(step_text.strip() + "\n\n")
         elif level_count == 1:
             # 二级，格式化为标题 ##
             step_text = _PROMPT_TEMPLATE_1_1.format(
-                task_step_name=f'{context_linked_list_node.task_step_name}',
+                task_step_name=f"{context_linked_list_node.task_step_name}",
                 task_step_level=context_linked_list_node.task_step_level,
                 task_step_description=context_linked_list_node.task_step_description,
                 task_step_id=context_linked_list_node.task_step_id,
-                task_step_question_answer=context_linked_list_node.task_step_question_answer
+                task_step_question_answer=context_linked_list_node.task_step_question_answer,
             )
-            formatted_task_steps.append(step_text.strip()+"\n\n")
-            
+            formatted_task_steps.append(step_text.strip() + "\n\n")
+
         elif level_count >= 2:
             # 三级及以上，格式化为分类 -
             step_text = _PROMPT_TEMPLATE_1_2.format(
-                task_step_name=f'- {context_linked_list_node.task_step_name}',
+                task_step_name=f"- {context_linked_list_node.task_step_name}",
                 task_step_level=context_linked_list_node.task_step_level,
                 task_step_description=context_linked_list_node.task_step_description,
                 task_step_id=context_linked_list_node.task_step_id,
-                task_step_question_answer=context_linked_list_node.task_step_question_answer
+                task_step_question_answer=context_linked_list_node.task_step_question_answer,
             )
-            formatted_task_steps.append(step_text.strip()+"\n\n")
+            formatted_task_steps.append(step_text.strip() + "\n\n")
 
         else:
             step_text = _PROMPT_TEMPLATE_1_3.format(
-                task_step_name=f'{context_linked_list_node.task_step_name}',
+                task_step_name=f"{context_linked_list_node.task_step_name}",
                 task_step_level=context_linked_list_node.task_step_level,
                 task_step_description=context_linked_list_node.task_step_description,
                 task_step_id=context_linked_list_node.task_step_id,
-                task_step_question_answer=context_linked_list_node.task_step_question_answer
+                task_step_question_answer=context_linked_list_node.task_step_question_answer,
             )
-        
+
             formatted_task_steps.append(step_text.strip())
 
-        while context_linked_list_node is not None and context_linked_list_node.next is not None:
+        while (
+            context_linked_list_node is not None
+            and context_linked_list_node.next is not None
+        ):
             if context_linked_list_node.task_step_id == continue_task_step_id:
                 break
             context_linked_list_node = context_linked_list_node.next
             # 计算层级关系
-            level_count = context_linked_list_node.task_step_level.count('>')
+            level_count = context_linked_list_node.task_step_level.count(">")
 
-            past_steps.append(f'{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n')
+            past_steps.append(
+                f"{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n"
+            )
 
-        
             if level_count == 0:
                 # 一级，格式化为标题 #
                 step_text = _PROMPT_TEMPLATE_1.format(
-                    task_step_name=f'### {context_linked_list_node.task_step_name}',
+                    task_step_name=f"### {context_linked_list_node.task_step_name}",
                     task_step_level=context_linked_list_node.task_step_level,
                     task_step_description=context_linked_list_node.task_step_description,
                     task_step_id=context_linked_list_node.task_step_id,
-                    task_step_question_answer=context_linked_list_node.task_step_question_answer
+                    task_step_question_answer=context_linked_list_node.task_step_question_answer,
                 )
-                formatted_task_steps.append(step_text.strip()+"\n\n")
+                formatted_task_steps.append(step_text.strip() + "\n\n")
 
             elif level_count == 1:
                 # 二级，格式化为标题 ##
                 step_text = _PROMPT_TEMPLATE_1_1.format(
-                    task_step_name=f'{context_linked_list_node.task_step_name}',
+                    task_step_name=f"{context_linked_list_node.task_step_name}",
                     task_step_level=context_linked_list_node.task_step_level,
                     task_step_description=context_linked_list_node.task_step_description,
                     task_step_id=context_linked_list_node.task_step_id,
-                    task_step_question_answer=context_linked_list_node.task_step_question_answer
+                    task_step_question_answer=context_linked_list_node.task_step_question_answer,
                 )
-                formatted_task_steps.append(step_text.strip()+"\n\n")
+                formatted_task_steps.append(step_text.strip() + "\n\n")
 
             elif level_count >= 2:
                 # 三级及以上，格式化为分类 -
                 step_text = _PROMPT_TEMPLATE_1_2.format(
-                    task_step_name=f'- {context_linked_list_node.task_step_name}',
+                    task_step_name=f"- {context_linked_list_node.task_step_name}",
                     task_step_level=context_linked_list_node.task_step_level,
                     task_step_description=context_linked_list_node.task_step_description,
                     task_step_id=context_linked_list_node.task_step_id,
-                    task_step_question_answer=context_linked_list_node.task_step_question_answer
+                    task_step_question_answer=context_linked_list_node.task_step_question_answer,
                 )
-                formatted_task_steps.append(step_text.strip()+"\n\n")
+                formatted_task_steps.append(step_text.strip() + "\n\n")
 
             else:
                 step_text = _PROMPT_TEMPLATE_1_3.format(
-                    task_step_name=f'{context_linked_list_node.task_step_name}',
+                    task_step_name=f"{context_linked_list_node.task_step_name}",
                     task_step_level=context_linked_list_node.task_step_level,
                     task_step_description=context_linked_list_node.task_step_description,
                     task_step_id=context_linked_list_node.task_step_id,
-                    task_step_question_answer=context_linked_list_node.task_step_question_answer
+                    task_step_question_answer=context_linked_list_node.task_step_question_answer,
                 )
-            
+
                 formatted_task_steps.append(step_text.strip())
-            
 
         # 将格式化的步骤列表转换为字符串
         context_placeholder = "".join(formatted_task_steps)
-        past_steps_placeholder = ''.join(past_steps)
+        past_steps_placeholder = "".join(past_steps)
         return context_placeholder, past_steps_placeholder
 
-    def self_refine(self, node: MCTSNode) ->  Tuple[MCTSNode, RefineResponse]:
+    def self_refine(self, node: MCTSNode) -> Tuple[MCTSNode, RefineResponse]:
         """
         自我反思
         """
 
-        critic_system_prompt_template =  PromptTemplate(
+        critic_system_prompt_template = PromptTemplate(
             input_variables=[
-                "problem", 
+                "problem",
                 "current_answer",
                 "context",
                 "past_steps",
@@ -507,18 +542,24 @@ class MCTSrStoryboard(MCTSr):
                 "aemo_representation_context",
                 "task_step_name",
                 "task_step_description",
-                "task_step_level"
+                "task_step_level",
             ],
             template=os.environ.get(
-                "critic_system_prompt_data", gpt_prompt_config.critic_system_prompt_data 
-            )
-        ) 
+                "critic_system_prompt_data", gpt_prompt_config.critic_system_prompt_data
+            ),
+        )
 
-        structured_storyboard = _build_structured_storyboard(self.storage_context.task_step_store)
-             
+        structured_storyboard = _build_structured_storyboard(
+            self.storage_context.task_step_store
+        )
+
         context_linked_list_node = structured_storyboard.head
-        past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.task_step_id)
-        task_step_node = self.storage_context.task_step_store.get_task_step(self.task_step_id)
+        past_context, past_steps = self._wrapper_steps_unit(
+            context_linked_list_node, node.task_step_id
+        )
+        task_step_node = self.storage_context.task_step_store.get_task_step(
+            self.task_step_id
+        )
         user_prompt = critic_system_prompt_template.format(
             problem=self.problem,
             current_answer=node.answer,
@@ -528,33 +569,32 @@ class MCTSrStoryboard(MCTSr):
             aemo_representation_context=task_step_node.aemo_representation_context,
             task_step_name=task_step_node.task_step_name,
             task_step_description=task_step_node.task_step_description,
-            task_step_level=task_step_node.task_step_level
-        ) 
+            task_step_level=task_step_node.task_step_level,
+        )
 
-             
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
-        
+
         results = call_func(
             self._get_ai_message,
             resource_id=f"resource_critic_{self.task_step_id}",
             kwargs={
-                    "llm_runable": self.llm_runable,
-                    "system_prompt": gpt_prompt_config.critic_system_prompt,
-                    "user_prompt": user_prompt,
-                    "storage_context": self.storage_context,
-                },
+                "llm_runable": self.llm_runable,
+                "system_prompt": gpt_prompt_config.critic_system_prompt,
+                "user_prompt": user_prompt,
+                "storage_context": self.storage_context,
+            },
         )
-  
+
         _ai_message = results[0]
         assert _ai_message.content is not None
         critique = _ai_message.content
         assert critique is not None
         self.critiques.append(critique)
-   
+
         refine_system_prompt_template = PromptTemplate(
             input_variables=[
-                "problem", 
+                "problem",
                 "current_answer",
                 "critique",
                 "context",
@@ -562,36 +602,38 @@ class MCTSrStoryboard(MCTSr):
             ],
             template=os.environ.get(
                 "refine_system_prompt_data", gpt_prompt_config.refine_system_prompt_data
-            )
+            ),
         )
         refine_system_prompt = refine_system_prompt_template.format(
             problem=self.problem,
             current_answer=node.answer,
             critique=critique,
             context=past_context,
-            past_steps=past_steps
+            past_steps=past_steps,
         )
- 
+
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
-        
+
         results = call_func(
             self._get_ai_message,
             resource_id=f"resource_refine_{node.task_step_id}",
             kwargs={
-                    "llm_runable": self.llm_runable,
-                    "system_prompt": gpt_prompt_config.refine_system_prompt,
-                    "user_prompt": refine_system_prompt,
-                    "storage_context": self.storage_context,
-                },
+                "llm_runable": self.llm_runable,
+                "system_prompt": gpt_prompt_config.refine_system_prompt,
+                "user_prompt": refine_system_prompt,
+                "storage_context": self.storage_context,
+            },
         )
-  
-        _refined_answer_response_message = results[0] 
+
+        _refined_answer_response_message = results[0]
         assert _refined_answer_response_message.content is not None
-            
+
         json_object = {}
         try:
-            task_step_refine_node_list = self._kor_task_step_refine_builder(_refined_answer_response_message)
+            task_step_refine_node_list = self._kor_task_step_refine_builder(
+                _refined_answer_response_message
+            )
             # 将列表answer_score平均
             answer_score_list: list[float] = []
             for task_step_refine_node in task_step_refine_node_list:
@@ -603,16 +645,18 @@ class MCTSrStoryboard(MCTSr):
             if answer_score <= 1:
                 answer_score = answer_score * 100
 
-            json_object.update({
-                "thought": task_step_refine_node_list[0].thought,
-                "answer": task_step_refine_node_list[0].answer,
-                "answer_score": answer_score
-            })
-        except Exception as e: 
+            json_object.update(
+                {
+                    "thought": task_step_refine_node_list[0].thought,
+                    "answer": task_step_refine_node_list[0].answer,
+                    "answer_score": answer_score,
+                }
+            )
+        except Exception as e:
             json_object = {
                 "thought": "解析失败",
                 "answer": node.answer,
-                "answer_score": 0
+                "answer_score": 0,
             }
 
         logger.info("\033[1;32m" + f"解析后的 JSON 对象: {json_object}" + "\033[0m")
@@ -620,92 +664,104 @@ class MCTSrStoryboard(MCTSr):
         self.refinements.append(refined_answer)
 
         # ```thought \n{refined_answer.thought} ```\n\n ```answer_score \n{refined_answer.answer_score} ```
-        return MCTSNode( 
+        return MCTSNode(
             answer=f"{refined_answer.answer}",
-            task_step_id=self.task_step_id, 
+            task_step_id=self.task_step_id,
             parent=node,
             children=[],
             visits=0,
             Q=0,
-            reward_samples=[]
+            reward_samples=[],
         ), refined_answer
 
     def _evaluate_answer(self, node: MCTSNode) -> int:
         """
         评估答案
-        """ 
- 
+        """
+
         evaluate_system_prompt_template = PromptTemplate(
-            input_variables=[
-                "problem", 
-                "past_steps", 
-                "context", 
-                "answer"
-            ],
+            input_variables=["problem", "past_steps", "context", "answer"],
             template=os.environ.get(
-                "evaluate_system_prompt_data", gpt_prompt_config.evaluate_system_prompt_data
-            )
+                "evaluate_system_prompt_data",
+                gpt_prompt_config.evaluate_system_prompt_data,
+            ),
         )
-        structured_storyboard = _build_structured_storyboard(self.storage_context.task_step_store)
-             
+        structured_storyboard = _build_structured_storyboard(
+            self.storage_context.task_step_store
+        )
+
         context_linked_list_node = structured_storyboard.head
-        past_context,past_steps = self._wrapper_steps_unit(context_linked_list_node, node.task_step_id)
+        past_context, past_steps = self._wrapper_steps_unit(
+            context_linked_list_node, node.task_step_id
+        )
 
         user_prompt = evaluate_system_prompt_template.format(
             problem=self.problem,
             answer=node.answer,
             context=past_context,
-            past_steps=past_steps
+            past_steps=past_steps,
         )
-        
+
         for attempt in range(3):
             try:
-                        
                 owner = f"register_event thread {threading.get_native_id()}, _evaluate_answer"
                 logger.info(f"owner:{owner}")
-                
+
                 results = call_func(
                     self._get_ai_message,
                     resource_id=f"resource_evaluate_{node.task_step_id}",
                     kwargs={
-                            "llm_runable": self.llm_runable,
-                            "system_prompt": gpt_prompt_config.evaluate_system_prompt,
-                            "user_prompt": user_prompt,
-                            "storage_context": self.storage_context,
-                        },
+                        "llm_runable": self.llm_runable,
+                        "system_prompt": gpt_prompt_config.evaluate_system_prompt,
+                        "user_prompt": user_prompt,
+                        "storage_context": self.storage_context,
+                    },
                 )
-         
-                _ai_message = results[0]  
-                
-                owner = f"event end thread {threading.get_native_id()}, _evaluate_answer"
+
+                _ai_message = results[0]
+
+                owner = (
+                    f"event end thread {threading.get_native_id()}, _evaluate_answer"
+                )
                 logger.info(f"owner:{owner}")
                 assert _ai_message.content is not None
                 return int(_ai_message.content)
-            except ValueError: 
-                user_prompt = f"{_ai_message.content}\n\nFailed to parse reward as an integer."
-               
+            except ValueError:
+                user_prompt = (
+                    f"{_ai_message.content}\n\nFailed to parse reward as an integer."
+                )
+
                 if attempt == 2:
                     raise
-    
-    
-    def _kor_task_step_refine_builder(self, refined_answer_response_message: AIMessage) -> list[TaskStepRefineNode]:
+
+    def _kor_task_step_refine_builder(
+        self, refined_answer_response_message: AIMessage
+    ) -> list[TaskStepRefineNode]:
         """
         抽取根据批评意见优化当前回答并续写上下文内容
         """
-        kor_task_step_refine_builder = KorLoader.form_kor_task_step_refine_builder(self.llm_runable)
-        response = kor_task_step_refine_builder.run(refined_answer_response_message.content)
+        kor_task_step_refine_builder = KorLoader.form_kor_task_step_refine_builder(
+            self.llm_runable
+        )
+        response = kor_task_step_refine_builder.run(
+            refined_answer_response_message.content
+        )
         task_step_refine_node_list = []
-        if response.get('data') is not None and response.get('data').get('script') is not None:
-            step_list = response.get('data').get('script')
+        if (
+            response.get("data") is not None
+            and response.get("data").get("script") is not None
+        ):
+            step_list = response.get("data").get("script")
             for step in step_list:
                 task_step_refine_node = TaskStepRefineNode(
-                                            thought=step.get('thought'),
-                                            answer=step.get('answer'),
-                                            answer_socre=step.get('answer_socre')
-                                            )
+                    thought=step.get("thought"),
+                    answer=step.get("answer"),
+                    answer_socre=step.get("answer_socre"),
+                )
                 task_step_refine_node_list.append(task_step_refine_node)
 
         return task_step_refine_node_list
+
 
 def print_tree(node: MCTSNode | None, level: int = 0):
     if node is None:
@@ -717,15 +773,15 @@ def print_tree(node: MCTSNode | None, level: int = 0):
     for child in node.children:
         print_tree(child, level + 1)
 
- 
-    
-def _build_structured_storyboard(task_step_store: BaseTaskStepStore) -> StructuredStoryboard:
+
+def _build_structured_storyboard(
+    task_step_store: BaseTaskStepStore,
+) -> StructuredStoryboard:
     task_step_all = task_step_store.task_step_all
     task_step_all_list = [val.__dict__ for val in list(task_step_all.values())]
-    structured_storyboard = StructuredStoryboard(json_data=task_step_all_list) 
+    structured_storyboard = StructuredStoryboard(json_data=task_step_all_list)
 
     return structured_storyboard
-
 
 
 # 链表转树的函数
@@ -737,23 +793,23 @@ def linked_list_to_tree(linked_list_head):
     def build_tree(node: LinkedListNode, parent: MCTSNode = None):
         if node is None:
             return None
-        
+
         # 为当前链表节点创建树节点
         mcts_node = MCTSNode(
             task_step_id=node.task_step_id,
             answer=node.task_step_question_answer,
-            children=[], 
-            visits=0, 
-            Q=0, 
+            children=[],
+            visits=0,
+            Q=0,
             reward_samples=[],
-            parent=parent
+            parent=parent,
         )
-        
+
         # 如果有下一个节点，继续递归构建子节点
         if node.next:
             child_node = build_tree(node.next, mcts_node)
             mcts_node.children.append(child_node)
-        
+
         return mcts_node
 
     # 从链表头开始构建树

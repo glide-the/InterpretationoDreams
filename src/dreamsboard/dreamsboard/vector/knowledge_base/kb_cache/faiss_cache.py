@@ -1,12 +1,12 @@
 import os
 
 from langchain.schema import Document
-from langchain_community.vectorstores.faiss import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
- 
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores.faiss import FAISS
+
 from dreamsboard.vector.knowledge_base.kb_cache.base import *
 
-from langchain_community.embeddings import HuggingFaceEmbeddings
 
 # patch FAISS to include doc id in Document.metadata
 def _new_ds_search(self, search: str) -> Union[str, Document]:
@@ -53,10 +53,10 @@ class _FaissPool(CachePool):
     def new_vector_store(
         self,
         embed_model: str,
-        device: str = 'cpu',
+        device: str = "cpu",
     ) -> FAISS:
         # create an empty vector store
-        model_kwargs = {'device': device}
+        model_kwargs = {"device": device}
         embeddings = HuggingFaceEmbeddings(
             model_name=embed_model,
             model_kwargs=model_kwargs,
@@ -85,7 +85,7 @@ class KBFaissPool(_FaissPool):
         embed_model: str,
         vector_name: str = None,
         create: bool = True,
-        device: str = 'cpu'
+        device: str = "cpu",
     ) -> ThreadSafeFaiss:
         self.atomic.acquire()
         locked = True
@@ -101,10 +101,10 @@ class KBFaissPool(_FaissPool):
                     logger.info(
                         f"loading vector store in '{kb_name}/vector_store/{vector_name}' from disk."
                     )
-                    vs_path = os.path.join(kb_name, "vector_store", vector_name) 
+                    vs_path = os.path.join(kb_name, "vector_store", vector_name)
 
-                    if os.path.isfile(os.path.join(vs_path, "index.faiss")): 
-                        model_kwargs = {'device': device}
+                    if os.path.isfile(os.path.join(vs_path, "index.faiss")):
+                        model_kwargs = {"device": device}
                         embeddings = HuggingFaceEmbeddings(
                             model_name=embed_model,
                             model_kwargs=model_kwargs,
@@ -121,7 +121,7 @@ class KBFaissPool(_FaissPool):
                         if not os.path.exists(vs_path):
                             os.makedirs(vs_path)
                         vector_store = self.new_vector_store(
-                             embed_model=embed_model, device=device
+                            embed_model=embed_model, device=device
                         )
                         vector_store.save_local(vs_path)
                     else:
@@ -138,7 +138,5 @@ class KBFaissPool(_FaissPool):
             raise RuntimeError(f"向量库 {kb_name} 加载失败。")
         return self.get((kb_name, vector_name))
 
- 
 
-kb_faiss_pool = KBFaissPool(cache_num=1) 
- 
+kb_faiss_pool = KBFaissPool(cache_num=1)

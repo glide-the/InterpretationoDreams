@@ -1,4 +1,3 @@
-
 COSPLAY_ANALYSIS_MD_TEMPLATE = """
 
 

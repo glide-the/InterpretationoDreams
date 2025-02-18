@@ -1,14 +1,13 @@
-from typing import Type, Dict
+from typing import Dict, Type
 
 from dreamsboard.engine.generate.code_generate import (
-    CodeGenerator,
-    BaseProgramGenerator,
-    QueryProgramGenerator,
     AIProgramGenerator,
+    BaseProgramGenerator,
+    CodeGenerator,
     EngineProgramGenerator,
+    QueryProgramGenerator,
 )
 from dreamsboard.engine.schema import ObjectTemplateType
-
 
 TEMPLATE_TYPE_TO_GENERATOR_CLASS: Dict[ObjectTemplateType, Type[CodeGenerator]] = {
     ObjectTemplateType.BaseProgramGenerator: BaseProgramGenerator,

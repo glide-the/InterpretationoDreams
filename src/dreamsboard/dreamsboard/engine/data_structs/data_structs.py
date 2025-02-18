@@ -1,11 +1,11 @@
+import uuid
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from dataclasses_json import DataClassJsonMixin
 from typing import Dict, List, Optional, Sequence, Set
 
-from dreamsboard.engine.data_structs.struct_type import IndexStructType
-import uuid
+from dataclasses_json import DataClassJsonMixin
 
+from dreamsboard.engine.data_structs.struct_type import IndexStructType
 from dreamsboard.engine.schema import BaseNode
 
 
@@ -37,9 +37,9 @@ class IndexDict(IndexStruct):
     nodes_dict: Dict[str, str] = field(default_factory=dict)
 
     def add_node(
-            self,
-            node: BaseNode,
-            text_id: Optional[str] = None,
+        self,
+        node: BaseNode,
+        text_id: Optional[str] = None,
     ) -> str:
         """Add text to table, return current position in list."""
         # # don't worry about child indices for now, nodes are all in order

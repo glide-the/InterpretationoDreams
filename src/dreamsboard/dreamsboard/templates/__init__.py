@@ -1,7 +1,6 @@
-
-from dreamsboard.common.registry import registry
 import os
 
+from dreamsboard.common.registry import registry
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 registry.register_path("templates_library_root", root_dir)

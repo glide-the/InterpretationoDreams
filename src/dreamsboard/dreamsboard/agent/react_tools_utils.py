@@ -1,5 +1,5 @@
 def save_questions(questions, path):
-    with open(path, "w", encoding='utf-8') as f:
+    with open(path, "w", encoding="utf-8") as f:
         for question in questions:
             f.write(question + "\n")
 

@@ -1,20 +1,22 @@
 from __future__ import annotations
-from langchain_core.messages import ( 
+
+from typing import Union
+
+from kor.extraction import create_extraction_chain
+from kor.nodes import Number, Object, Text
+from langchain.chains import LLMChain
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.messages import (
     BaseMessage,
 )
-from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
-from kor.extraction import create_extraction_chain
-from kor.nodes import Object, Text, Number
-from langchain.chains import LLMChain
-from typing import Union
 
 
 class KorLoader:
-
     @classmethod
-    def form_kor_dreams_guidance_builder(cls,
-                                         llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
+    def form_kor_dreams_guidance_builder(
+        cls, llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    ) -> LLMChain:
         """
         生成开放问题的抽取链
         :param llm:
@@ -27,12 +29,12 @@ class KorLoader:
             attributes=[
                 Text(
                     id="step_advice",
-                    description='''在这一步骤中提供的建议，例如“我想说这样的话：‘我理解这对你来说是一个困难的情况。’” ''',
+                    description="""在这一步骤中提供的建议，例如“我想说这样的话：‘我理解这对你来说是一个困难的情况。’” """,
                 ),
                 Text(
                     id="step_description",
                     description="""咨询步骤的描述，例如“建立信任”""",
-                )
+                ),
             ],
             examples=[
                 (
@@ -63,14 +65,30 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
 
 通过这种方式，您可以引导来访者自由表达他们的情感和思维，帮助他们更好地理解自己和他们与他人的互动。同时，保持开放和倾听，以便在需要时提供支持和建议。""",
                     [
-                        {"step_advice": "我注意到这个对话中有许多愉快的时刻和互动。你对这些时刻有什么特别的感受吗？",
-                         "step_description": "建立情感连接"},
-                        {"step_advice": "在这个对话中，有哪些瞬间让你感到开心或快乐?", "step_description": "探索来访者的感受"},
-                        {"step_advice": "除了快乐的瞬间，是否有一些让你感到不安或担忧的地方？",
-                         "step_description": "询问是否有反感情绪"},
-                        {"step_advice": "你觉得自己在这些互动中扮演了什么角色?", "step_description": "深入探讨个人反应"},
-                        {"step_advice": "这些互动对你与他人的关系有什么影响？你觉得与朋友之间的互动如何影响你的情感状态?", "step_description": "探索与他人的互动"},
-                        {"step_advice": "在这个故事场景中，你是否注意到了自己的情感变化或思维模式？有没有什么你想要深入探讨或解决的问题?", "step_description": "引导自我反思"},
+                        {
+                            "step_advice": "我注意到这个对话中有许多愉快的时刻和互动。你对这些时刻有什么特别的感受吗？",
+                            "step_description": "建立情感连接",
+                        },
+                        {
+                            "step_advice": "在这个对话中，有哪些瞬间让你感到开心或快乐?",
+                            "step_description": "探索来访者的感受",
+                        },
+                        {
+                            "step_advice": "除了快乐的瞬间，是否有一些让你感到不安或担忧的地方？",
+                            "step_description": "询问是否有反感情绪",
+                        },
+                        {
+                            "step_advice": "你觉得自己在这些互动中扮演了什么角色?",
+                            "step_description": "深入探讨个人反应",
+                        },
+                        {
+                            "step_advice": "这些互动对你与他人的关系有什么影响？你觉得与朋友之间的互动如何影响你的情感状态?",
+                            "step_description": "探索与他人的互动",
+                        },
+                        {
+                            "step_advice": "在这个故事场景中，你是否注意到了自己的情感变化或思维模式？有没有什么你想要深入探讨或解决的问题?",
+                            "step_description": "引导自我反思",
+                        },
                     ],
                 )
             ],
@@ -81,8 +99,9 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
         return chain
 
     @classmethod
-    def form_kor_dreams_personality_builder(cls,
-                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
+    def form_kor_dreams_personality_builder(
+        cls, llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    ) -> LLMChain:
         """
         生成性格分析的抽取链
         :param llm:
@@ -94,12 +113,12 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
             attributes=[
                 Text(
                     id="personality",
-                    description='''包含的性格评价，例如：“率真和直接、愿意与人互动并享受社交乐趣、对预期之外的情况敏感” ''',
+                    description="""包含的性格评价，例如：“率真和直接、愿意与人互动并享受社交乐趣、对预期之外的情况敏感” """,
                 ),
                 Text(
                     id="subj",
-                    description='''包含的特定人物，例如：“张毛峰” ''',
-                )
+                    description="""包含的特定人物，例如：“张毛峰” """,
+                ),
             ],
             examples=[
                 (
@@ -122,7 +141,9 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
             
             """,
                     [
-                        {"personality": "热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人"}
+                        {
+                            "personality": "热情、情感表达能力、好奇心、幽默感、亲情关怀以及乐于分享和帮助他人"
+                        }
                     ],
                 ),
                 (
@@ -144,8 +165,14 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
             
             """,
                     [
-                        {"personality": "率真和直接、愿意与人互动并享受社交乐趣、对预期之外的情况敏感", "subj": "张毛峰"},
-                        {"personality": "对自我形象有着不确定、能够在交流中表达积极的情感、对社会反馈，尤其是潜在的负面反馈较为敏感", "subj": "露ᥫᩣ"},
+                        {
+                            "personality": "率真和直接、愿意与人互动并享受社交乐趣、对预期之外的情况敏感",
+                            "subj": "张毛峰",
+                        },
+                        {
+                            "personality": "对自我形象有着不确定、能够在交流中表达积极的情感、对社会反馈，尤其是潜在的负面反馈较为敏感",
+                            "subj": "露ᥫᩣ",
+                        },
                     ],
                 ),
                 (
@@ -159,22 +186,26 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
 综上所述，张毛峰和露ᥫᩣ在对话中表现出的是一种现代社交网络下成熟的交流方式，他们性格中包含了幽默感、社交技巧、适应性和直接性等特征。这些特点使他们能够在数字媒介主导的社交环境中游刃有余。
             """,
                     [
-                        {"personality": "幽默感、社交技巧、适应性和直接性等特征、在社交场合中可能是受欢迎和具有亲和力的人",
-                         "subj": "张毛峰"},
-                        {"personality":  "幽默感、社交技巧、适应性和直接性等特征、在社交场合中可能是受欢迎和具有亲和力的人、",
-                         "subj": "露ᥫᩣ"},
+                        {
+                            "personality": "幽默感、社交技巧、适应性和直接性等特征、在社交场合中可能是受欢迎和具有亲和力的人",
+                            "subj": "张毛峰",
+                        },
+                        {
+                            "personality": "幽默感、社交技巧、适应性和直接性等特征、在社交场合中可能是受欢迎和具有亲和力的人、",
+                            "subj": "露ᥫᩣ",
+                        },
                     ],
-                )
+                ),
             ],
             many=True,
         )
         chain = create_extraction_chain(llm_runable, schema)
         return chain
 
-
     @classmethod
-    def form_kor_dreams_task_step_builder(cls,
-                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> Union[LLMChain,Object]:
+    def form_kor_dreams_task_step_builder(
+        cls, llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    ) -> Union[LLMChain, Object]:
         """
         生成任务步骤的抽取链
         :param llm:
@@ -187,7 +218,7 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
             attributes=[
                 Text(
                     id="task_step_name",
-                    description='''提取步骤的名称，例如"分析近几年研究领域的技术框架与方法论"、"基于规则的方法"、"研究论文中采用的主要框架"、"Transformer"等''',
+                    description="""提取步骤的名称，例如"分析近几年研究领域的技术框架与方法论"、"基于规则的方法"、"研究论文中采用的主要框架"、"Transformer"等""",
                 ),
                 Text(
                     id="task_step_description",
@@ -196,7 +227,7 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
                 Text(
                     id="task_step_level",
                     description="""提取步骤的层级编号，只有root>child层级，例如"0"、"0>1"、"0>2"、"1"、"1>1"、"1>2"等""",
-                )
+                ),
             ],
             examples=[
                 (
@@ -255,41 +286,41 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
                         {
                             "task_step_description": "Text2SQL 是将自然语言查询（NLQ）转换为结构化查询语言（SQL）的任务，近年来在数据库和自然语言处理（NLP）领域受到广泛关注。主要技术框架和方法论包括：",
                             "task_step_name": "Text2SQL 研究现状与挑战",
-                            "task_step_level": "0"
+                            "task_step_level": "0",
                         },
                         {
                             "task_step_description": "早期方法依赖于手工编写的规则和模板，将自然语言映射到 SQL。这种方法在小规模、特定领域的数据库上表现良好，但缺乏泛化能力。",
                             "task_step_name": "基于规则的方法",
-                            "task_step_level": "0>1"
+                            "task_step_level": "0>1",
                         },
                         {
                             "task_step_description": "随着机器学习的发展，统计模型（如序列到序列模型）被引入，通过学习大量标注数据来生成 SQL 查询。",
                             "task_step_name": "基于统计的方法",
-                            "task_step_level": "0>2"
+                            "task_step_level": "0>2",
                         },
                         {
                             "task_step_description": "Transformer 模型在 Text2SQL 任务中表现出色，特别是在处理长文本和复杂查询时。通过自注意力机制，Transformer 能够捕捉自然语言和数据库模式之间的复杂关系。",
                             "task_step_name": "研究论文中采用的主要框架",
-                            "task_step_level": "1"
+                            "task_step_level": "1",
                         },
                         {
                             "task_step_description": "BERT 及其变体（如 RoBERTa、ALBERT）通过预训练语言模型，显著提升了模型对自然语言的理解能力。在 Text2SQL 任务中，BERT 通常用于编码自然语言查询和数据库模式。",
                             "task_step_name": "BERT",
-                            "task_step_level": "1>1"
-                        }
-                    ]
+                            "task_step_level": "1>1",
+                        },
+                    ],
                 )
             ],
-            many=True
+            many=True,
         )
-
 
         chain = create_extraction_chain(llm_runable, schema)
         return chain, schema
 
     @classmethod
-    def form_kor_task_step_refine_builder(cls,
-                                            llm_runable: Runnable[LanguageModelInput, BaseMessage]) -> LLMChain:
+    def form_kor_task_step_refine_builder(
+        cls, llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    ) -> LLMChain:
         """
         抽取批评意见优化当前回答并续写上下文内容
         :param llm:
@@ -302,7 +333,7 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
             attributes=[
                 Text(
                     id="thought",
-                    description='''提取优化后的回答的内容''',
+                    description="""提取优化后的回答的内容""",
                 ),
                 Text(
                     id="answer",
@@ -311,7 +342,7 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
                 Text(
                     id="answer_socre",
                     description="""提取答案评分分数。 转换为浮点数,例如95/100转换为 0.95""",
-                )
+                ),
             ],
             examples=[
                 (
@@ -366,11 +397,10 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
 6. **评估与基准**：
    - **具体标准**：如ImageNet图像分类任务、SQuAD文本问答数据集等，提供了统一的评估标准和基准，帮助研究者客观评估多模态模型的性能。""",
                             "answer": "此外，早期探索与基础构建阶段不仅在技术上为多模态融合提供了坚实的基础，还在方法论和思维模式上为后续研究提供了重要的启示。例如，从单一模态的特征提取和模型优化中汲取的经验，被广泛应用到多模态融合中，提升了融合效果。同时，早期研究推动了从单一模态的独立研究转向多模态融合的系统性思维，促进了多模态大模型的快速发展。",
-                            "answer_socre": "0.95"
+                            "answer_socre": "0.95",
                         }
-                    ]
+                    ],
                 ),
-                
                 (
                     """### 优化后的回答：
 
@@ -442,16 +472,13 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
 
 通过这些深入的研究，多模态大模型不仅在技术上取得了显著进展，也在实际应用中展示了巨大的潜力，如智能客服、自动驾驶和医疗诊断等领域。未来，随着技术的不断进步，多模态大模型有望在更多领域发挥重要作用，推动人工智能的全面发展。
 """,
-                            "answer_socre": "0.95"
+                            "answer_socre": "0.95",
                         }
-                    ]
-                )
+                    ],
+                ),
             ],
-            many=True
+            many=True,
         )
-
 
         chain = create_extraction_chain(llm_runable, schema)
         return chain
-
-

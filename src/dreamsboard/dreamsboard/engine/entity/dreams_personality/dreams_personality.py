@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from abc import abstractmethod, ABC
-from typing import Any, Optional, Dict
-
 import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
 from pydantic import Field
 
@@ -22,18 +21,15 @@ logger.addHandler(handler)
 
 class DreamsPersonalityNode(BaseNode, ABC):
     """心里分析信息节点"""
+
     story_scenario_context: Optional[str] = Field(
         default="", description="开放问题 故事情境"
     )
     scene_monologue_context: Optional[str] = Field(
         default="", description="开放问题 故事场景"
     )
-    user_id: Optional[str] = Field(
-        default="", description="开放问题user_id"
-    )
-    scene_content: Optional[str] = Field(
-        default="", description="开放问题 文本内容"
-    )
+    user_id: Optional[str] = Field(default="", description="开放问题user_id")
+    scene_content: Optional[str] = Field(default="", description="开放问题 文本内容")
     story_board_summary_context: Optional[str] = Field(
         default="", description="开放问题 人物对话"
     )
@@ -41,26 +37,31 @@ class DreamsPersonalityNode(BaseNode, ABC):
         default="", description="开放性问题dreams_guidance_context"
     )
     evolutionary_step: Optional[str] = Field(
-        default="", description="性格信息 剧情总结",
+        default="",
+        description="性格信息 剧情总结",
     )
     dreams_personality_context: Optional[str] = Field(
-        default="", description="性格信息dreams_personality_context",
+        default="",
+        description="性格信息dreams_personality_context",
     )
     ref_analysis_id: Optional[str] = Field(
-        default="", description="ref_analysis_id",
+        default="",
+        description="ref_analysis_id",
     )
 
-    def __init__(self,
-                 story_scenario_context: str = None,
-                 scene_monologue_context: str = None,
-                 user_id: str = None,
-                 scene_content: str = None,
-                 story_board_summary_context: str = None,
-                 dreams_guidance_context: str = None,
-                 evolutionary_step: str = None,
-                 dreams_personality_context=None,
-                 ref_analysis_id: str = None,
-                 **kwargs):
+    def __init__(
+        self,
+        story_scenario_context: str = None,
+        scene_monologue_context: str = None,
+        user_id: str = None,
+        scene_content: str = None,
+        story_board_summary_context: str = None,
+        dreams_guidance_context: str = None,
+        evolutionary_step: str = None,
+        dreams_personality_context=None,
+        ref_analysis_id: str = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.story_scenario_context = story_scenario_context
         self.scene_monologue_context = scene_monologue_context
@@ -71,6 +72,7 @@ class DreamsPersonalityNode(BaseNode, ABC):
         self.dreams_guidance_context = dreams_guidance_context
         self.dreams_personality_context = dreams_personality_context
         self.ref_analysis_id = ref_analysis_id
+
     @classmethod
     def from_config(cls, cfg=None):
         if cfg is None:
@@ -93,7 +95,7 @@ class DreamsPersonalityNode(BaseNode, ABC):
             evolutionary_step=evolutionary_step,
             dreams_guidance_context=dreams_guidance_context,
             dreams_personality_context=dreams_personality_context,
-            ref_analysis_id=ref_analysis_id
+            ref_analysis_id=ref_analysis_id,
         )
 
     @classmethod
@@ -114,15 +116,17 @@ class DreamsPersonalityNode(BaseNode, ABC):
 
     @property
     def template_content(self) -> str:
-        return f"story_scenario_context: {self.story_scenario_context}, " \
-               f"scene_monologue_context: {self.scene_monologue_context}, " \
-               f"user_id: {self.user_id}, " \
-               f"scene_content: {self.scene_content}, " \
-               f"story_board_summary_context: {self.story_board_summary_context}, " \
-               f"dreams_guidance_context: {self.dreams_guidance_context}, " \
-               f"evolutionary_step: {self.evolutionary_step}, " \
-               f"dreams_personality_context: {self.dreams_personality_context}, " \
-               f"ref_analysis_id: {self.ref_analysis_id}"
+        return (
+            f"story_scenario_context: {self.story_scenario_context}, "
+            f"scene_monologue_context: {self.scene_monologue_context}, "
+            f"user_id: {self.user_id}, "
+            f"scene_content: {self.scene_content}, "
+            f"story_board_summary_context: {self.story_board_summary_context}, "
+            f"dreams_guidance_context: {self.dreams_guidance_context}, "
+            f"evolutionary_step: {self.evolutionary_step}, "
+            f"dreams_personality_context: {self.dreams_personality_context}, "
+            f"ref_analysis_id: {self.ref_analysis_id}"
+        )
 
     @template_content.setter
     def template_content(self, _template_content) -> None:

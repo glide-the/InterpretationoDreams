@@ -1,11 +1,13 @@
-from typing import Dict, List, Optional, Union, Any
-from typing_extensions import Self
-from abc import abstractmethod
-from pydantic import BaseModel, Field
-from enum import Enum, auto
-import uuid
 import json
 import logging
+import uuid
+from abc import abstractmethod
+from enum import Enum, auto
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field
+from typing_extensions import Self
+
 logger = logging.getLogger(__name__)
 # NOTE: for pretty printing
 TRUNCATE_LENGTH = 350
@@ -176,9 +178,14 @@ class BaseNode(BaseComponent):
         node_type = None
         try:
             node_type = ObjectTemplateType[self.get_type()]
-            logger.info(f"The corresponding enum value for '{self.get_type()}' is: {node_type}")
+            logger.info(
+                f"The corresponding enum value for '{self.get_type()}' is: {node_type}"
+            )
         except KeyError:
             logger.info(f"'{self.get_type()}' is not a valid enum value.")
         return RelatedNodeInfo(
-            node_id=self.node_id, node_type=node_type, metadata=self.metadata, hash=self.hash
+            node_id=self.node_id,
+            node_type=node_type,
+            metadata=self.metadata,
+            hash=self.hash,
         )

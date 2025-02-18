@@ -15,4 +15,3 @@ AEMO_REPRESENTATION_PROMPT_TEMPLATE = """作为一个社会学研究学者，您
 
 {start_task_context}
 """
- 

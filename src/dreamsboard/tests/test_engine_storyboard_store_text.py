@@ -1,12 +1,17 @@
 import logging
 
+import langchain
 from langchain_community.chat_models import ChatOpenAI
 
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
-from dreamsboard.dreams.dreams_personality_chain.base import StoryBoardDreamsGenerationChain
-import langchain
-
-from dreamsboard.engine.generate.code_generate import QueryProgramGenerator, EngineProgramGenerator, AIProgramGenerator
+from dreamsboard.dreams.dreams_personality_chain.base import (
+    StoryBoardDreamsGenerationChain,
+)
+from dreamsboard.engine.generate.code_generate import (
+    AIProgramGenerator,
+    EngineProgramGenerator,
+    QueryProgramGenerator,
+)
 from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.storage_context import StorageContext
 
@@ -23,7 +28,6 @@ logger.addHandler(handler)
 
 def test_structured_dreams_storyboard_store_text() -> None:
     try:
-
         storage_context = StorageContext.from_defaults(persist_dir="./storage")
         code_gen_builder = load_store_from_storage(storage_context)
         index_loaded = True
@@ -31,42 +35,54 @@ def test_structured_dreams_storyboard_store_text() -> None:
         index_loaded = False
 
     if not index_loaded:
-        llm = ChatOpenAI(
-            verbose=True
-        )
+        llm = ChatOpenAI(verbose=True)
 
-        dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
-                llm_runable=llm, csv_file_path="../../docs/csv/iRMa9DMW_keyframe.csv")
+        dreams_generation_chain = (
+            StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
+                llm_runable=llm, csv_file_path="../../docs/csv/iRMa9DMW_keyframe.csv"
+            )
+        )
 
         output = dreams_generation_chain.run()
         logger.info("dreams_guidance_context:" + output.get("dreams_guidance_context"))
-        logger.info("dreams_personality_context:" + output.get("dreams_personality_context"))
+        logger.info(
+            "dreams_personality_context:" + output.get("dreams_personality_context")
+        )
         dreams_guidance_context = output.get("dreams_guidance_context")
         dreams_personality_context = output.get("dreams_personality_context")
 
-        storyboard_executor = StructuredDreamsStoryboard.form_builder(llm_runable=llm,
-                                                                      builder=dreams_generation_chain.builder,
-                                                                      dreams_guidance_context=dreams_guidance_context,
-                                                                      dreams_personality_context=dreams_personality_context
-                                                                      )
+        storyboard_executor = StructuredDreamsStoryboard.form_builder(
+            llm_runable=llm,
+            builder=dreams_generation_chain.builder,
+            dreams_guidance_context=dreams_guidance_context,
+            dreams_personality_context=dreams_personality_context,
+        )
         code_gen_builder = storyboard_executor.loader_cosplay_builder()
 
     _dreams_render_data = {
-        'cosplay_role': '心理咨询工作者',
-        'message': '''宝宝今天做一份特别美味的面条，用了南瓜、香菜、大蒜、盐、鸡精、香油、面条、香醋。
-        你尝试下用你之前的语气，给宝宝报备一个一模一样的生活，让对方感受到你的生活，然后再给对方一个反馈，看看对方的反应。'''
+        "cosplay_role": "心理咨询工作者",
+        "message": """宝宝今天做一份特别美味的面条，用了南瓜、香菜、大蒜、盐、鸡精、香油、面条、香醋。
+        你尝试下用你之前的语气，给宝宝报备一个一模一样的生活，让对方感受到你的生活，然后再给对方一个反馈，看看对方的反应。""",
     }
-    code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-        "query_code_file": "query_template.py-tpl",
-        "render_data": _dreams_render_data,
-    }))
+    code_gen_builder.add_generator(
+        QueryProgramGenerator.from_config(
+            cfg={
+                "query_code_file": "query_template.py-tpl",
+                "render_data": _dreams_render_data,
+            }
+        )
+    )
 
-    code_gen_builder.add_generator(EngineProgramGenerator.from_config(cfg={
-        "engine_code_file": "simple_engine_template.py-tpl",
-        "render_data": {
-            'model_name': 'gpt-4',
-        },
-    }))
+    code_gen_builder.add_generator(
+        EngineProgramGenerator.from_config(
+            cfg={
+                "engine_code_file": "simple_engine_template.py-tpl",
+                "render_data": {
+                    "model_name": "gpt-4",
+                },
+            }
+        )
+    )
 
     executor = code_gen_builder.build_executor()
     logger.info(executor)
@@ -81,13 +97,15 @@ def test_structured_dreams_storyboard_store_text() -> None:
     assert executor._ai_message is not None
     # 删除最后一个生成器，然后添加一个AI生成器
     code_gen_builder.remove_last_generator()
-    _ai_render_data = {
-        'ai_message_content': _ai_message.content
-    }
-    code_gen_builder.add_generator(AIProgramGenerator.from_config(cfg={
-        "ai_code_file": "ai_template.py-tpl",
-        "render_data": _ai_render_data,
-    }))
+    _ai_render_data = {"ai_message_content": _ai_message.content}
+    code_gen_builder.add_generator(
+        AIProgramGenerator.from_config(
+            cfg={
+                "ai_code_file": "ai_template.py-tpl",
+                "render_data": _ai_render_data,
+            }
+        )
+    )
 
     # persist index to disk
     code_gen_builder.storage_context.persist(persist_dir="./storage")

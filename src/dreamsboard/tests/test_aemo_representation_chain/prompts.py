@@ -129,4 +129,3 @@ DREAMS_GEN_TEMPLATE = """# 分析计算机科学领域的研究内容
 {scene_monologue_context}
 
 """
-

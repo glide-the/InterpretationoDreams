@@ -17,17 +17,21 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod, ABC
-from typing import Any, Optional, Dict
+import hashlib
+import logging
+import textwrap
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
 from jinja2 import Template
-import logging
-
-import textwrap
-import hashlib
 from pydantic import Field
 
-from dreamsboard.engine.schema import BaseNode, ObjectTemplateType, TRUNCATE_LENGTH, WRAP_WIDTH
+from dreamsboard.engine.schema import (
+    TRUNCATE_LENGTH,
+    WRAP_WIDTH,
+    BaseNode,
+    ObjectTemplateType,
+)
 from dreamsboard.templates import get_template_path
 
 logger = logging.getLogger(__name__)
@@ -49,7 +53,6 @@ def truncate_text(text: str, max_length: int) -> str:
 
 # 创建一个代码生成器抽象类
 class CodeGenerator(BaseNode, ABC):
-
     @classmethod
     def from_config(cls, cfg=None):
         return cls()
@@ -88,13 +91,11 @@ class CodeGenerator(BaseNode, ABC):
 
     def calculate_md5(self):
         md5_hash = hashlib.md5()
-        md5_hash.update(self.render_code.encode('utf-8'))
+        md5_hash.update(self.render_code.encode("utf-8"))
         return md5_hash.hexdigest()
 
     def __str__(self) -> str:
-        source_text_truncated = truncate_text(
-            self.render_code.strip(), TRUNCATE_LENGTH
-        )
+        source_text_truncated = truncate_text(self.render_code.strip(), TRUNCATE_LENGTH)
         source_text_wrapped = textwrap.fill(
             f"Text: {source_text_truncated}\n", width=WRAP_WIDTH
         )
@@ -103,11 +104,10 @@ class CodeGenerator(BaseNode, ABC):
 
 # 创建不同类型的代码生成器
 class BaseProgramGenerator(CodeGenerator):
-    exec_code: Optional[str] = Field(
-        default="", description="执行代码"
-    )
+    exec_code: Optional[str] = Field(default="", description="执行代码")
     base_template_content: Optional[str] = Field(
-        default="", description="模板内容",
+        default="",
+        description="模板内容",
     )
     exec_data: Optional[Dict[str, Any]] = Field(
         default_factory=dict,
@@ -117,14 +117,20 @@ class BaseProgramGenerator(CodeGenerator):
 
     def __init__(self, code_file: str = None, render_data=None, **kwargs):
         # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
-        if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
+        if (
+            "exec_data" not in kwargs
+            and "base_template_content" not in kwargs
+            and "exec_code" not in kwargs
+        ):
             if render_data is None:
                 render_data = {}
             # 读取模板文件
-            with open(code_file, 'r', encoding='utf-8') as template_file:
+            with open(code_file, "r", encoding="utf-8") as template_file:
                 base_template_content = template_file.read()
 
-            super().__init__(exec_data=render_data, base_template_content=base_template_content)
+            super().__init__(
+                exec_data=render_data, base_template_content=base_template_content
+            )
         else:
             super().__init__(**kwargs)
 
@@ -178,11 +184,10 @@ class BaseProgramGenerator(CodeGenerator):
 
 
 class QueryProgramGenerator(CodeGenerator):
-    exec_code: Optional[str] = Field(
-        default="", description="执行代码"
-    )
+    exec_code: Optional[str] = Field(default="", description="执行代码")
     dreams_query_template_content: Optional[str] = Field(
-        default="", description="模板内容",
+        default="",
+        description="模板内容",
     )
     exec_data: Optional[Dict[str, Any]] = Field(
         default_factory=dict,
@@ -191,16 +196,24 @@ class QueryProgramGenerator(CodeGenerator):
     )
 
     def __init__(self, query_code_file: str = None, render_data=None, **kwargs):
-
         # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
-        if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
+        if (
+            "exec_data" not in kwargs
+            and "base_template_content" not in kwargs
+            and "exec_code" not in kwargs
+        ):
             if render_data is None:
                 render_data = {}
             # 读取模板文件
-            with open(query_code_file, 'r', encoding='utf-8') as dreams_query_template_file:
+            with open(
+                query_code_file, "r", encoding="utf-8"
+            ) as dreams_query_template_file:
                 dreams_query_template_content = dreams_query_template_file.read()
 
-            super().__init__(exec_data=render_data, dreams_query_template_content=dreams_query_template_content)
+            super().__init__(
+                exec_data=render_data,
+                dreams_query_template_content=dreams_query_template_content,
+            )
         else:
             super().__init__(**kwargs)
 
@@ -226,7 +239,9 @@ class QueryProgramGenerator(CodeGenerator):
             raise RuntimeError("from_config cfg is None.")
         query_code_file = cfg.get("query_code_file", "")
         render_data = cfg.get("render_data", None)
-        return cls(query_code_file=get_template_path(query_code_file), render_data=render_data)
+        return cls(
+            query_code_file=get_template_path(query_code_file), render_data=render_data
+        )
 
     @property
     def template_content(self) -> str:
@@ -254,11 +269,10 @@ class QueryProgramGenerator(CodeGenerator):
 
 
 class AIProgramGenerator(CodeGenerator):
-    exec_code: Optional[str] = Field(
-        default="", description="执行代码"
-    )
+    exec_code: Optional[str] = Field(default="", description="执行代码")
     ai_template_content: Optional[str] = Field(
-        default="", description="模板内容",
+        default="",
+        description="模板内容",
     )
     exec_data: Optional[Dict[str, Any]] = Field(
         default_factory=dict,
@@ -267,16 +281,21 @@ class AIProgramGenerator(CodeGenerator):
     )
 
     def __init__(self, ai_code_file: str = None, render_data=None, **kwargs):
-
         # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
-        if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
+        if (
+            "exec_data" not in kwargs
+            and "base_template_content" not in kwargs
+            and "exec_code" not in kwargs
+        ):
             if render_data is None:
                 render_data = {}
             # 读取模板文件
-            with open(ai_code_file, 'r', encoding='utf-8') as ai_template_file:
+            with open(ai_code_file, "r", encoding="utf-8") as ai_template_file:
                 ai_template_content = ai_template_file.read()
 
-            super().__init__(exec_data=render_data, ai_template_content=ai_template_content)
+            super().__init__(
+                exec_data=render_data, ai_template_content=ai_template_content
+            )
         else:
             super().__init__(**kwargs)
 
@@ -302,7 +321,9 @@ class AIProgramGenerator(CodeGenerator):
             raise RuntimeError("from_config cfg is None.")
         ai_code_file = cfg.get("ai_code_file", "")
         render_data = cfg.get("render_data", None)
-        return cls(ai_code_file=get_template_path(ai_code_file), render_data=render_data)
+        return cls(
+            ai_code_file=get_template_path(ai_code_file), render_data=render_data
+        )
 
     @property
     def template_content(self) -> str:
@@ -330,11 +351,10 @@ class AIProgramGenerator(CodeGenerator):
 
 
 class EngineProgramGenerator(CodeGenerator):
-    exec_code: Optional[str] = Field(
-        default="", description="执行代码"
-    )
+    exec_code: Optional[str] = Field(default="", description="执行代码")
     engine_template_content: Optional[str] = Field(
-        default="", description="模板内容",
+        default="",
+        description="模板内容",
     )
     exec_data: Optional[Dict[str, Any]] = Field(
         default_factory=dict,
@@ -343,21 +363,26 @@ class EngineProgramGenerator(CodeGenerator):
     )
 
     def __init__(self, engine_code_file: str = None, render_data=None, **kwargs):
-
         # 检查kwargs中是否包含这些属性，如果包含就不执行文件读取
-        if "exec_data" not in kwargs and "base_template_content" not in kwargs and "exec_code" not in kwargs:
+        if (
+            "exec_data" not in kwargs
+            and "base_template_content" not in kwargs
+            and "exec_code" not in kwargs
+        ):
             if render_data is None:
                 render_data = {
-                    'model_name': 'gpt-4',
+                    "model_name": "gpt-4",
                 }
             model_name = render_data.get("model_name", None)
             if model_name is None:
                 raise RuntimeError("model_name is None.")
             # 读取模板文件
-            with open(engine_code_file, 'r', encoding='utf-8') as engine_template_file:
+            with open(engine_code_file, "r", encoding="utf-8") as engine_template_file:
                 engine_template_content = engine_template_file.read()
 
-            super().__init__(exec_data=render_data, engine_template_content=engine_template_content)
+            super().__init__(
+                exec_data=render_data, engine_template_content=engine_template_content
+            )
         else:
             super().__init__(**kwargs)
 
@@ -383,7 +408,10 @@ class EngineProgramGenerator(CodeGenerator):
             raise RuntimeError("from_config cfg is None.")
         engine_code_file = cfg.get("engine_code_file", "")
         render_data = cfg.get("render_data", None)
-        return cls(engine_code_file=get_template_path(engine_code_file), render_data=render_data)
+        return cls(
+            engine_code_file=get_template_path(engine_code_file),
+            render_data=render_data,
+        )
 
     @property
     def template_content(self) -> str:

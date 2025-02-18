@@ -1,12 +1,13 @@
-from kor.extraction import create_extraction_chain
-from kor.nodes import Object, Text, Number
-from langchain_community.chat_models import ChatOpenAI
 import os
+
+from kor.extraction import create_extraction_chain
+from kor.nodes import Number, Object, Text
+from langchain_community.chat_models import ChatOpenAI
 
 
 def test_kor2():
     llm = ChatOpenAI(
-        openai_api_base='http://127.0.0.1:30000/v1',
+        openai_api_base="http://127.0.0.1:30000/v1",
         model="glm-4",
         openai_api_key="glm-4",
         verbose=True,
@@ -20,12 +21,12 @@ def test_kor2():
         attributes=[
             Text(
                 id="step_advice",
-                description='''Advice provided in this step, e.g. "I would say something like: 'I understand this is a difficult situation for you.'" ''',
+                description="""Advice provided in this step, e.g. "I would say something like: 'I understand this is a difficult situation for you.'" """,
             ),
             Text(
                 id="step_description",
                 description="""(Description of the counseling step, e.g. "Establish trust" """,
-            )
+            ),
         ],
         examples=[
             (
@@ -51,20 +52,35 @@ def test_kor2():
 
 通过这种方式，您可以引导来访者自由表达他们的情感和思维，帮助他们更好地理解自己和他们与他人的互动。同时，保持开放和倾听，以便在需要时提供支持和建议。""",
                 [
-                    {"step_advice": "我注意到这个对话中有许多愉快的时刻和互动。你对这些时刻有什么特别的感受吗？",
-                     "step_description": "建立情感连接"},
-                    {"step_advice": "在这个对话中，有哪些瞬间让你感到开心或快乐?", "step_description": "探索来访者的感受"},
-                    {"step_advice": "除了快乐的瞬间，是否有一些让你感到不安或担忧的地方？",
-                     "step_description": "询问是否有反感情绪"},
-                    {"step_advice": "你觉得自己在这些互动中扮演了什么角色?", "step_description": "深入探讨个人反应"},
-                    {"step_advice": "这些互动对你与他人的关系有什么影响？你觉得与朋友之间的互动如何影响你的情感状态?", "step_description": "探索与他人的互动"},
-                    {"step_advice": "在这个故事场景中，你是否注意到了自己的情感变化或思维模式？有没有什么你想要深入探讨或解决的问题?", "step_description": "引导自我反思"},
+                    {
+                        "step_advice": "我注意到这个对话中有许多愉快的时刻和互动。你对这些时刻有什么特别的感受吗？",
+                        "step_description": "建立情感连接",
+                    },
+                    {
+                        "step_advice": "在这个对话中，有哪些瞬间让你感到开心或快乐?",
+                        "step_description": "探索来访者的感受",
+                    },
+                    {
+                        "step_advice": "除了快乐的瞬间，是否有一些让你感到不安或担忧的地方？",
+                        "step_description": "询问是否有反感情绪",
+                    },
+                    {
+                        "step_advice": "你觉得自己在这些互动中扮演了什么角色?",
+                        "step_description": "深入探讨个人反应",
+                    },
+                    {
+                        "step_advice": "这些互动对你与他人的关系有什么影响？你觉得与朋友之间的互动如何影响你的情感状态?",
+                        "step_description": "探索与他人的互动",
+                    },
+                    {
+                        "step_advice": "在这个故事场景中，你是否注意到了自己的情感变化或思维模式？有没有什么你想要深入探讨或解决的问题?",
+                        "step_description": "引导自我反思",
+                    },
                 ],
             )
         ],
         many=True,
     )
-
 
     chain = create_extraction_chain(llm, schema)
     print(chain.prompt.format_prompt(text="[user input]").to_string())

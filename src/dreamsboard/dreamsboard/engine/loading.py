@@ -1,18 +1,17 @@
+import logging
 from typing import Any, List, Optional, Sequence
 
 from dreamsboard.engine.engine_builder import BaseEngineBuilder
 from dreamsboard.engine.registry import INDEX_STRUCT_TYPE_TO_INDEX_CLASS
 from dreamsboard.engine.storage.storage_context import StorageContext
 
-import logging
-
 logger = logging.getLogger(__name__)
 
 
 def load_store_from_storage(
-        storage_context: StorageContext,
-        index_id: Optional[str] = None,
-        **kwargs: Any,
+    storage_context: StorageContext,
+    index_id: Optional[str] = None,
+    **kwargs: Any,
 ) -> BaseEngineBuilder:
     """Load index from storage context.
 
@@ -46,9 +45,9 @@ def load_store_from_storage(
 
 
 def load_indices_from_storage(
-        storage_context: StorageContext,
-        index_ids: Optional[Sequence[str]] = None,
-        **kwargs: Any,
+    storage_context: StorageContext,
+    index_ids: Optional[Sequence[str]] = None,
+    **kwargs: Any,
 ) -> List[BaseEngineBuilder]:
     """Load multiple indices from storage context
 

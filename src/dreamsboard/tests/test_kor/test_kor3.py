@@ -1,12 +1,13 @@
-from kor.extraction import create_extraction_chain
-from kor.nodes import Object, Text, Number
-from langchain_community.chat_models import ChatOpenAI
 import os
+
+from kor.extraction import create_extraction_chain
+from kor.nodes import Number, Object, Text
+from langchain_community.chat_models import ChatOpenAI
 
 
 def test_kor3():
     llm = ChatOpenAI(
-        openai_api_base='https://open.bigmodel.cn/api/paas/v4',
+        openai_api_base="https://open.bigmodel.cn/api/paas/v4",
         model="glm-4",
         openai_api_key="testkey",
         verbose=True,
@@ -20,7 +21,7 @@ def test_kor3():
         attributes=[
             Text(
                 id="task_step_name",
-                description='''提取步骤的名称，例如"分析近几年研究领域的技术框架与方法论"、"基于规则的方法"、"研究论文中采用的主要框架"、"Transformer"等''',
+                description="""提取步骤的名称，例如"分析近几年研究领域的技术框架与方法论"、"基于规则的方法"、"研究论文中采用的主要框架"、"Transformer"等""",
             ),
             Text(
                 id="task_step_description",
@@ -29,7 +30,7 @@ def test_kor3():
             Text(
                 id="task_step_level",
                 description="""提取步骤的层级编号，只有root>child层级，例如"0"、"0>1"、"0>2"、"1"、"1>1"、"1>2"等""",
-            )
+            ),
         ],
         examples=[
             (
@@ -88,34 +89,33 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
                     {
                         "task_step_description": "Text2SQL 是将自然语言查询（NLQ）转换为结构化查询语言（SQL）的任务，近年来在数据库和自然语言处理（NLP）领域受到广泛关注。主要技术框架和方法论包括：",
                         "task_step_name": "Text2SQL 研究现状与挑战",
-                        "task_step_level": "0"
+                        "task_step_level": "0",
                     },
                     {
                         "task_step_description": "早期方法依赖于手工编写的规则和模板，将自然语言映射到 SQL。这种方法在小规模、特定领域的数据库上表现良好，但缺乏泛化能力。",
                         "task_step_name": "基于规则的方法",
-                        "task_step_level": "0>1"
+                        "task_step_level": "0>1",
                     },
                     {
                         "task_step_description": "随着机器学习的发展，统计模型（如序列到序列模型）被引入，通过学习大量标注数据来生成 SQL 查询。",
                         "task_step_name": "基于统计的方法",
-                        "task_step_level": "0>2"
+                        "task_step_level": "0>2",
                     },
                     {
                         "task_step_description": "Transformer 模型在 Text2SQL 任务中表现出色，特别是在处理长文本和复杂查询时。通过自注意力机制，Transformer 能够捕捉自然语言和数据库模式之间的复杂关系。",
                         "task_step_name": "研究论文中采用的主要框架",
-                        "task_step_level": "1"
+                        "task_step_level": "1",
                     },
                     {
                         "task_step_description": "BERT 及其变体（如 RoBERTa、ALBERT）通过预训练语言模型，显著提升了模型对自然语言的理解能力。在 Text2SQL 任务中，BERT 通常用于编码自然语言查询和数据库模式。",
                         "task_step_name": "BERT",
-                        "task_step_level": "1>1"
-                    }
-                ]
+                        "task_step_level": "1>1",
+                    },
+                ],
             )
         ],
-        many=True
+        many=True,
     )
-
 
     chain = create_extraction_chain(llm, schema)
     print(chain.prompt.format_prompt(text="[user input]").to_string())

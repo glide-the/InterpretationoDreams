@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    Dict,
     Generator,
     Iterable,
     List,
@@ -23,7 +24,6 @@ from typing import (
     Type,
     Union,
     cast,
-    Dict,
 )
 
 

@@ -1,14 +1,15 @@
 import os
 import shutil
-from typing import Dict, List, Tuple, Any, Sized
+from typing import Any, Dict, List, Sized, Tuple
 
 from langchain.docstore.document import Document
- 
+
+from dreamsboard.vector.base import CollectionService, DocumentWithVSId
 from dreamsboard.vector.knowledge_base.kb_cache.faiss_cache import (
     ThreadSafeFaiss,
     kb_faiss_pool,
-) 
-from dreamsboard.vector.base import CollectionService, DocumentWithVSId
+)
+
 
 def _len_check_if_sized(x: Any, y: Any, x_name: str, y_name: str) -> None:
     if isinstance(x, Sized) and isinstance(y, Sized) and len(x) != len(y):
@@ -18,6 +19,7 @@ def _len_check_if_sized(x: Any, y: Any, x_name: str, y_name: str) -> None:
         )
     return
 
+
 class FaissCollectionService(CollectionService):
     _vs_path: str
     device: str
@@ -25,14 +27,16 @@ class FaissCollectionService(CollectionService):
     embed_model: str
     vector_name: str = None
 
-    def __init__(self, kb_name: str, embed_model: str, vector_name: str, device: str = 'cpu') -> None:
+    def __init__(
+        self, kb_name: str, embed_model: str, vector_name: str, device: str = "cpu"
+    ) -> None:
         self.device = device
         self.kb_name = kb_name
         self.embed_model = embed_model
         self.vector_name = vector_name
         self._vs_path = os.path.join(kb_name, "vector_store", vector_name)
         self.load_vector_store()
- 
+
     def load_vector_store(self) -> ThreadSafeFaiss:
         return kb_faiss_pool.load_vector_store(
             kb_name=self.kb_name,
@@ -54,20 +58,18 @@ class FaissCollectionService(CollectionService):
                 store_data = vs.docstore._dict.get(id)
                 if store_data is None:
                     continue
-                doc = DocumentWithVSId(**{**store_data.dict(), "id":id})
+                doc = DocumentWithVSId(**{**store_data.dict(), "id": id})
                 docs.append(doc)
             return docs
 
     def del_doc_by_ids(self, ids: List[str]) -> bool:
         with self.load_vector_store().acquire() as vs:
             vs.delete(ids)
- 
 
     def do_create_kb(self):
         if not os.path.exists(self._vs_path):
             os.makedirs(self._vs_path)
         self.load_vector_store()
- 
 
     def do_search(
         self,
@@ -81,7 +83,10 @@ class FaissCollectionService(CollectionService):
                 search_kwargs={"score_threshold": score_threshold, "k": top_k},
             )
             docs = faiss_retriever.invoke(query)
-            docs = [DocumentWithVSId(**{**doc.dict(), "id":doc.metadata['id']}) for doc in docs]
+            docs = [
+                DocumentWithVSId(**{**doc.dict(), "id": doc.metadata["id"]})
+                for doc in docs
+            ]
         return docs
 
     def do_add_doc(
@@ -92,12 +97,13 @@ class FaissCollectionService(CollectionService):
         if docs is None or len(docs) == 0:
             return []
         if not isinstance(docs[0], DocumentWithVSId):
-            raise ValueError(f"docs expected to be List[DocumentWithVSId] but got {type(docs)}")
+            raise ValueError(
+                f"docs expected to be List[DocumentWithVSId] but got {type(docs)}"
+            )
 
         ids = [x.id for x in docs]
         texts = [x.page_content for x in docs]
         metadatas = [x.metadata for x in docs]
-
 
         _len_check_if_sized(docs, ids, "docs", "ids")
         _len_check_if_sized(docs, texts, "docs", "texts")
@@ -106,12 +112,13 @@ class FaissCollectionService(CollectionService):
             embeddings = vs.embeddings.embed_documents(texts)
             ids = vs.add_embeddings(
                 text_embeddings=zip(texts, embeddings), metadatas=metadatas, ids=ids
-            ) 
+            )
 
         self.save_vector_store()
-        doc_infos = [DocumentWithVSId(**{**doc.dict(), "id":id}) for id, doc in zip(ids, docs)]
+        doc_infos = [
+            DocumentWithVSId(**{**doc.dict(), "id": id}) for id, doc in zip(ids, docs)
+        ]
         return doc_infos
-
 
     def do_clear_vs(self):
         with kb_faiss_pool.atomic:
@@ -121,7 +128,3 @@ class FaissCollectionService(CollectionService):
         except Exception:
             ...
         os.makedirs(self._vs_path, exist_ok=True)
-
- 
-
- 

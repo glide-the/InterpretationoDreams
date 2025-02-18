@@ -1,32 +1,37 @@
 import asyncio
-import os
-import sys
-from typing import Optional, Any, Dict
-
-from fastapi import (APIRouter,
-                     FastAPI,
-                     HTTPException,
-                     Response,
-                     Request,
-                     status
-                     )
-import logging
-
 import json
-import pprint
-import tiktoken
-from tests.zhipu.openai_protocol import ChatCompletionRequest, EmbeddingsRequest, \
-    ChatCompletionResponse, ModelList, EmbeddingsResponse, ChatCompletionStreamResponse, FunctionAvailable
-from uvicorn import Config, Server
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import JSONResponse as StarletteJSONResponse
+import logging
 import multiprocessing as mp
-from tests.zhipu.utils import json_dumps, get_config_dict, get_log_file, get_timestamp_ms
+import os
+import pprint
+import sys
 import threading
-from zhipuai import ZhipuAI
-from sse_starlette import EventSourceResponse
+from typing import Any, Dict, Optional
 
+import tiktoken
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 from generic import dictify, jsonify
+from sse_starlette import EventSourceResponse
+from starlette.responses import JSONResponse as StarletteJSONResponse
+from uvicorn import Config, Server
+from zhipuai import ZhipuAI
+
+from tests.zhipu.openai_protocol import (
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    ChatCompletionStreamResponse,
+    EmbeddingsRequest,
+    EmbeddingsResponse,
+    FunctionAvailable,
+    ModelList,
+)
+from tests.zhipu.utils import (
+    get_config_dict,
+    get_log_file,
+    get_timestamp_ms,
+    json_dumps,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +41,9 @@ class JSONResponse(StarletteJSONResponse):
         return json_dumps(content)
 
 
-async def create_stream_chat_completion(client: ZhipuAI, chat_request: ChatCompletionRequest):
+async def create_stream_chat_completion(
+    client: ZhipuAI, chat_request: ChatCompletionRequest
+):
     try:
         # 将JSON字符串转换为字典
         data_dict = json.loads(jsonify(chat_request))
@@ -44,7 +51,10 @@ async def create_stream_chat_completion(client: ZhipuAI, chat_request: ChatCompl
         functions = data_dict.get("functions", None)
 
         if functions is not None:
-            tools = [json.loads(jsonify(FunctionAvailable(type='function', function=f))) for f in functions]
+            tools = [
+                json.loads(jsonify(FunctionAvailable(type="function", function=f)))
+                for f in functions
+            ]
         response = client.chat.completions.create(
             model=chat_request.model,
             messages=data_dict["messages"],
@@ -80,7 +90,9 @@ class RESTFulOpenAIBootstrapBaseWeb:
         host = cfg.get("host", "127.0.0.1")
         port = cfg.get("port", 30000)
 
-        logger.info(f"Starting openai Bootstrap Server Lifecycle at endpoint: http://{host}:{port}")
+        logger.info(
+            f"Starting openai Bootstrap Server Lifecycle at endpoint: http://{host}:{port}"
+        )
         return cls(host=host, port=port)
 
     def serve(self, logging_conf: Optional[dict] = None):
@@ -139,8 +151,12 @@ class RESTFulOpenAIBootstrapBaseWeb:
     async def list_models(self, request: Request):
         pass
 
-    async def create_embeddings(self, request: Request, embeddings_request: EmbeddingsRequest):
-        logger.info(f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}")
+    async def create_embeddings(
+        self, request: Request, embeddings_request: EmbeddingsRequest
+    ):
+        logger.info(
+            f"Received create_embeddings request: {pprint.pformat(embeddings_request.dict())}"
+        )
         if os.environ["API_KEY"] is None:
             authorization = request.headers.get("Authorization")
             authorization = authorization.split("Bearer ")[-1]
@@ -170,8 +186,12 @@ class RESTFulOpenAIBootstrapBaseWeb:
         )
         return EmbeddingsResponse(**dictify(response))
 
-    async def create_chat_completion(self, request: Request, chat_request: ChatCompletionRequest):
-        logger.info(f"Received chat completion request: {pprint.pformat(chat_request.dict())}")
+    async def create_chat_completion(
+        self, request: Request, chat_request: ChatCompletionRequest
+    ):
+        logger.info(
+            f"Received chat completion request: {pprint.pformat(chat_request.dict())}"
+        )
         if os.environ["API_KEY"] is None:
             authorization = request.headers.get("Authorization")
             authorization = authorization.split("Bearer ")[-1]
@@ -187,7 +207,10 @@ class RESTFulOpenAIBootstrapBaseWeb:
             functions = data_dict.get("functions", None)
 
             if functions is not None:
-                tools = [json.loads(jsonify(FunctionAvailable(type='function', function=f))) for f in functions]
+                tools = [
+                    json.loads(jsonify(FunctionAvailable(type="function", function=f)))
+                    for f in functions
+                ]
 
             response = client.chat.completions.create(
                 model=chat_request.model,
@@ -205,7 +228,12 @@ class RESTFulOpenAIBootstrapBaseWeb:
                 for res in chat_response.choices:
                     # 筛序res.message.tool_calls中type是 function的第一个数据
                     if res.message.tool_calls is not None:
-                        function = next(filter(lambda x: x.type == "function", res.message.tool_calls), None)
+                        function = next(
+                            filter(
+                                lambda x: x.type == "function", res.message.tool_calls
+                            ),
+                            None,
+                        )
                         if function is not None:
                             res.message.function_call = function.function
 
@@ -215,7 +243,6 @@ class RESTFulOpenAIBootstrapBaseWeb:
 def run(logging_conf: Optional[dict] = None):
     logging.config.dictConfig(logging_conf)  # type: ignore
     try:
-
         api = RESTFulOpenAIBootstrapBaseWeb.from_config(cfg={})
         # api.set_app_event(started_event=started_event)
         api.serve(logging_conf=logging_conf)

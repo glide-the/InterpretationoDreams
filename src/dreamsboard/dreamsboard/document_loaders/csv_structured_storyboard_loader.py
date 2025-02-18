@@ -25,9 +25,11 @@ story_board_role:"七七",
 
 """
 from __future__ import annotations
+
 from abc import ABC
-import pandas as pd
 from typing import List, Set
+
+import pandas as pd
 
 
 class Metadata:
@@ -37,7 +39,14 @@ class Metadata:
 
 
 class StructuredStoryboard:
-    def __init__(self, start_point_len, end_point_len, story_board, story_board_text, story_board_role):
+    def __init__(
+        self,
+        start_point_len,
+        end_point_len,
+        story_board,
+        story_board_text,
+        story_board_role,
+    ):
         self.start_point_len = Metadata(start_point_len, "开始时间")
         self.end_point_len = Metadata(end_point_len, "结束时间")
         self.story_board = Metadata(story_board, "分镜")
@@ -52,7 +61,6 @@ class StructuredStoryboardCSVBuilder(ABC):
 
     @classmethod
     def form_builder(cls, csv_file_path: str) -> StructuredStoryboardCSVBuilder:
-
         return cls(csv_file_path=csv_file_path)
 
     def export_role(self) -> Set[str]:
@@ -62,7 +70,10 @@ class StructuredStoryboardCSVBuilder(ABC):
         """
         role = set()
         for item in self.data:
-            if len(item.story_board_role.name) > 0 and item.story_board_role.name is not None:
+            if (
+                len(item.story_board_role.name) > 0
+                and item.story_board_role.name is not None
+            ):
                 role.add(item.story_board_role.name)
         return role
 
@@ -71,24 +82,26 @@ class StructuredStoryboardCSVBuilder(ABC):
         self.data = []
 
         # 打开CSV文件并读取数据
-        with open(self.csv_file_path, newline='', encoding='utf-8') as file:
+        with open(self.csv_file_path, newline="", encoding="utf-8") as file:
             csv_reader = pd.read_csv(
-                file, 
+                file,
                 dtype=str,
                 keep_default_na=False,
-                sep=',',
+                sep=",",
                 skipinitialspace=True,
-                on_bad_lines='skip',
+                on_bad_lines="skip",
             )
             records = csv_reader.to_dict(orient="records")
-            for data_dict in records:  
-                role = data_dict.get('角色', '')
-                text = data_dict.get('内容', '')
-                start_point_len = data_dict.get('开始时间', '')
-                end_point_len = data_dict.get('结束时间', '')
-                storyboard = data_dict.get('分镜', '')
+            for data_dict in records:
+                role = data_dict.get("角色", "")
+                text = data_dict.get("内容", "")
+                start_point_len = data_dict.get("开始时间", "")
+                end_point_len = data_dict.get("结束时间", "")
+                storyboard = data_dict.get("分镜", "")
                 # 创建StructuredStoryboard对象
-                structured_storyboard = StructuredStoryboard(start_point_len, end_point_len, storyboard, text, role)
+                structured_storyboard = StructuredStoryboard(
+                    start_point_len, end_point_len, storyboard, text, role
+                )
 
                 # 添加到数据列表
                 self.data.append(structured_storyboard)
@@ -119,7 +132,9 @@ class StructuredStoryboardCSVBuilder(ABC):
         formatted_text += "\n"
         for item in selected_data:
             # 遍历每个键值对并输出
-            formatted_text += '\t'.join([item[field_name] for field_name in columns_to_select])
+            formatted_text += "\t".join(
+                [item[field_name] for field_name in columns_to_select]
+            )
             if item != selected_data[-1]:
                 formatted_text += "\n"
 
@@ -139,20 +154,30 @@ class StructuredStoryboardCSVBuilder(ABC):
         for storyboard in self.data:
             if storyboard.story_board.name in storyboard_dict:
                 # 如果已经存在该story_board的组，追加内容和角色
-                if storyboard.story_board_role.name in storyboard_dict[storyboard.story_board.name]:
-                    storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name].append(
-                        storyboard.story_board_text.name)
+                if (
+                    storyboard.story_board_role.name
+                    in storyboard_dict[storyboard.story_board.name]
+                ):
+                    storyboard_dict[storyboard.story_board.name][
+                        storyboard.story_board_role.name
+                    ].append(storyboard.story_board_text.name)
                 else:
-                    storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name] = []
-                    storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name].append(
-                        storyboard.story_board_text.name)
+                    storyboard_dict[storyboard.story_board.name][
+                        storyboard.story_board_role.name
+                    ] = []
+                    storyboard_dict[storyboard.story_board.name][
+                        storyboard.story_board_role.name
+                    ].append(storyboard.story_board_text.name)
             else:
                 # 如果还没有该story_board的组，创建一个新的组
 
                 storyboard_dict[storyboard.story_board.name] = {}
-                storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name] = []
-                storyboard_dict[storyboard.story_board.name][storyboard.story_board_role.name].append(
-                    storyboard.story_board_text.name)
+                storyboard_dict[storyboard.story_board.name][
+                    storyboard.story_board_role.name
+                ] = []
+                storyboard_dict[storyboard.story_board.name][
+                    storyboard.story_board_role.name
+                ].append(storyboard.story_board_text.name)
 
         return storyboard_dict
 

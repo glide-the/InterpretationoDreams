@@ -1,9 +1,8 @@
+from llama_index.core import Document, PromptTemplate
 from llama_index.core.agent import ReActAgent
+from llama_index.core.evaluation import DatasetGenerator
 from llama_index.core.llms import LLM
 from llama_index.llms.openai import OpenAI
-from llama_index.core.evaluation import DatasetGenerator
-from llama_index.llms.openai import OpenAI
-from llama_index.core import PromptTemplate, Document
 
 
 def adapter_agent(llm_agent: OpenAI, query_engine_tools):
@@ -11,8 +10,9 @@ def adapter_agent(llm_agent: OpenAI, query_engine_tools):
     return base_agent
 
 
-def build_dataset_generator_questions(base_question_gen_query, docs: list[Document], llm: LLM, num=60) -> list[str]:
-
+def build_dataset_generator_questions(
+    base_question_gen_query, docs: list[Document], llm: LLM, num=60
+) -> list[str]:
     # 在
     # /llama_index/core/evaluation/dataset_generation.py:246
     # /llama_index/core/evaluation/dataset_generation.py:274
@@ -29,8 +29,9 @@ def build_dataset_generator_questions(base_question_gen_query, docs: list[Docume
     return questions
 
 
-def gen_question_variations(vary_question_tmpl, valid_10q_str, generator_questions, llm: LLM, num_vary=3) -> list[str]:
-
+def gen_question_variations(
+    vary_question_tmpl, valid_10q_str, generator_questions, llm: LLM, num_vary=3
+) -> list[str]:
     prompt_tmpl = PromptTemplate(vary_question_tmpl)
 
     new_questions = []

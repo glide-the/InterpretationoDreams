@@ -1,12 +1,12 @@
+import logging
 import threading
 from collections import OrderedDict
 from contextlib import contextmanager
-from typing import Any, List, Tuple, Union, Generator
+from typing import Any, Generator, List, Tuple, Union
 
 from langchain.embeddings.base import Embeddings
 from langchain_community.vectorstores.faiss import FAISS
- 
-import logging 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -15,6 +15,7 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 
 logger.addHandler(handler)
+
 
 class ThreadSafeObject:
     def __init__(

@@ -22,12 +22,14 @@ Shot 2	story_board2	00:00:05	描述分镜细节 备注
 
 """
 from abc import ABC
-from typing import List, Dict, Any
-from langchain.document_loaders.base import BaseLoader
-from langchain.docstore.document import Document
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List
+
 import pandas as pd
+from langchain.docstore.document import Document
+from langchain.document_loaders.base import BaseLoader
 from pandas import DataFrame
-from dataclasses import dataclass, asdict
+
 
 @dataclass
 class QuestionContext:
@@ -42,25 +44,27 @@ class QuestionContext:
             "ref_id": self.ref_id,
             "chunk_id": self.chunk_id,
             "score": self.score,
-            "text": self.text
+            "text": self.text,
         }
-    
+
+
 # 定义链表节点类
 class LinkedListNode:
-    def __init__(self, 
-                task_step_id: str,
-                shot_number: int, 
-                scene_number: str, 
-                start_task_context: str=None, 
-                aemo_representation_context: str=None,
-                task_step_name: str=None, 
-                task_step_description: str=None, 
-                task_step_level: str=None,
-                task_step_question: str=None,
-                task_step_question_context: List[QuestionContext]=None,
-                task_step_question_answer: str=None,
-                ref_task_step_id: str=None
-        ):
+    def __init__(
+        self,
+        task_step_id: str,
+        shot_number: int,
+        scene_number: str,
+        start_task_context: str = None,
+        aemo_representation_context: str = None,
+        task_step_name: str = None,
+        task_step_description: str = None,
+        task_step_level: str = None,
+        task_step_question: str = None,
+        task_step_question_context: List[QuestionContext] = None,
+        task_step_question_answer: str = None,
+        ref_task_step_id: str = None,
+    ):
         self.task_step_id = task_step_id
         self.shot_number = shot_number
         self.scene_number = scene_number
@@ -82,6 +86,7 @@ class StructuredStoryboard:
     """
     解析json数组中整理好的镜头，实现链表结构的处理操作
     """
+
     head: LinkedListNode = None
     prev_node: LinkedListNode = None
 
@@ -96,7 +101,7 @@ class StructuredStoryboard:
         if self.prev_node is None:
             shot_number = 1
         else:
-            shot_number = self.prev_node.shot_number+1
+            shot_number = self.prev_node.shot_number + 1
 
         for index, data in enumerate(json_data):
             scene_number = "story_board" + str(index)
@@ -107,28 +112,31 @@ class StructuredStoryboard:
             task_step_description = data["task_step_description"]
             task_step_level = data["task_step_level"]
             task_step_question = data["task_step_question"]
-            task_step_question_context = [QuestionContext(
-                ref_id=context.get("ref_id",""), 
-                chunk_id=context.get("chunk_id",""),
-                score=context.get("score",""), 
-                text=context.get("text","")
-                ) for context in data["task_step_question_context"]]
+            task_step_question_context = [
+                QuestionContext(
+                    ref_id=context.get("ref_id", ""),
+                    chunk_id=context.get("chunk_id", ""),
+                    score=context.get("score", ""),
+                    text=context.get("text", ""),
+                )
+                for context in data["task_step_question_context"]
+            ]
             task_step_question_answer = data["task_step_question_answer"]
             ref_task_step_id = data["ref_task_step_id"]
 
             node = LinkedListNode(
-                task_step_id, 
+                task_step_id,
                 shot_number,
                 scene_number,
                 start_task_context,
-                aemo_representation_context, 
-                task_step_name, 
-                task_step_description, 
-                task_step_level, 
-                task_step_question, 
-                task_step_question_context, 
-                task_step_question_answer, 
-                ref_task_step_id
+                aemo_representation_context,
+                task_step_name,
+                task_step_description,
+                task_step_level,
+                task_step_question,
+                task_step_question_context,
+                task_step_question_answer,
+                ref_task_step_id,
             )
             if self.prev_node:
                 self.prev_node.next = node
@@ -151,6 +159,7 @@ class StructuredStoryboard:
                 return current_parse_node
             current_parse_node = current_parse_node.next
         return None
+
     def parse_table(self) -> DataFrame:
         """
         输出格式为
@@ -161,7 +170,8 @@ class StructuredStoryboard:
         current_parse_node = self.head
         while current_parse_node is not None:
             task_context = [
-                context.to_dict() for context in current_parse_node.task_step_question_context
+                context.to_dict()
+                for context in current_parse_node.task_step_question_context
             ]  # 遍历并转换每个对象为字典
 
             row = [
@@ -176,25 +186,28 @@ class StructuredStoryboard:
                 current_parse_node.task_step_question,
                 task_context,
                 current_parse_node.task_step_question_answer,
-                current_parse_node.ref_task_step_id
+                current_parse_node.ref_task_step_id,
             ]
             table_data.append(row)
             current_parse_node = current_parse_node.next
 
-        table = pd.DataFrame(table_data, columns=[
-            "task_step_id", 
-            "shot_number", 
-            "scene_number", 
-            "start_task_context", 
-            "aemo_representation_context", 
-            "task_step_name", 
-            "task_step_description", 
-            "task_step_level", 
-            "task_step_question", 
-            "task_step_question_context", 
-            "task_step_question_answer", 
-            "ref_task_step_id"
-        ]) 
+        table = pd.DataFrame(
+            table_data,
+            columns=[
+                "task_step_id",
+                "shot_number",
+                "scene_number",
+                "start_task_context",
+                "aemo_representation_context",
+                "task_step_name",
+                "task_step_description",
+                "task_step_level",
+                "task_step_question",
+                "task_step_question_context",
+                "task_step_question_answer",
+                "ref_task_step_id",
+            ],
+        )
         return table
 
 
@@ -210,7 +223,6 @@ class StructuredStoryboardLoader(BaseLoader, ABC):
 
         table = self.structured_storyboard.parse_table()
         for row in table.itertuples():
-
             raw_transcript_with_meta_info = (
                 f"task_step_id: {row.task_step_id},"
                 f"scene_number: {row.scene_number},"
@@ -226,10 +238,12 @@ class StructuredStoryboardLoader(BaseLoader, ABC):
                 f"ref_task_step_id: {row.ref_task_step_id}\n\n"
             )
 
-            structured_storyboard_json = row.to_json(orient='records',  indent=4)
-            doc = Document(page_content=raw_transcript_with_meta_info, metadata=structured_storyboard_json)
+            structured_storyboard_json = row.to_json(orient="records", indent=4)
+            doc = Document(
+                page_content=raw_transcript_with_meta_info,
+                metadata=structured_storyboard_json,
+            )
 
             documents.append(doc)
 
         return documents
-

@@ -1,23 +1,28 @@
 from __future__ import annotations
+
+import logging
 from typing import List, Optional
-from langchain_core.messages import ( 
+
+from langchain.chains import LLMChain
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.messages import (
     BaseMessage,
 )
-from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
+
+from dreamsboard.document_loaders import KorLoader, StructuredStoryboardCSVBuilder
 from dreamsboard.document_loaders.ner_loader import NerLoader
-from dreamsboard.document_loaders.protocol.ner_protocol import DreamsStepInfo, Personality
+from dreamsboard.document_loaders.protocol.ner_protocol import (
+    DreamsStepInfo,
+    Personality,
+)
 from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
 from dreamsboard.engine.generate.code_generate import (
-    BaseProgramGenerator,
-    QueryProgramGenerator,
     AIProgramGenerator,
+    BaseProgramGenerator,
     EngineProgramGenerator,
+    QueryProgramGenerator,
 )
-from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder, KorLoader
-from langchain.chains import LLMChain
-import logging
-
 from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.storage_context import StorageContext
 
@@ -33,7 +38,7 @@ logger.addHandler(handler)
 
 class StructuredDreamsStoryboard:
     """
-   
+
     构建会话场景执行器 StructuredDreamsStoryboard
         对剧本和分析结果进行结构化，将开放问题与性格分析结果进行结合。生成情景扮演会话器
     此过程如下
@@ -45,16 +50,17 @@ class StructuredDreamsStoryboard:
         导出情景扮演会话器
     """
 
-    def __init__(self,
-                 builder: StructuredStoryboardCSVBuilder,
-                 dreams_guidance_context: str,
-                 dreams_personality_context: str,
-                 kor_dreams_guidance_chain: LLMChain,
-                 kor_dreams_personality_chain: LLMChain,
-                 ner_dreams_personality_chain: LLMChain,
-                 user_id: str = None,
-                 llm_runable: Runnable[LanguageModelInput, BaseMessage]|None = None,
-                 ):
+    def __init__(
+        self,
+        builder: StructuredStoryboardCSVBuilder,
+        dreams_guidance_context: str,
+        dreams_personality_context: str,
+        kor_dreams_guidance_chain: LLMChain,
+        kor_dreams_personality_chain: LLMChain,
+        ner_dreams_personality_chain: LLMChain,
+        user_id: str = None,
+        llm_runable: Runnable[LanguageModelInput, BaseMessage] | None = None,
+    ):
         """
 
         :param builder: 剧本
@@ -69,18 +75,21 @@ class StructuredDreamsStoryboard:
         self.ner_dreams_personality_chain = ner_dreams_personality_chain
         self.user_id = user_id
         self.llm_runable = llm_runable
-        
+
     @classmethod
-    def form_builder(cls,
-                     llm_runable: Runnable[LanguageModelInput, BaseMessage],
-                     builder: StructuredStoryboardCSVBuilder,
-                     dreams_guidance_context: str,
-                     dreams_personality_context: str,
-                     guidance_llm: Runnable[LanguageModelInput, BaseMessage] = None,
-                     personality_llm: Runnable[LanguageModelInput, BaseMessage] = None,
-                     user_id: str = None, ) -> StructuredDreamsStoryboard:
+    def form_builder(
+        cls,
+        llm_runable: Runnable[LanguageModelInput, BaseMessage],
+        builder: StructuredStoryboardCSVBuilder,
+        dreams_guidance_context: str,
+        dreams_personality_context: str,
+        guidance_llm: Runnable[LanguageModelInput, BaseMessage] = None,
+        personality_llm: Runnable[LanguageModelInput, BaseMessage] = None,
+        user_id: str = None,
+    ) -> StructuredDreamsStoryboard:
         kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
-            llm_runable=llm_runable if guidance_llm is None else guidance_llm)
+            llm_runable=llm_runable if guidance_llm is None else guidance_llm
+        )
         kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(
             llm_runable=llm_runable if personality_llm is None else personality_llm
         )
@@ -88,14 +97,16 @@ class StructuredDreamsStoryboard:
             llm_runable=llm_runable if personality_llm is None else personality_llm
         )
 
-        return cls(builder=builder,
-                   dreams_guidance_context=dreams_guidance_context,
-                   dreams_personality_context=dreams_personality_context,
-                   kor_dreams_guidance_chain=kor_dreams_guidance_chain,
-                   kor_dreams_personality_chain=kor_dreams_personality_chain,
-                   ner_dreams_personality_chain=ner_dreams_personality_chain,
-                   user_id=user_id,
-                   llm_runable=llm_runable)
+        return cls(
+            builder=builder,
+            dreams_guidance_context=dreams_guidance_context,
+            dreams_personality_context=dreams_personality_context,
+            kor_dreams_guidance_chain=kor_dreams_guidance_chain,
+            kor_dreams_personality_chain=kor_dreams_personality_chain,
+            ner_dreams_personality_chain=ner_dreams_personality_chain,
+            user_id=user_id,
+            llm_runable=llm_runable,
+        )
 
     def kor_dreams_guidance_context(self) -> List[DreamsStepInfo]:
         """
@@ -104,11 +115,16 @@ class StructuredDreamsStoryboard:
         """
         response = self.kor_dreams_guidance_chain.run(self.dreams_guidance_context)
         dreams_step_list = []
-        if response.get('data') is not None and response.get('data').get('script') is not None:
-            step_list = response.get('data').get('script')
+        if (
+            response.get("data") is not None
+            and response.get("data").get("script") is not None
+        ):
+            step_list = response.get("data").get("script")
             for step in step_list:
-                dreams_step = DreamsStepInfo(step_advice=step.get('step_advice'),
-                                             step_description=step.get('step_description'))
+                dreams_step = DreamsStepInfo(
+                    step_advice=step.get("step_advice"),
+                    step_description=step.get("step_description"),
+                )
                 dreams_step_list.append(dreams_step)
 
         return dreams_step_list
@@ -118,15 +134,20 @@ class StructuredDreamsStoryboard:
         对性格分析结果进行抽取，得到性格分析结果
         :return:
         """
-        response = self.kor_dreams_personality_chain.run(self.dreams_personality_context)
+        response = self.kor_dreams_personality_chain.run(
+            self.dreams_personality_context
+        )
 
         personality = ""
-        if response.get('data') is not None and response.get('data').get('personality_script') is not None:
-            personality_list = response.get('data').get('personality_script')
+        if (
+            response.get("data") is not None
+            and response.get("data").get("personality_script") is not None
+        ):
+            personality_list = response.get("data").get("personality_script")
             # [{'personality': '具有情感表达和期待、注重个体快感、善于运用语义信息、对社会行为产生兴趣'}]},
             # 拼接personality 成一个字符串
             for item in personality_list:
-                personality += item.get('personality') + "、"
+                personality += item.get("personality") + "、"
 
         return personality
 
@@ -135,7 +156,9 @@ class StructuredDreamsStoryboard:
         对性格分析结果进行抽取，得到性格分析结果,ner版本
         :return:
         """
-        response: Personality = self.ner_dreams_personality_chain.invoke({"input": self.dreams_personality_context})
+        response: Personality = self.ner_dreams_personality_chain.invoke(
+            {"input": self.dreams_personality_context}
+        )
 
         return response.personality
 
@@ -158,16 +181,19 @@ class StructuredDreamsStoryboard:
 
         return messages
 
-    def loader_cosplay_builder(self, 
-                               dreams_cosplay_role: str = "心理咨询工作者", 
-                               dreams_cosplay_step: int = 1, 
-                               storage_context: Optional[StorageContext] = None,
-                               ) -> CodeGeneratorBuilder:
+    def loader_cosplay_builder(
+        self,
+        dreams_cosplay_role: str = "心理咨询工作者",
+        dreams_cosplay_step: int = 1,
+        storage_context: Optional[StorageContext] = None,
+    ) -> CodeGeneratorBuilder:
         """
         dreams_cosplay_role对话角色
         dreams_cosplay_step对话次数
         """
-        code_gen_builder = CodeGeneratorBuilder.from_template(nodes=[], storage_context=storage_context)
+        code_gen_builder = CodeGeneratorBuilder.from_template(
+            nodes=[], storage_context=storage_context
+        )
 
         # 创建一个字典，用于按照story_board组织内容和角色
         export_role = self.builder.export_role()
@@ -181,48 +207,59 @@ class StructuredDreamsStoryboard:
         try:
             personality = self.ner_dreams_personality_context()
         except Exception as e:
-            logger.error(f'ner_dreams_personality_context error:{e}')
+            logger.error(f"ner_dreams_personality_context error:{e}")
             personality = self.kor_dreams_personality_context()
 
         base_cosplay_message = self.builder_base_cosplay_code()
         _base_render_data = {
-            'cosplay_role': cosplay_role,
-            'personality': personality,
-            'messages': base_cosplay_message
+            "cosplay_role": cosplay_role,
+            "personality": personality,
+            "messages": base_cosplay_message,
         }
-        code_gen_builder.add_generator(BaseProgramGenerator.from_config(cfg={
-            "code_file": "base_template.py-tpl",
-            "render_data": _base_render_data,
-        }))
+        code_gen_builder.add_generator(
+            BaseProgramGenerator.from_config(
+                cfg={
+                    "code_file": "base_template.py-tpl",
+                    "render_data": _base_render_data,
+                }
+            )
+        )
 
         for index, guidance_question in enumerate(guidance_questions):
             if dreams_cosplay_step >= index:
                 break
-            
-            logger.info(f'{guidance_question.step_description}:{guidance_question.step_advice}')
+
+            logger.info(
+                f"{guidance_question.step_description}:{guidance_question.step_advice}"
+            )
             _dreams_render_data = {
-                'dreams_cosplay_role': dreams_cosplay_role,
-                'dreams_message': guidance_question.step_advice,
+                "dreams_cosplay_role": dreams_cosplay_role,
+                "dreams_message": guidance_question.step_advice,
             }
-            code_gen_builder.add_generator(QueryProgramGenerator.from_config(cfg={
-                "query_code_file": "dreams_query_template.py-tpl",
-                "render_data": _dreams_render_data,
-            })) 
+            code_gen_builder.add_generator(
+                QueryProgramGenerator.from_config(
+                    cfg={
+                        "query_code_file": "dreams_query_template.py-tpl",
+                        "render_data": _dreams_render_data,
+                    }
+                )
+            )
             executor = code_gen_builder.build_executor(
-                llm_runable=self.llm_runable,
-                messages=[]
+                llm_runable=self.llm_runable, messages=[]
             )
             executor.execute()
             _ai_message = executor.chat_run()
 
-            logger.info(f'{guidance_question.step_description}:{_ai_message}')
+            logger.info(f"{guidance_question.step_description}:{_ai_message}")
 
-            _ai_render_data = {
-                'ai_message_content': _ai_message.content
-            }
-            code_gen_builder.add_generator(AIProgramGenerator.from_config(cfg={
-                "ai_code_file": "ai_template.py-tpl",
-                "render_data": _ai_render_data,
-            }))
+            _ai_render_data = {"ai_message_content": _ai_message.content}
+            code_gen_builder.add_generator(
+                AIProgramGenerator.from_config(
+                    cfg={
+                        "ai_code_file": "ai_template.py-tpl",
+                        "render_data": _ai_render_data,
+                    }
+                )
+            )
 
         return code_gen_builder

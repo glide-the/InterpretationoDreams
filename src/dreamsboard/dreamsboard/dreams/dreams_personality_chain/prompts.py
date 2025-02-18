@@ -1,6 +1,6 @@
 """
 
-""" 
+"""
 
 # 03- 故事情境生成 `story_scenario_context`.txt
 STORY_BOARD_SCENE_TEMPLATE = """根据文本执行任务。以下任务信息
@@ -106,4 +106,3 @@ DREAMS_GEN_TEMPLATE = """作为一个心理咨询工作者，尝试使用开放�
 
 {scene_monologue_context}
 """
-

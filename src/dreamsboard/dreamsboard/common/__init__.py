@@ -1,7 +1,3 @@
-
-from langchain_core.tools import BaseTool
-from langchain_core.utils.function_calling import convert_to_openai_tool
-from langchain_core.pydantic_v1 import BaseModel
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -15,9 +11,12 @@ from typing import (
     Union,
     cast,
 )
-from langchain_core.tools import BaseTool
-from dreamsboard.common.struct_type import AdapterAllToolStructType
 
+from langchain_core.pydantic_v1 import BaseModel
+from langchain_core.tools import BaseTool
+from langchain_core.utils.function_calling import convert_to_openai_tool
+
+from dreamsboard.common.struct_type import AdapterAllToolStructType
 
 
 def _is_assistants_builtin_tool(
@@ -30,7 +29,6 @@ def _is_assistants_builtin_tool(
         and ("type" in tool)
         and (tool["type"] in assistants_builtin_tools)
     )
-
 
 
 def _get_assistants_tool(

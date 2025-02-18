@@ -21,5 +21,7 @@ def test_structured_dreams_storyboard_store_print() -> None:
         storage_keyframe="storage_iRMa9DMW_keyframe",
         storage_keyframe_path="./storage_iRMa9DMW_keyframe",
     )
-    out = analysis.write_md(output_path="./01_宝今天煮饺子把皮煮开了原来是喜欢你露馅儿了_阿七.md")
+    out = analysis.write_md(
+        output_path="./01_宝今天煮饺子把皮煮开了原来是喜欢你露馅儿了_阿七.md"
+    )
     print(out.text)

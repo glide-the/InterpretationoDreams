@@ -1,22 +1,23 @@
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Generic, List, Optional, Sequence, Type, TypeVar
+
 from langchain.schema import BaseMessage
-
-from dreamsboard.engine.data_structs.data_structs import IndexStruct, IndexDict
-from dreamsboard.engine.schema import BaseNode
-from dreamsboard.engine.storage.storage_context import StorageContext
-from dreamsboard.engine.generate.code_executor import CodeExecutor
-from dreamsboard.engine.generate.code_generate import CodeGenerator
-from dreamsboard.engine.generate.run_generate import CodeGeneratorHandler, CodeGeneratorChain
-from typing import Any, Dict, List, Generic, TypeVar, Sequence, Type, Optional
-
-from langchain_core.messages import ( 
+from langchain.schema.language_model import BaseLanguageModel
+from langchain_core.language_models import LanguageModelInput
+from langchain_core.messages import (
     BaseMessage,
 )
-from langchain_core.language_models import LanguageModelInput
 from langchain_core.runnables import Runnable
 
-from langchain.schema.language_model import BaseLanguageModel
-from abc import ABC, abstractmethod
-
+from dreamsboard.engine.data_structs.data_structs import IndexDict, IndexStruct
+from dreamsboard.engine.generate.code_executor import CodeExecutor
+from dreamsboard.engine.generate.code_generate import CodeGenerator
+from dreamsboard.engine.generate.run_generate import (
+    CodeGeneratorChain,
+    CodeGeneratorHandler,
+)
+from dreamsboard.engine.schema import BaseNode
+from dreamsboard.engine.storage.storage_context import StorageContext
 from dreamsboard.engine.storage.template_store.types import BaseTemplateStore
 
 IS = TypeVar("IS", bound=IndexStruct)
@@ -24,17 +25,16 @@ EngineBuilderType = TypeVar("EngineBuilderType", bound="BaseEngineBuilder")
 
 
 class BaseEngineBuilder(Generic[IS], ABC):
-
     index_struct_cls: Type[IS]
     _index_struct: Optional[IS] = None
 
     def __init__(
-            self,
-            nodes: Optional[Sequence[CodeGenerator]] = None,
-            storage_context: Optional[StorageContext] = None,
-            index_struct: Optional[IS] = None,
-            show_progress: bool = False,
-            **kwargs: Any,
+        self,
+        nodes: Optional[Sequence[CodeGenerator]] = None,
+        storage_context: Optional[StorageContext] = None,
+        index_struct: Optional[IS] = None,
+        show_progress: bool = False,
+        **kwargs: Any,
     ) -> None:
         """Initialize with parameters."""
         if index_struct is None and nodes is None:
@@ -42,7 +42,11 @@ class BaseEngineBuilder(Generic[IS], ABC):
         if index_struct is not None and nodes is not None:
             raise ValueError("Only one of nodes or index_struct can be provided.")
         # This is to explicitly make sure that the old UX is not used
-        if nodes is not None and len(nodes) >= 1 and not isinstance(nodes[0], CodeGenerator):
+        if (
+            nodes is not None
+            and len(nodes) >= 1
+            and not isinstance(nodes[0], CodeGenerator)
+        ):
             raise ValueError("nodes must be a list of CodeGenerator objects.")
         self._storage_context = storage_context or StorageContext.from_defaults()
         self._template_store = self._storage_context.template_store
@@ -60,17 +64,19 @@ class BaseEngineBuilder(Generic[IS], ABC):
                     self._template_store.set_template_hash(node_id, node.hash)
 
             self._index_struct = index_struct
-            self.build_index_from_nodes(storage_context.template_store.templates.values())
+            self.build_index_from_nodes(
+                storage_context.template_store.templates.values()
+            )
 
         self._storage_context.index_store.add_index_struct(self._index_struct)
 
     @classmethod
     def from_template(
-            cls: Type[EngineBuilderType],
-            nodes: Optional[Sequence[CodeGenerator]] = None,
-            storage_context: Optional[StorageContext] = None,
-            show_progress: bool = False,
-            **kwargs: Any,
+        cls: Type[EngineBuilderType],
+        nodes: Optional[Sequence[CodeGenerator]] = None,
+        storage_context: Optional[StorageContext] = None,
+        show_progress: bool = False,
+        **kwargs: Any,
     ) -> EngineBuilderType:
         """Create index from documents.
 
@@ -145,10 +151,14 @@ class BaseEngineBuilder(Generic[IS], ABC):
         return self._build_index_from_nodes(nodes)
 
     @abstractmethod
-    def _add_generator(self, nodes: Sequence[CodeGenerator], **insert_kwargs: Any) -> None:
+    def _add_generator(
+        self, nodes: Sequence[CodeGenerator], **insert_kwargs: Any
+    ) -> None:
         """Index-specific logic for inserting nodes to the index struct."""
 
-    def add_generators(self, nodes: Sequence[CodeGenerator], **insert_kwargs: Any) -> None:
+    def add_generators(
+        self, nodes: Sequence[CodeGenerator], **insert_kwargs: Any
+    ) -> None:
         self._template_store.add_templates(nodes, allow_update=True)
         self._add_generator(nodes, **insert_kwargs)
         self._storage_context.index_store.add_index_struct(self._index_struct)
@@ -172,6 +182,7 @@ class CodeGeneratorBuilder(BaseEngineBuilder[IndexDict]):
     被链接起来的代码生成器会按照添加的顺序依次执行，生成最终的代码
     连接器可被序列化，用于保存和加载
     """
+
     index_struct_cls = IndexDict
     _code_gen_chain: CodeGeneratorChain = CodeGeneratorChain()
 
@@ -181,21 +192,20 @@ class CodeGeneratorBuilder(BaseEngineBuilder[IndexDict]):
             index_struct = self.index_struct_cls()
         else:
             index_struct = self._index_struct
-        self._add_nodes_to_index(
-            index_struct, nodes, show_progress=self._show_progress
-        )
+        self._add_nodes_to_index(index_struct, nodes, show_progress=self._show_progress)
 
         return index_struct
 
-    def _add_generator(self, nodes: Sequence[CodeGenerator], **insert_kwargs: Any) -> None:
-
+    def _add_generator(
+        self, nodes: Sequence[CodeGenerator], **insert_kwargs: Any
+    ) -> None:
         self._add_nodes_to_index(self._index_struct, nodes, **insert_kwargs)
 
     def _add_nodes_to_index(
-            self,
-            index_struct: IndexDict,
-            nodes: Sequence[CodeGenerator],
-            show_progress: bool = False,
+        self,
+        index_struct: IndexDict,
+        nodes: Sequence[CodeGenerator],
+        show_progress: bool = False,
     ) -> None:
         """
         添加节点到索引中，节点的
@@ -208,7 +218,6 @@ class CodeGeneratorBuilder(BaseEngineBuilder[IndexDict]):
             return
 
         for node in nodes:
-
             self._code_gen_chain.add_generator(node)
             # NOTE: remove embedding from node to avoid duplication
             node_without_copy = node.copy()
@@ -217,15 +226,26 @@ class CodeGeneratorBuilder(BaseEngineBuilder[IndexDict]):
 
     def remove_last_generator(self):
         # 先删除缓存中的代码生成器
-        self._index_struct.delete(doc_id=self._code_gen_chain.chain_tail.generator.node_id)
-        self._template_store.delete_template(self._code_gen_chain.chain_tail.generator.node_id, raise_error=False)
+        self._index_struct.delete(
+            doc_id=self._code_gen_chain.chain_tail.generator.node_id
+        )
+        self._template_store.delete_template(
+            self._code_gen_chain.chain_tail.generator.node_id, raise_error=False
+        )
         self._code_gen_chain.remove_last_generator()
 
-    def build_executor(self, llm_runable: Runnable[LanguageModelInput, BaseMessage], messages: List[BaseMessage] = [], render_data: dict = {}) -> CodeExecutor:
+    def build_executor(
+        self,
+        llm_runable: Runnable[LanguageModelInput, BaseMessage],
+        messages: List[BaseMessage] = [],
+        render_data: dict = {},
+    ) -> CodeExecutor:
         if self._code_gen_chain.chain_head is None:
             raise RuntimeError("chain_head is None.")
 
         executor_code = self._code_gen_chain.generate(render_data)
         self.summary = executor_code
-        executor = CodeExecutor(executor_code=executor_code, llm_runable=llm_runable, messages=messages)
+        executor = CodeExecutor(
+            executor_code=executor_code, llm_runable=llm_runable, messages=messages
+        )
         return executor

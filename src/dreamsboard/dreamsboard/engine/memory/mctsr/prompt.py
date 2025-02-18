@@ -8,7 +8,7 @@ class PromptConfig(BaseModel):
     refine_system_prompt_data: str
     evaluate_system_prompt: str
     evaluate_system_prompt_data: str
- 
+
 
 class RefineResponse(BaseModel):
     thought: str = Field(..., description="The thought process behind the answer.")
@@ -89,7 +89,7 @@ task_step_level: {task_step_level}
     - 格式`分数/总分`
 
 """,
-refine_system_prompt_data="""# 当前上下文：
+    refine_system_prompt_data="""# 当前上下文：
 <context>
 {context}
 </context>

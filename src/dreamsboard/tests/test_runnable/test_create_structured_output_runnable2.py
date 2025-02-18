@@ -1,13 +1,16 @@
-from typing import Optional, List
+import logging
+from typing import List, Optional
 
+import langchain
 from langchain.chains.openai_functions import create_structured_output_runnable
 from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
-import logging
-import langchain
 
-from dreamsboard.document_loaders.protocol.ner_protocol import DreamsStepInfo, DreamsStepInfoListWrapper
+from dreamsboard.document_loaders.protocol.ner_protocol import (
+    DreamsStepInfo,
+    DreamsStepInfoListWrapper,
+)
 
 langchain.verbose = True
 logger = logging.getLogger(__name__)
@@ -22,15 +25,19 @@ logger.addHandler(handler)
 
 def test_create_structured_output_runnable2() -> None:
     """Test create_structured_output_runnable. 测试创建结构化输出可运行对象。"""
-    llm = ChatOpenAI(openai_api_base='http://127.0.0.1:30000/v1',
-                     model="glm-4",
-                     openai_api_key="glm-4",
-                     verbose=True,
-                     temperature=0.1,
-                     top_p=0.9, )
+    llm = ChatOpenAI(
+        openai_api_base="http://127.0.0.1:30000/v1",
+        model="glm-4",
+        openai_api_key="glm-4",
+        verbose=True,
+        temperature=0.1,
+        top_p=0.9,
+    )
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", """根据提供的故事场景，您作为心理咨询工作者可以使用开放性问题来引导来访者表达他们的感受和思维。以下是一步一步的分解：
+            (
+                "system",
+                """根据提供的故事场景，您作为心理咨询工作者可以使用开放性问题来引导来访者表达他们的感受和思维。以下是一步一步的分解：
 
 **Step 1: 建立情感连接**
 开始时，您可以通过表达理解和共鸣来建立情感连接，让来访者感到舒适。您可以说：“我注意到这个对话中有许多愉快的时刻和互动。你对这些时刻有什么特别的感受吗？”
@@ -50,19 +57,25 @@ def test_create_structured_output_runnable2() -> None:
 **Step 6: 引导自我反思**
 最后，鼓励来访者进行自我反思。您可以问：“在这个故事场景中，你是否注意到了自己的情感变化或思维模式？有没有什么你想要深入探讨或解决的问题？”
 
-通过这种方式，您可以引导来访者自由表达他们的情感和思维，帮助他们更好地理解自己和他们与他人的互动。同时，保持开放和倾听，以便在需要时提供支持和建议。"""),
-            ("ai", """step_advice|step_description
+通过这种方式，您可以引导来访者自由表达他们的情感和思维，帮助他们更好地理解自己和他们与他人的互动。同时，保持开放和倾听，以便在需要时提供支持和建议。""",
+            ),
+            (
+                "ai",
+                """step_advice|step_description
 我注意到这个对话中有许多愉快的时刻和互动。你对这些时刻有什么特别的感受吗？|建立情感连接
 在这个对话中，有哪些瞬间让你感到开心或快乐?|探索来访者的感受
 除了快乐的瞬间，是否有一些让你感到不安或担忧的地方？|询问是否有反感情绪
 你觉得自己在这些互动中扮演了什么角色?|深入探讨个人反应
 这些互动对你与他人的关系有什么影响？你觉得与朋友之间的互动如何影响你的情感状态?|探索与他人的互动
-在这个故事场景中，你是否注意到了自己的情感变化或思维模式？有没有什么你想要深入探讨或解决的问题?|引导自我反思"""),
+在这个故事场景中，你是否注意到了自己的情感变化或思维模式？有没有什么你想要深入探讨或解决的问题?|引导自我反思""",
+            ),
             ("human", "{input}"),
         ]
     )
     chain = create_structured_output_runnable(DreamsStepInfoListWrapper, llm, prompt)
-    out = chain.invoke({"input": """以下是如何通过分步引导来访者张毛峰说出自己的问题的步骤：
+    out = chain.invoke(
+        {
+            "input": """以下是如何通过分步引导来访者张毛峰说出自己的问题的步骤：
 
 ### Step 1: 建立情感连接
 - “张毛峰，我注意到你提到的这段经历让你感到非常愉快，甚至有些事情让你忍不住笑出声。能跟我分享一下，那个让你这么开心的事情吗？”
@@ -102,7 +115,9 @@ def test_create_structured_output_runnable2() -> None:
 **Step 6: 深入探讨来访者的自我认知**
 - 针对他提到的“我不是我自己了”这句话，探索他的自我认同和可能的内心变化。
 
-通过这样的引导，可以帮助张毛峰表达和认识自己的情感、动机和内心冲突，从而更好地理解自己的问题所在。"""})
+通过这样的引导，可以帮助张毛峰表达和认识自己的情感、动机和内心冲突，从而更好地理解自己的问题所在。"""
+        }
+    )
 
     logger.info(out)
     # -> Dog(name="Harry", color="brown", fav_food="chicken")
