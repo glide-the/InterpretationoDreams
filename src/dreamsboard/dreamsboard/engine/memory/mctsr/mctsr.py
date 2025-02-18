@@ -579,7 +579,8 @@ class MCTSrStoryboard(MCTSr):
 
         _ai_message = results[0]
         assert _ai_message.content is not None
-        critique = _ai_message.content
+        cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
+        critique = cleaned_text
         assert critique is not None
         self.critiques.append(critique)
 
