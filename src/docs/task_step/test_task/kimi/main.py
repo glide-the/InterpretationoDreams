@@ -44,7 +44,29 @@ llm = ChatOpenAI(
     temperature=0.1,
     top_p=0.9,
 ) 
- 
+
+zhipu_llm = ChatOpenAI(
+    openai_api_base=os.environ.get("ZHIPUAI_API_BASE"),
+    model=os.environ.get("ZHIPUAI_API_MODEL"),
+    openai_api_key=os.environ.get("ZHIPUAI_API_KEY"),
+    verbose=True,
+    temperature=0.1,
+    top_p=0.9,
+    max_tokens=8192,
+)
+
+guiji_llm = ChatOpenAI(
+    openai_api_base=os.environ.get("PPINFRA_API_BASE"),
+    model=os.environ.get("PPINFRA_API_MODEL"),
+    openai_api_key=os.environ.get("PPINFRA_API_KEY"),
+    verbose=True,
+    temperature=0.1,
+    top_p=0.9,
+    max_tokens=8192,
+) 
+
+tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
+zhipu_llm_with_tools = zhipu_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
 from tests.test_builder_task_step.prompts import (
     AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
@@ -67,8 +89,8 @@ cross_encoder_path = os.environ.get("cross_encoder_path")
 embed_model_path =  os.environ.get("embed_model_path") 
 start_task_context = os.environ.get("start_task_context")
 builder = StructuredTaskStepStoryboard.form_builder(
-    llm_runable=llm,
-    kor_dreams_task_step_llm=llm,
+    llm_runable=zhipu_llm_with_tools,
+    kor_dreams_task_step_llm=zhipu_llm_with_tools,
     start_task_context=start_task_context,
     cross_encoder_path=cross_encoder_path,
     embed_model_path=embed_model_path,
@@ -84,7 +106,7 @@ def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskS
     owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
     logger.info(f"{owner}，任务开始")
     try:
- 
+        task_engine.llm_runable = llm
         if not task_engine.check_engine_init():
             task_engine.init_task_engine()
             task_engine.init_task_engine_dreams()
@@ -99,6 +121,7 @@ def worker(step: int, task_engine: TaskEngineBuilder, task_step_store: BaseTaskS
         logger.info(f"step:{step}, {owner}，get_mcts_node")
         mcts_node = task_engine.get_mcts_node() 
         mcts_node.initialize()
+        mcts_node.llm_runable = guiji_llm
         logger.info(f"step:{step}, {owner}，get_mcts_node run")
         answer = mcts_node.run()
         
