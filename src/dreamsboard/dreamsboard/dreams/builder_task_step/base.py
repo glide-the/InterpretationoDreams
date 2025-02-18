@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import queue
-
+import re
 import torch
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import (
@@ -61,6 +61,7 @@ class StructuredTaskStepStoryboard:
     collection: CollectionService
     data_base: str
     llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage]
     aemo_representation_chain: AEMORepresentationChain
 
     def __init__(
@@ -73,6 +74,7 @@ class StructuredTaskStepStoryboard:
         aemo_representation_chain: AEMORepresentationChain,
         task_step_store: BaseTaskStepStore,
         data_base: str,
+        kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage]= None,
     ):
         """
 
@@ -88,6 +90,7 @@ class StructuredTaskStepStoryboard:
         self.aemo_representation_chain = aemo_representation_chain
         self.task_step_store = task_step_store
         self.data_base = data_base
+        self.kor_dreams_task_step_llm = kor_dreams_task_step_llm
 
     @classmethod
     def form_builder(
@@ -134,6 +137,7 @@ class StructuredTaskStepStoryboard:
         return cls(
             base_path=base_path,
             llm_runable=llm_runable,
+            kor_dreams_task_step_llm=kor_dreams_task_step_llm,
             start_task_context=start_task_context,
             cross_encoder=cross_encoder,
             collection=collection,
@@ -186,11 +190,11 @@ class StructuredTaskStepStoryboard:
 
         else:
             result = self.aemo_representation_chain.invoke_aemo_representation_context()
+    
+            cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', result["aemo_representation_context"], flags=re.DOTALL)
             task_step_iter = (
                 self.aemo_representation_chain.invoke_kor_dreams_task_step_context(
-                    aemo_representation_context=result.get(
-                        "aemo_representation_context"
-                    )
+                    aemo_representation_context=cleaned_text
                 )
             )
             for task_step in task_step_iter:

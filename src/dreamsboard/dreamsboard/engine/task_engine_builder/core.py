@@ -79,6 +79,7 @@ class TaskEngineBuilder:
     csv_file_path: str
     storyboard_executor: StructuredDreamsStoryboard
     _llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    _kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage]
 
     def __init__(
         self,
@@ -90,6 +91,7 @@ class TaskEngineBuilder:
         task_step_store: BaseTaskStepStore,
         task_step_id: str,
         data_base: str = "search_papers",
+        kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage]= None,
     ):
         self.base_path = base_path
         self.start_task_context = start_task_context
@@ -107,6 +109,7 @@ class TaskEngineBuilder:
             persist_dir=f"{self.base_path}/storage/{self.task_step_id}"
         )
         self.storage_context.task_step_store = self.task_step_store
+        self._kor_dreams_task_step_llm = kor_dreams_task_step_llm
 
     @property
     def llm_runable(self) -> Runnable[LanguageModelInput, BaseMessage]:
@@ -117,6 +120,15 @@ class TaskEngineBuilder:
         self, llm_runable: Runnable[LanguageModelInput, BaseMessage]
     ) -> None:
         self._llm_runable = llm_runable
+    @property
+    def kor_dreams_task_step_llm(self) -> Runnable[LanguageModelInput, BaseMessage]:
+        return self._kor_dreams_task_step_llm
+
+    @kor_dreams_task_step_llm.setter
+    def kor_dreams_task_step_llm(
+        self, kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage]
+    ) -> None:
+        self._kor_dreams_task_step_llm = kor_dreams_task_step_llm
 
     def check_engine_init(self):
         """
@@ -257,8 +269,8 @@ class TaskEngineBuilder:
             builder=csv_builder,
             dreams_guidance_context=dreams_guidance_context,
             dreams_personality_context=dreams_personality_context,
-            guidance_llm=self.llm_runable,
-            personality_llm=self.llm_runable,
+            guidance_llm=self.llm_runable if self._kor_dreams_task_step_llm is None else self._kor_dreams_task_step_llm,
+            personality_llm=self.llm_runable if self._kor_dreams_task_step_llm is None else self._kor_dreams_task_step_llm,
             user_id=self.task_step_id,
         )
 

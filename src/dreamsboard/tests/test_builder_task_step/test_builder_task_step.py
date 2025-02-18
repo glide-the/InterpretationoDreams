@@ -399,24 +399,26 @@ def test_builder_task_step_mctsr_threads(setup_log):
     # kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
     llm = ChatOpenAI(
-        openai_api_base=os.environ.get("HUOSHAN_API_BASE"),
-        model=os.environ.get("HUOSHAN_API_MODEL"),
-        openai_api_key=os.environ.get("HUOSHAN_API_KEY"),
+        openai_api_base=os.environ.get("KIMI_API_BASE"),
+        model=os.environ.get("KIMI_API_MODEL"),
+        openai_api_key=os.environ.get("KIMI_API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
+        max_tokens=8192,
     )
 
     guiji_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("GUIJI_API_BASE"),
-        model=os.environ.get("GUIJI_API_MODEL"),
-        openai_api_key=os.environ.get("GUIJI_API_KEY"),
+        openai_api_base=os.environ.get("PPINFRA_API_BASE"),
+        model=os.environ.get("PPINFRA_API_MODEL"),
+        openai_api_key=os.environ.get("PPINFRA_API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
+        max_tokens=8192,
     )
     llm_with_tools = llm
-    kor_dreams_task_step_llm_with_tools = llm
+    kor_dreams_task_step_llm_with_tools = guiji_llm
 
     from tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
@@ -455,7 +457,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
     embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
     start_task_context = "MCTS在PRM偏好策略模型微调的应用探索综述"
     builder = StructuredTaskStepStoryboard.form_builder(
-        llm_runable=llm_with_tools,
+        llm_runable=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
         start_task_context=start_task_context,
         cross_encoder_path=cross_encoder_path,
@@ -463,7 +465,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
     )
 
     # 初始化任务引擎
-    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
 
     def worker(
         step: int,
@@ -474,8 +476,8 @@ def test_builder_task_step_mctsr_threads(setup_log):
         owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
         logger.info(f"{owner}，任务开始")
         try:
-            if step & 2 == 0:
-                task_engine.llm_runable = guiji_llm
+           
+            task_engine.llm_runable = llm
             if not task_engine.check_engine_init():
                 task_engine.init_task_engine()
                 task_engine.init_task_engine_dreams()

@@ -33,5 +33,5 @@ TASK_STEP_MD_TEMPLATE = """
 """
 
 
-TASK_REF_TEMPLATE = """[{task_step_level}] ,chunk_id:{ref_id} 
+TASK_REF_TEMPLATE = """[{task_step_level}] {paper_title} ,chunk_id:{ref_id} 
 """

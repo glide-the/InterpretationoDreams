@@ -174,7 +174,8 @@ class TaskStepToQuestionChain(ABC):
 
         task_step_node = self.task_step_store.get_task_step(task_step_id)
         result = self.task_step_to_question_chain.invoke(task_step_node.__dict__)
-        task_step_node.task_step_question = result["task_step_question_context"]
+        cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', result["task_step_question_context"], flags=re.DOTALL)
+        task_step_node.task_step_question = cleaned_text
         self.task_step_store.add_task_step([task_step_node])
 
         # 每处理一个任务步骤，就持久化一次
@@ -231,9 +232,7 @@ class TaskStepToQuestionChain(ABC):
         """
         对任务步骤进行抽取，得到任务步骤的上下文
         3、增加项目
-        """
-
-        from langchain_community.utilities import SearxSearchWrapper
+        """ 
 
         task_step_node = self.task_step_store.get_task_step(task_step_id)
         if (
@@ -270,10 +269,12 @@ class TaskStepToQuestionChain(ABC):
         chunk_texts = []
         ref_ids = []
         chunk_ids = []
+        paper_titles = []
         for o in response:
             chunk_texts.append(o.page_content)
             ref_ids.append(o.metadata["ref_id"])
             chunk_ids.append(o.metadata["chunk_id"])
+            paper_titles.append(o.metadata.get("paper_title", ""))
 
         rankings = self.cross_encoder.rank(
             task_step_node.task_step_question,
@@ -292,6 +293,7 @@ class TaskStepToQuestionChain(ABC):
             task_step_question_context.append(
                 TaskStepContext(
                     ref_id=str(ref_ids[i]),
+                    paper_title=str(paper_titles[i]),
                     chunk_id=str(chunk_ids[i]),
                     score=ranking["score"],
                     text=ranking["text"],

@@ -63,7 +63,7 @@ _PROMPT_TEMPLATE_2 = PromptTemplate(
 )
 
 _REF_TEMPLATE = PromptTemplate(
-    input_variables=["task_step_level", "ref_id", "chunk_id", "score"],
+    input_variables=["task_step_level", "ref_id",  "paper_title", "chunk_id", "score"],
     template=TASK_REF_TEMPLATE,
 )
 
@@ -80,16 +80,17 @@ class TaskStepMD:
             for step in list(self.task_step_store.task_step_all.values()):
                 # 计算层级关系
                 level_count = step.task_step_level.count(">")
-
+                step_ref = []
                 for ref_data in step.task_step_question_context:
                     ref_txt = _REF_TEMPLATE.format(
                         task_step_level=step.task_step_level,
                         ref_id=ref_data["ref_id"],
                         chunk_id=ref_data["chunk_id"],
+                        paper_title=ref_data.get("paper_title"),
                         score=ref_data["score"],
                     )
                     ref_list.append(ref_txt)
-
+  
                 if level_count == 0:
                     # 一级，格式化为标题 #
                     step_text = _PROMPT_TEMPLATE_1.format(
