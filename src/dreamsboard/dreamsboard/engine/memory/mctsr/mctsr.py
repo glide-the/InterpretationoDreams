@@ -200,6 +200,7 @@ class MCTSr(BaseModel):
     storage_context: StorageContext
     """当前任务的会话存储"""
     llm_runable: Runnable[LanguageModelInput, BaseMessage]
+    kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage]
     problem: str
     max_rollouts: int
     exploration_constant: float = 1.0
@@ -219,17 +220,7 @@ class MCTSr(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-
-    @property
-    def llm_runable(self) -> Runnable[LanguageModelInput, BaseMessage]:
-        return self.llm_runable
-
-    @llm_runable.setter
-    def llm_runable(
-        self, llm_runable: Runnable[LanguageModelInput, BaseMessage]
-    ) -> None:
-        self.llm_runable = llm_runable
-
+ 
     def self_refine(self, node: MCTSNode) -> Tuple[MCTSNode, RefineResponse]:
         raise NotImplementedError()
 
@@ -711,7 +702,7 @@ class MCTSrStoryboard(MCTSr):
                     self._get_ai_message,
                     resource_id=f"resource_evaluate_{node.task_step_id}",
                     kwargs={
-                        "llm_runable": self.llm_runable,
+                        "llm_runable": self.llm_runable if self.kor_dreams_task_step_llm is None else self.kor_dreams_task_step_llm,
                         "system_prompt": gpt_prompt_config.evaluate_system_prompt,
                         "user_prompt": user_prompt,
                         "storage_context": self.storage_context,
@@ -725,7 +716,8 @@ class MCTSrStoryboard(MCTSr):
                 )
                 logger.info(f"owner:{owner}")
                 assert _ai_message.content is not None
-                return int(_ai_message.content)
+                cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
+                return int(cleaned_text)
             except ValueError:
                 user_prompt = (
                     f"{_ai_message.content}\n\nFailed to parse reward as an integer."
@@ -741,7 +733,7 @@ class MCTSrStoryboard(MCTSr):
         抽取根据批评意见优化当前回答并续写上下文内容
         """
         kor_task_step_refine_builder = KorLoader.form_kor_task_step_refine_builder(
-            self.llm_runable
+            llm_runable=self.llm_runable if self.kor_dreams_task_step_llm is None else self.kor_dreams_task_step_llm,
         )
         response = kor_task_step_refine_builder.run(
             refined_answer_response_message.content

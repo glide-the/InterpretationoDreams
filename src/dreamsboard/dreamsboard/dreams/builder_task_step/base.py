@@ -178,6 +178,7 @@ class StructuredTaskStepStoryboard:
                 iter_builder_queue.put(
                     TaskEngineBuilder(
                         llm_runable=self.llm_runable,
+                        kor_dreams_task_step_llm=self.kor_dreams_task_step_llm,
                         cross_encoder=self.cross_encoder,
                         collection=self.collection,
                         start_task_context=self.start_task_context,
@@ -226,6 +227,7 @@ class StructuredTaskStepStoryboard:
                 iter_builder_queue.put(
                     TaskEngineBuilder(
                         llm_runable=self.llm_runable,
+                        kor_dreams_task_step_llm=self.kor_dreams_task_step_llm,
                         cross_encoder=self.cross_encoder,
                         collection=self.collection,
                         start_task_context=self.start_task_context,

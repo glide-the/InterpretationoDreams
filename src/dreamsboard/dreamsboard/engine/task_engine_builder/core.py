@@ -389,6 +389,7 @@ class TaskEngineBuilder:
             storage_context=self.storage_context,
             root=mcts_node,
             llm_runable=self.llm_runable,
+            kor_dreams_task_step_llm=self.kor_dreams_task_step_llm,
             problem=task_step.task_step_name,
             max_rollouts=2,
         )

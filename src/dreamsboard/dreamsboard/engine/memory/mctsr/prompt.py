@@ -117,7 +117,7 @@ task_step_level: {task_step_level}
 - Does not want answers with numbered or structured content like 1. 2. 3. 4. 
 - Avoid using any segmented or explicitly structured terms. If disallowed content appears, assign a score of 10. 
 - Return *ONLY* the score. 
-
+- 只返回数字，不要返回其它内容
 """,
     evaluate_system_prompt_data="""你的目标:
 <problem>
