@@ -199,6 +199,12 @@ class TaskStepToQuestionChain(ABC):
             str(item.get(kwargs.get("union_id_key")))
             for item in kwargs.get("properties_list")
         ]
+        if len(union_ids) == 0:
+            callback([])
+            return
+        if kwargs.get("properties_list") == 0:
+            callback([])
+            return
 
         response = kwargs.get("collection").get_doc_by_ids(ids=union_ids)
 
@@ -265,7 +271,9 @@ class TaskStepToQuestionChain(ABC):
         while results is None or len(results) == 0:
             results = event_manager.get_results(event_id)
         response = results[0]
-
+        if len(response) == 0:
+            return
+        
         chunk_texts = []
         ref_ids = []
         chunk_ids = []
