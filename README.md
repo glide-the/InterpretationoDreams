@@ -10,5 +10,5 @@
 [角色扮演](src/docs/coplay_analysis/README.md)请参考`src/docs/coplay_analysis/README.md`, 
 
 
-[任务规划](src/docs/task_step/README.md)请参考`src/docs/task_step/README.md` [MCTS的工程化实现+长文本思维链生成思路分享.md](src%2Fdocs%2Ftask_step%2FMCTS%B5%C4%B9%A4%B3%CC%BB%AF%CA%B5%CF%D6%2B%B3%A4%CE%C4%B1%BE%CB%BC%CE%AC%C1%B4%C9%FA%B3%C9%CB%BC%C2%B7%B7%D6%CF%ED.md)
+[任务规划](src/docs/task_step/README.md)请参考`src/docs/task_step/README.md` [MCTS的工程化实现+长文本思维链生成思路分享.md](src/docs/task_step/MCTS的工程化实现+长文本思维链生成思路分享.md)
  
