@@ -55,7 +55,7 @@ python test_task/glm/printmd.md
 > 脚本会读取`start_task_context`环境变量
 
  
-
+### 设计思路[MCTS的工程化实现+长文本思维链生成思路分享.md](MCTS%B5%C4%B9%A4%B3%CC%BB%AF%CA%B5%CF%D6%2B%B3%A4%CE%C4%B1%BE%CB%BC%CE%AC%C1%B4%C9%FA%B3%C9%CB%BC%C2%B7%B7%D6%CF%ED.md)
 ### 模块说明
 
 #### 任务规划模块设计方案
