@@ -193,7 +193,6 @@ class ProcessIteratorize:
 
 def call_func(func, resource_id, kwargs={}):
  
- 
     sentinel = "SENTINEL"
     result_holder = []
 
