@@ -108,19 +108,16 @@ class Iteratorize:
 
 class ProcessIteratorize:
     """
-    这个类会将一个任务封装为延迟执行的迭代器（Generator）。
-    任务不会在注册时立即启动线程，而是在 __iter__ 方法第一次被调用时才会启动线程。
-    每个任务会检查资源锁，确保同一资源不会被多个任务同时访问。
+    这个类会将一个任务封装为延迟执行的迭代器（Generator）。 
     """
 
-    def __init__(self, func, resource_id, sentinel, kwargs={}, resource_lock=None):
+    def __init__(self, func, resource_id, sentinel, kwargs={}):
         self.mfunc = func
         self.q = Queue()
         self.sentinel = sentinel
         self.kwargs = kwargs
         self.stop_now = False
-        self.resource_id = resource_id
-        self.resource_lock = resource_lock  # 传入具体的锁，而不是整个lock_dict
+        self.resource_id = resource_id 
 
         self._callback = self._callback_func()  # 保存回调函数
         self.process = Process(target=self._run)  # 延迟创建进程
@@ -138,21 +135,16 @@ class ProcessIteratorize:
         return _callback
 
     def _run(self):
-        """在迭代开始时启动线程并执行任务
-        DO：在 EventManager 中，多个事件（task_function）可能会同时尝试获取相同资源的锁（resource_lock），
-        但如果一个线程持有某个锁且另一个线程正在等待同一个锁，它们就会产生死锁。
-        如果多个任务被注册到相同资源，并且这些任务还相互依赖（或者访问同一个资源），则可能会形成死锁链。
-        解决方案: 对资源锁增加一个超时机制，若在一定时间内无法获得锁，可以进行回滚，避免无限期阻塞。
+        """在迭代开始时启动线程并执行任务 
         """
 
         owner = f"getlock thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}, resource_id:{self.resource_id}")
 
-        self.resource_lock.acquire()
-        owner = f"lock thread {threading.get_native_id()}"
-        logger.info(f"owner:{owner}, resource_id:{self.resource_id}")
 
-        try:
+        try: 
+            owner = f"lock thread {threading.get_native_id()}"
+            logger.info(f"owner:{owner}, resource_id:{self.resource_id}")
             # 执行任务，传入回调函数
             self.mfunc(
                 callback=self._callback, resource_id=self.resource_id, **self.kwargs
@@ -161,8 +153,7 @@ class ProcessIteratorize:
             traceback.print_exc()
         except:
             traceback.print_exc()
-        finally:
-            self.resource_lock.release()
+        finally: 
             # 任务结束，放入sentinel来标识结束
             self.q.put(self.sentinel)
 
@@ -201,8 +192,8 @@ class ProcessIteratorize:
 
 
 def call_func(func, resource_id, kwargs={}):
-    # 创建一个资源锁，用于保护资源
-    resource_lock = Lock()
+ 
+ 
     sentinel = "SENTINEL"
     result_holder = []
 
@@ -210,8 +201,7 @@ def call_func(func, resource_id, kwargs={}):
     it = ProcessIteratorize(
         func=func,
         resource_id=resource_id,
-        sentinel=sentinel,
-        resource_lock=resource_lock,
+        sentinel=sentinel, 
         kwargs=kwargs,
     )
 
