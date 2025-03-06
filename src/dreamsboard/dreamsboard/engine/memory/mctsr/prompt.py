@@ -28,6 +28,7 @@ gpt_prompt_config = PromptConfig(
 - 不要重复`<task_step_name>`描述。
 - 不要重复`<task_step_description>`描述。
 - 不要重复`<task_step_level>`描述。
+- 使用中文回复
 
 
 结合开始任务（start_task_context），在符合任务总体描述（aemo_representation_context）的情况下，根据任务步骤名称（task_step_name）、任务步骤描述（task_step_description）和任务步骤层级（task_step_level），
@@ -73,6 +74,7 @@ task_step_level: {task_step_level}
 - 不要重复`<current_answer>`描述。 
 - 结合总体任务进度输出 
 - 不要做总结的回复
+- 使用中文回复
 
 # 输出优化后的回答
 
@@ -118,6 +120,7 @@ task_step_level: {task_step_level}
 - Avoid using any segmented or explicitly structured terms. If disallowed content appears, assign a score of 10. 
 - Return *ONLY* the score. 
 - 只返回数字，不要返回其它内容
+- 使用中文回复
 """,
     evaluate_system_prompt_data="""你的目标:
 <problem>
