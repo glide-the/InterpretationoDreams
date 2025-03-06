@@ -247,7 +247,7 @@ class TaskStepToQuestionChain(ABC):
         ):
             return
 
-        top_k = 30  # 可选参数，默认查询返回前 30个结果
+        top_k = 4  # 可选参数，默认查询返回前 4个结果
         if self.data_base == "search_papers":
             properties_list = exe_query(task_step_node.task_step_question, top_k)
         elif self.data_base == "searx":
