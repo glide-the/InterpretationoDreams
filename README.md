@@ -12,3 +12,11 @@
 
 [任务规划](src/docs/task_step/README.md)请参考`src/docs/task_step/README.md` [MCTS的工程化实现+长文本思维链生成思路分享.md](src/docs/task_step/MCTS的工程化实现+长文本思维链生成思路分享.md)
  
+
+## 正在进行中的事情
+
+- 调整MCTS的反思策略，增加上下文窗口
+
+
+    构建 StructuredStoryboard 对象，并确保生成的上下文不超过指定 token 数量。
+    默认规则为：以当前 task_step_id 为中心，取其前后步骤的内容。

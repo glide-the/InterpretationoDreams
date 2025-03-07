@@ -399,9 +399,9 @@ def test_builder_task_step_mctsr_threads(setup_log):
     # kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
     llm = ChatOpenAI(
-        openai_api_base=os.environ.get("PPINFRA_API_BASE"),
-        model=os.environ.get("PPINFRA_API_MODEL"),
-        openai_api_key=os.environ.get("PPINFRA_API_KEY"),
+        openai_api_base=os.environ.get("VINLIC_API_BASE"),
+        model=os.environ.get("VINLIC_API_MODEL"),
+        openai_api_key=os.environ.get("VINLIC_API_KEY"),
         verbose=True,
         temperature=0.9,
         top_p=0.9,
@@ -409,9 +409,9 @@ def test_builder_task_step_mctsr_threads(setup_log):
     )
 
     guiji_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
+        openai_api_base=os.environ.get("VINLIC_API_BASE"),
+        model=os.environ.get("VINLIC_API_MODEL"),
+        openai_api_key=os.environ.get("VINLIC_API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
@@ -465,7 +465,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
     )
 
     # 初始化任务引擎
-    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
 
     def worker(
         step: int,
@@ -527,7 +527,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
         buffer_queue.get()
         buffer_queue.task_done()
 
-    buffer_queue = queue.Queue(maxsize=2)  # Create the buffer queue with max size of 2
+    buffer_queue = queue.Queue(maxsize=6)  # Create the buffer queue with max size of 2
     threads = []
     step = 0
 

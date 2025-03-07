@@ -97,6 +97,7 @@ from dreamsboard.engine.memory.mctsr.prompt import (
 from dreamsboard.engine.storage.storage_context import StorageContext
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.task_engine_builder.core import CodeGeneratorBuilder
+import tiktoken  # 使用 tiktoken 库来校验 token 大小
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -317,7 +318,7 @@ class MCTSr(BaseModel):
         """Generate a zero-shot answer."""
         # 构建MCTS树,
         structured_storyboard = _build_structured_storyboard(
-            self.storage_context.task_step_store
+            task_step_store=self.storage_context.task_step_store, task_step_id = self.task_step_id
         )
 
         linked_list_node = structured_storyboard.get_task_step_node(self.task_step_id)
@@ -399,127 +400,6 @@ class MCTSrStoryboard(MCTSr):
 
         callback(_ai_message)
 
-    @staticmethod
-    def _wrapper_steps_unit(
-        context_linked_list_node: LinkedListNode, continue_task_step_id: str
-    ):
-        # 使用 TASK_STEP_MD_TEMPLATE 格式化每个任务步骤
-        formatted_task_steps = []
-        past_steps = []
-
-        past_steps.append(
-            f"{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n"
-        )
-
-        # 计算层级关系
-        level_count = context_linked_list_node.task_step_level.count(">")
-
-        if level_count == 0:
-            # 一级，格式化为标题 #
-            step_text = _PROMPT_TEMPLATE_1.format(
-                task_step_name=f"### {context_linked_list_node.task_step_name}",
-                task_step_level=context_linked_list_node.task_step_level,
-                task_step_description=context_linked_list_node.task_step_description,
-                task_step_id=context_linked_list_node.task_step_id,
-                task_step_question_answer=context_linked_list_node.task_step_question_answer,
-            )
-            formatted_task_steps.append(step_text.strip() + "\n\n")
-        elif level_count == 1:
-            # 二级，格式化为标题 ##
-            step_text = _PROMPT_TEMPLATE_1_1.format(
-                task_step_name=f"{context_linked_list_node.task_step_name}",
-                task_step_level=context_linked_list_node.task_step_level,
-                task_step_description=context_linked_list_node.task_step_description,
-                task_step_id=context_linked_list_node.task_step_id,
-                task_step_question_answer=context_linked_list_node.task_step_question_answer,
-            )
-            formatted_task_steps.append(step_text.strip() + "\n\n")
-
-        elif level_count >= 2:
-            # 三级及以上，格式化为分类 -
-            step_text = _PROMPT_TEMPLATE_1_2.format(
-                task_step_name=f"- {context_linked_list_node.task_step_name}",
-                task_step_level=context_linked_list_node.task_step_level,
-                task_step_description=context_linked_list_node.task_step_description,
-                task_step_id=context_linked_list_node.task_step_id,
-                task_step_question_answer=context_linked_list_node.task_step_question_answer,
-            )
-            formatted_task_steps.append(step_text.strip() + "\n\n")
-
-        else:
-            step_text = _PROMPT_TEMPLATE_1_3.format(
-                task_step_name=f"{context_linked_list_node.task_step_name}",
-                task_step_level=context_linked_list_node.task_step_level,
-                task_step_description=context_linked_list_node.task_step_description,
-                task_step_id=context_linked_list_node.task_step_id,
-                task_step_question_answer=context_linked_list_node.task_step_question_answer,
-            )
-
-            formatted_task_steps.append(step_text.strip())
-
-        while (
-            context_linked_list_node is not None
-            and context_linked_list_node.next is not None
-        ):
-            if context_linked_list_node.task_step_id == continue_task_step_id:
-                break
-            context_linked_list_node = context_linked_list_node.next
-            # 计算层级关系
-            level_count = context_linked_list_node.task_step_level.count(">")
-
-            past_steps.append(
-                f"{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n"
-            )
-
-            if level_count == 0:
-                # 一级，格式化为标题 #
-                step_text = _PROMPT_TEMPLATE_1.format(
-                    task_step_name=f"### {context_linked_list_node.task_step_name}",
-                    task_step_level=context_linked_list_node.task_step_level,
-                    task_step_description=context_linked_list_node.task_step_description,
-                    task_step_id=context_linked_list_node.task_step_id,
-                    task_step_question_answer=context_linked_list_node.task_step_question_answer,
-                )
-                formatted_task_steps.append(step_text.strip() + "\n\n")
-
-            elif level_count == 1:
-                # 二级，格式化为标题 ##
-                step_text = _PROMPT_TEMPLATE_1_1.format(
-                    task_step_name=f"{context_linked_list_node.task_step_name}",
-                    task_step_level=context_linked_list_node.task_step_level,
-                    task_step_description=context_linked_list_node.task_step_description,
-                    task_step_id=context_linked_list_node.task_step_id,
-                    task_step_question_answer=context_linked_list_node.task_step_question_answer,
-                )
-                formatted_task_steps.append(step_text.strip() + "\n\n")
-
-            elif level_count >= 2:
-                # 三级及以上，格式化为分类 -
-                step_text = _PROMPT_TEMPLATE_1_2.format(
-                    task_step_name=f"- {context_linked_list_node.task_step_name}",
-                    task_step_level=context_linked_list_node.task_step_level,
-                    task_step_description=context_linked_list_node.task_step_description,
-                    task_step_id=context_linked_list_node.task_step_id,
-                    task_step_question_answer=context_linked_list_node.task_step_question_answer,
-                )
-                formatted_task_steps.append(step_text.strip() + "\n\n")
-
-            else:
-                step_text = _PROMPT_TEMPLATE_1_3.format(
-                    task_step_name=f"{context_linked_list_node.task_step_name}",
-                    task_step_level=context_linked_list_node.task_step_level,
-                    task_step_description=context_linked_list_node.task_step_description,
-                    task_step_id=context_linked_list_node.task_step_id,
-                    task_step_question_answer=context_linked_list_node.task_step_question_answer,
-                )
-
-                formatted_task_steps.append(step_text.strip())
-
-        # 将格式化的步骤列表转换为字符串
-        context_placeholder = "".join(formatted_task_steps)
-        past_steps_placeholder = "".join(past_steps)
-        return context_placeholder, past_steps_placeholder
-
     def self_refine(self, node: MCTSNode) -> Tuple[MCTSNode, RefineResponse]:
         """
         自我反思
@@ -543,11 +423,11 @@ class MCTSrStoryboard(MCTSr):
         )
 
         structured_storyboard = _build_structured_storyboard(
-            self.storage_context.task_step_store
+            task_step_store=self.storage_context.task_step_store, task_step_id = self.task_step_id
         )
 
         context_linked_list_node = structured_storyboard.head
-        past_context, past_steps = self._wrapper_steps_unit(
+        past_context, past_steps = _wrapper_steps_unit(
             context_linked_list_node, node.task_step_id
         )
         task_step_node = self.storage_context.task_step_store.get_task_step(
@@ -682,11 +562,11 @@ class MCTSrStoryboard(MCTSr):
             ),
         )
         structured_storyboard = _build_structured_storyboard(
-            self.storage_context.task_step_store
+            task_step_store=self.storage_context.task_step_store, task_step_id = self.task_step_id
         )
 
         context_linked_list_node = structured_storyboard.head
-        past_context, past_steps = self._wrapper_steps_unit(
+        past_context, past_steps = _wrapper_steps_unit(
             context_linked_list_node, node.task_step_id
         )
 
@@ -797,12 +677,206 @@ def print_tree(node: MCTSNode | None, level: int = 0):
         print_tree(child, level + 1)
 
 
+def _wrapper_steps_unit(
+    context_linked_list_node: LinkedListNode, continue_task_step_id: str
+):
+    """
+    获取当前id的前面上下文
+    """
+    # 使用 TASK_STEP_MD_TEMPLATE 格式化每个任务步骤
+    formatted_task_steps = []
+    past_steps = []
+
+    past_steps.append(
+        f"{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n"
+    )
+
+    # 计算层级关系
+    level_count = context_linked_list_node.task_step_level.count(">")
+
+    if level_count == 0:
+        # 一级，格式化为标题 #
+        step_text = _PROMPT_TEMPLATE_1.format(
+            task_step_name=f"### {context_linked_list_node.task_step_name}",
+            task_step_level=context_linked_list_node.task_step_level,
+            task_step_description=context_linked_list_node.task_step_description,
+            task_step_id=context_linked_list_node.task_step_id,
+            task_step_question_answer=context_linked_list_node.task_step_question_answer,
+        )
+        formatted_task_steps.append(step_text.strip() + "\n\n")
+    elif level_count == 1:
+        # 二级，格式化为标题 ##
+        step_text = _PROMPT_TEMPLATE_1_1.format(
+            task_step_name=f"{context_linked_list_node.task_step_name}",
+            task_step_level=context_linked_list_node.task_step_level,
+            task_step_description=context_linked_list_node.task_step_description,
+            task_step_id=context_linked_list_node.task_step_id,
+            task_step_question_answer=context_linked_list_node.task_step_question_answer,
+        )
+        formatted_task_steps.append(step_text.strip() + "\n\n")
+
+    elif level_count >= 2:
+        # 三级及以上，格式化为分类 -
+        step_text = _PROMPT_TEMPLATE_1_2.format(
+            task_step_name=f"- {context_linked_list_node.task_step_name}",
+            task_step_level=context_linked_list_node.task_step_level,
+            task_step_description=context_linked_list_node.task_step_description,
+            task_step_id=context_linked_list_node.task_step_id,
+            task_step_question_answer=context_linked_list_node.task_step_question_answer,
+        )
+        formatted_task_steps.append(step_text.strip() + "\n\n")
+
+    else:
+        step_text = _PROMPT_TEMPLATE_1_3.format(
+            task_step_name=f"{context_linked_list_node.task_step_name}",
+            task_step_level=context_linked_list_node.task_step_level,
+            task_step_description=context_linked_list_node.task_step_description,
+            task_step_id=context_linked_list_node.task_step_id,
+            task_step_question_answer=context_linked_list_node.task_step_question_answer,
+        )
+
+        formatted_task_steps.append(step_text.strip())
+
+    while (
+        context_linked_list_node is not None
+        and context_linked_list_node.next is not None
+    ):
+        if context_linked_list_node.task_step_id == continue_task_step_id:
+            break
+        context_linked_list_node = context_linked_list_node.next
+        # 计算层级关系
+        level_count = context_linked_list_node.task_step_level.count(">")
+
+        past_steps.append(
+            f"{context_linked_list_node.task_step_level} task_id: {context_linked_list_node.task_step_id}, {context_linked_list_node.task_step_name}\n"
+        )
+
+        if level_count == 0:
+            # 一级，格式化为标题 #
+            step_text = _PROMPT_TEMPLATE_1.format(
+                task_step_name=f"### {context_linked_list_node.task_step_name}",
+                task_step_level=context_linked_list_node.task_step_level,
+                task_step_description=context_linked_list_node.task_step_description,
+                task_step_id=context_linked_list_node.task_step_id,
+                task_step_question_answer=context_linked_list_node.task_step_question_answer,
+            )
+            formatted_task_steps.append(step_text.strip() + "\n\n")
+
+        elif level_count == 1:
+            # 二级，格式化为标题 ##
+            step_text = _PROMPT_TEMPLATE_1_1.format(
+                task_step_name=f"{context_linked_list_node.task_step_name}",
+                task_step_level=context_linked_list_node.task_step_level,
+                task_step_description=context_linked_list_node.task_step_description,
+                task_step_id=context_linked_list_node.task_step_id,
+                task_step_question_answer=context_linked_list_node.task_step_question_answer,
+            )
+            formatted_task_steps.append(step_text.strip() + "\n\n")
+
+        elif level_count >= 2:
+            # 三级及以上，格式化为分类 -
+            step_text = _PROMPT_TEMPLATE_1_2.format(
+                task_step_name=f"- {context_linked_list_node.task_step_name}",
+                task_step_level=context_linked_list_node.task_step_level,
+                task_step_description=context_linked_list_node.task_step_description,
+                task_step_id=context_linked_list_node.task_step_id,
+                task_step_question_answer=context_linked_list_node.task_step_question_answer,
+            )
+            formatted_task_steps.append(step_text.strip() + "\n\n")
+
+        else:
+            step_text = _PROMPT_TEMPLATE_1_3.format(
+                task_step_name=f"{context_linked_list_node.task_step_name}",
+                task_step_level=context_linked_list_node.task_step_level,
+                task_step_description=context_linked_list_node.task_step_description,
+                task_step_id=context_linked_list_node.task_step_id,
+                task_step_question_answer=context_linked_list_node.task_step_question_answer,
+            )
+
+            formatted_task_steps.append(step_text.strip())
+
+    # 将格式化的步骤列表转换为字符串
+    context_placeholder = "".join(formatted_task_steps)
+    past_steps_placeholder = "".join(past_steps)
+    return context_placeholder, past_steps_placeholder
+
 def _build_structured_storyboard(
     task_step_store: BaseTaskStepStore,
+    task_step_id: str,
+    context_windows: int = 3000
 ) -> StructuredStoryboard:
+    """
+    构建 StructuredStoryboard 对象，并确保生成的上下文不超过指定 token 数量。
+    默认规则为：以当前 task_step_id 为中心，取其前后步骤的内容。
+
+    """
     task_step_all = task_step_store.task_step_all
     task_step_all_list = [val.__dict__ for val in list(task_step_all.values())]
+    # 初始化 tiktoken 编码器，选择适合的编码（此处示例使用 "cl100k_base"）
+    encoding = tiktoken.get_encoding("cl100k_base")
+    
+    # 先尝试对整个字符串进行编码
+
     structured_storyboard = StructuredStoryboard(json_data=task_step_all_list)
+    context_linked_list_node = structured_storyboard.head
+    past_context, _ = _wrapper_steps_unit(
+        context_linked_list_node, task_step_id
+    )
+
+    tokens = encoding.encode(past_context)
+
+    # 如果 token 数超出 context_windows，则按任务步骤逐条累计，直到接近限制
+    if len(tokens) > context_windows:
+
+        # 查找当前步骤在列表中的索引
+        current_index = None
+        for i, item in enumerate(task_step_all_list):
+            if item.get("id_") == task_step_id:
+                current_index = i
+                break
+
+        if current_index is None:
+            raise ValueError(f"任务步骤 {task_step_id} 未找到")
+
+        # 从当前步骤构造初始上下文
+        current_item = task_step_all_list[current_index]
+        structured_current = StructuredStoryboard(json_data=[current_item])
+        context_str, _ = _wrapper_steps_unit(structured_current.head, task_step_id)
+        tokens = encoding.encode(context_str)
+        current_token_count = len(tokens)
+        truncated_list = [current_item]
+
+        # 用双指针方式向前和向后收集上下文
+        left = current_index - 1
+        right = current_index + 1
+
+        while (left >= 0 or right < len(task_step_all_list)) and current_token_count < context_windows:
+            # 优先添加前面的步骤
+            if left >= 0:
+                candidate = task_step_all_list[left]
+                structured_candidate = StructuredStoryboard(json_data=[candidate])
+                candidate_str, _ = _wrapper_steps_unit(structured_candidate.head, task_step_id)
+                candidate_tokens = encoding.encode(candidate_str)
+                if current_token_count + len(candidate_tokens) <= context_windows:
+                    truncated_list.insert(0, candidate)
+                    current_token_count += len(candidate_tokens)
+                left -= 1
+
+            # 再添加后面的步骤
+            if right < len(task_step_all_list) and current_token_count < context_windows:
+                candidate = task_step_all_list[right]
+                structured_candidate = StructuredStoryboard(json_data=[candidate])
+                candidate_str, _ = _wrapper_steps_unit(structured_candidate.head, task_step_id)
+                candidate_tokens = encoding.encode(candidate_str)
+                if current_token_count + len(candidate_tokens) <= context_windows:
+                    truncated_list.append(candidate)
+                    current_token_count += len(candidate_tokens)
+                right += 1
+
+        structured_storyboard = StructuredStoryboard(json_data=truncated_list)
+    else:
+        structured_storyboard = StructuredStoryboard(json_data=task_step_all_list)
+
 
     return structured_storyboard
 
