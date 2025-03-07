@@ -25,6 +25,10 @@ from dreamsboard.engine.generate.code_generate import (
 )
 from dreamsboard.engine.loading import load_store_from_storage
 from dreamsboard.engine.storage.storage_context import StorageContext
+from kor.extraction.parser import KorParser
+from kor.nodes import Number, Object, Text
+from dreamsboard.common.csv_data import CSVEncoder
+import re
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -56,7 +60,9 @@ class StructuredDreamsStoryboard:
         dreams_guidance_context: str,
         dreams_personality_context: str,
         kor_dreams_guidance_chain: LLMChain,
+        kor_dreams_guidance_schema: Object,
         kor_dreams_personality_chain: LLMChain,
+        kor_dreams_personality_schema: Object,
         ner_dreams_personality_chain: LLMChain,
         user_id: str = None,
         llm_runable: Runnable[LanguageModelInput, BaseMessage] | None = None,
@@ -71,7 +77,9 @@ class StructuredDreamsStoryboard:
         self.dreams_guidance_context = dreams_guidance_context
         self.dreams_personality_context = dreams_personality_context
         self.kor_dreams_guidance_chain = kor_dreams_guidance_chain
+        self.kor_dreams_guidance_schema = kor_dreams_guidance_schema
         self.kor_dreams_personality_chain = kor_dreams_personality_chain
+        self.kor_dreams_personality_schema = kor_dreams_personality_schema
         self.ner_dreams_personality_chain = ner_dreams_personality_chain
         self.user_id = user_id
         self.llm_runable = llm_runable
@@ -87,12 +95,19 @@ class StructuredDreamsStoryboard:
         personality_llm: Runnable[LanguageModelInput, BaseMessage] = None,
         user_id: str = None,
     ) -> StructuredDreamsStoryboard:
-        kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
+        (
+            kor_dreams_guidance_chain,
+            kor_dreams_guidance_schema
+        ) = KorLoader.form_kor_dreams_guidance_builder(
             llm_runable=llm_runable if guidance_llm is None else guidance_llm
         )
-        kor_dreams_personality_chain = KorLoader.form_kor_dreams_personality_builder(
+        (
+            kor_dreams_personality_chain,
+            kor_dreams_personality_schema
+        ) = KorLoader.form_kor_dreams_personality_builder(
             llm_runable=llm_runable if personality_llm is None else personality_llm
         )
+        
         ner_dreams_personality_chain = NerLoader.form_ner_dreams_personality_builder(
             llm_runable=llm_runable if personality_llm is None else personality_llm
         )
@@ -102,7 +117,9 @@ class StructuredDreamsStoryboard:
             dreams_guidance_context=dreams_guidance_context,
             dreams_personality_context=dreams_personality_context,
             kor_dreams_guidance_chain=kor_dreams_guidance_chain,
+            kor_dreams_guidance_schema=kor_dreams_guidance_schema,
             kor_dreams_personality_chain=kor_dreams_personality_chain,
+            kor_dreams_personality_schema=kor_dreams_personality_schema,
             ner_dreams_personality_chain=ner_dreams_personality_chain,
             user_id=user_id,
             llm_runable=llm_runable,
@@ -115,17 +132,40 @@ class StructuredDreamsStoryboard:
         """
         response = self.kor_dreams_guidance_chain.run(self.dreams_guidance_context)
         dreams_step_list = []
-        if (
-            response.get("data") is not None
-            and response.get("data").get("script") is not None
-        ):
-            step_list = response.get("data").get("script")
-            for step in step_list:
-                dreams_step = DreamsStepInfo(
-                    step_advice=step.get("step_advice"),
-                    step_description=step.get("step_description"),
-                )
-                dreams_step_list.append(dreams_step)
+        try:
+            if (
+                response.get("data") is not None
+                and response.get("data").get("script") is not None
+            ):
+                step_list = response.get("data").get("script")
+                for step in step_list:
+                    dreams_step = DreamsStepInfo(
+                        step_advice=step.get("step_advice"),
+                        step_description=step.get("step_description"),
+                    )
+                    dreams_step_list.append(dreams_step)
+            else:
+                encoder = CSVEncoder(node=self.kor_dreams_guidance_schema)
+                parser = KorParser(encoder=encoder, schema_=self.kor_dreams_guidance_schema)
+                raw = response.get("raw")
+                
+                cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', raw, flags=re.DOTALL)
+                cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+                response = parser.parse(cleaned_text)
+
+                if (
+                    response.get("data") is not None
+                    and response.get("data").get("script") is not None
+                ): 
+                    step_list = response.get("data").get("script")
+                    for step in step_list:
+                        dreams_step = DreamsStepInfo(
+                            step_advice=step.get("step_advice"),
+                            step_description=step.get("step_description"),
+                        )
+                        dreams_step_list.append(dreams_step)
+        except Exception as e: 
+            logger.error("对开放问题结果进行抽取，失败", e)   
 
         return dreams_step_list
 
@@ -139,15 +179,38 @@ class StructuredDreamsStoryboard:
         )
 
         personality = ""
-        if (
-            response.get("data") is not None
-            and response.get("data").get("personality_script") is not None
-        ):
-            personality_list = response.get("data").get("personality_script")
-            # [{'personality': '具有情感表达和期待、注重个体快感、善于运用语义信息、对社会行为产生兴趣'}]},
-            # 拼接personality 成一个字符串
-            for item in personality_list:
-                personality += item.get("personality") + "、"
+        try:
+            if (
+                response.get("data") is not None
+                and response.get("data").get("personality_script") is not None
+            ):
+                personality_list = response.get("data").get("personality_script")
+                # [{'personality': '具有情感表达和期待、注重个体快感、善于运用语义信息、对社会行为产生兴趣'}]},
+                # 拼接personality 成一个字符串
+                for item in personality_list:
+                    personality += item.get("personality") + "、"
+
+            else:
+                encoder = CSVEncoder(node=self.kor_dreams_personality_schema)
+                parser = KorParser(encoder=encoder, schema_=self.kor_dreams_personality_schema)
+                raw = response.get("raw")
+                
+                cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', raw, flags=re.DOTALL)
+                cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+                response = parser.parse(cleaned_text)
+
+                if (
+                    response.get("data") is not None
+                    and response.get("data").get("script") is not None
+                ): 
+                    personality_list = response.get("data").get("personality_script")
+                    # [{'personality': '具有情感表达和期待、注重个体快感、善于运用语义信息、对社会行为产生兴趣'}]},
+                    # 拼接personality 成一个字符串
+                    for item in personality_list:
+                        personality += item.get("personality") + "、"
+                        
+        except Exception as e: 
+            logger.error("对性格分析结果进行抽取，失败", e)   
 
         return personality
 

@@ -331,6 +331,7 @@ class TaskEngineBuilder:
 
         _ai_message = results[0]
         cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
+        cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
         task_step.task_step_question_answer = cleaned_text
         self.task_step_store.add_task_step([task_step])
         # 每处理一个任务步骤，就持久化一次

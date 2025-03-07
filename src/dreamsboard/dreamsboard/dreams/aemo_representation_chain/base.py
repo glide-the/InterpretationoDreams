@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from abc import ABC
 from typing import Any, Dict, List
 
@@ -121,7 +122,11 @@ class AEMORepresentationChain(ABC):
         else:
             encoder = CSVEncoder(node=self.kor_schema)
             parser = KorParser(encoder=encoder, schema_=self.kor_schema)
-            response = parser.parse(response.get("raw"))
+            raw = response.get("raw")
+            
+            cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', raw, flags=re.DOTALL)
+            cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+            response = parser.parse(cleaned_text)
 
             if (
                 response.get("data") is not None

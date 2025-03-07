@@ -399,23 +399,23 @@ def test_builder_task_step_mctsr_threads(setup_log):
     # kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
     llm = ChatOpenAI(
-        openai_api_base=os.environ.get("KIMI_API_BASE"),
-        model=os.environ.get("KIMI_API_MODEL"),
-        openai_api_key=os.environ.get("KIMI_API_KEY"),
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-        max_tokens=8192,
-    )
-
-    guiji_llm = ChatOpenAI(
         openai_api_base=os.environ.get("PPINFRA_API_BASE"),
         model=os.environ.get("PPINFRA_API_MODEL"),
         openai_api_key=os.environ.get("PPINFRA_API_KEY"),
         verbose=True,
+        temperature=0.9,
+        top_p=0.9,
+        max_tokens=4000,
+    )
+
+    guiji_llm = ChatOpenAI(
+        openai_api_base=os.environ.get("API_BASE"),
+        model=os.environ.get("API_MODEL"),
+        openai_api_key=os.environ.get("API_KEY"),
+        verbose=True,
         temperature=0.1,
         top_p=0.9,
-        max_tokens=8192,
+        max_tokens=4000,
     )
     llm_with_tools = llm
     kor_dreams_task_step_llm_with_tools = guiji_llm
@@ -455,7 +455,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
         "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
     )
     embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
-    start_task_context = "MCTS在PRM偏好策略模型微调的应用探索综述"
+    start_task_context = "图检索增强生成（GraphRAG）"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
@@ -465,7 +465,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
     )
 
     # 初始化任务引擎
-    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
 
     def worker(
         step: int,
@@ -558,3 +558,62 @@ def test_builder_task_step_mctsr_threads(setup_log):
     # Wait for all threads to finish
     for t in threads:
         t.join()
+
+
+def test_prompt():
+    
+ 
+
+    import logging
+    import os
+    from abc import ABC
+    from typing import Any, Dict, List
+
+    from kor.extraction.parser import KorParser
+    from kor.nodes import Number, Object, Text
+    from langchain.chains import LLMChain, SequentialChain
+    from langchain.chains.base import Chain
+    from langchain_core.language_models import LanguageModelInput
+    
+    from langchain_core.output_parsers import StrOutputParser
+    from langchain_core.prompts import PromptTemplate
+    from langchain_core.runnables import Runnable, RunnableLambda, RunnableParallel
+    
+    from dreamsboard.dreams.aemo_representation_chain.prompts import (
+        AEMO_REPRESENTATION_PROMPT_TEMPLATE,
+    )
+
+    prompt_template1 = PromptTemplate(
+    input_variables=["start_task_context"],
+    template=os.environ.get(
+        "AEMO_REPRESENTATION_PROMPT_TEMPLATE",
+        AEMO_REPRESENTATION_PROMPT_TEMPLATE,
+    ),
+    )
+
+    llm_runable = ChatOpenAI(
+        openai_api_base=os.environ.get("VINLIC_API_BASE"),
+        model=os.environ.get("VINLIC_API_MODEL"),
+        openai_api_key=os.environ.get("VINLIC_API_KEY"),
+        verbose=True,
+        temperature=0.9,
+        top_p=0.9,
+        max_tokens=8192,
+    )
+
+    aemo_representation_chain = prompt_template1 | llm_runable | StrOutputParser()
+
+    def wrapper_output(_dict):
+        return {
+            # 中间变量全部打包输出
+            "aemo_representation_context": _dict["aemo_representation_context"],
+        }
+
+    aemo_representation_chain = {
+        "aemo_representation_context": aemo_representation_chain,
+    } | RunnableLambda(wrapper_output)
+    result = aemo_representation_chain.invoke(
+                {"start_task_context": "图检索增强生成（GraphRAG）"}
+            )
+    
+    print(result)

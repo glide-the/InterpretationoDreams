@@ -6,6 +6,6 @@
     "python.testing.pytestArgs": [],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "python.testing.cwd": "${cwd}",
+    "python.testing.cwd": "${cwd}/src/dreamsboard/tests",
     "python.testing.autoTestDiscoverOnSaveEnabled": true,
 }

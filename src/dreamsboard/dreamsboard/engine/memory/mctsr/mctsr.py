@@ -68,7 +68,9 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel
-
+from kor.extraction.parser import KorParser
+from kor.nodes import Number, Object, Text
+from dreamsboard.common.csv_data import CSVEncoder
 from dreamsboard.common.callback import call_func
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
 from dreamsboard.document_loaders.kor_loader import KorLoader
@@ -580,6 +582,7 @@ class MCTSrStoryboard(MCTSr):
         _ai_message = results[0]
         assert _ai_message.content is not None
         cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
+        cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
         critique = cleaned_text
         assert critique is not None
         self.critiques.append(critique)
@@ -718,6 +721,7 @@ class MCTSrStoryboard(MCTSr):
                 logger.info(f"owner:{owner}")
                 assert _ai_message.content is not None
                 cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
+                cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
                 return int(cleaned_text)
             except ValueError:
                 user_prompt = (
@@ -733,7 +737,10 @@ class MCTSrStoryboard(MCTSr):
         """
         抽取根据批评意见优化当前回答并续写上下文内容
         """
-        kor_task_step_refine_builder = KorLoader.form_kor_task_step_refine_builder(
+        (
+            kor_task_step_refine_builder,
+            schema
+        ) = KorLoader.form_kor_task_step_refine_builder(
             llm_runable=self.llm_runable if self.kor_dreams_task_step_llm is None else self.kor_dreams_task_step_llm,
         )
         response = kor_task_step_refine_builder.run(
@@ -752,6 +759,29 @@ class MCTSrStoryboard(MCTSr):
                     answer_socre=step.get("answer_socre"),
                 )
                 task_step_refine_node_list.append(task_step_refine_node)
+
+        else:
+            encoder = CSVEncoder(node=schema)
+            parser = KorParser(encoder=encoder, schema_=schema)
+            raw = response.get("raw")
+            
+            cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', raw, flags=re.DOTALL)
+            cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+            response = parser.parse(cleaned_text)
+
+            if (
+                response.get("data") is not None
+                and response.get("data").get("script") is not None
+            ): 
+                step_list = response.get("data").get("script")
+                for step in step_list:
+                    task_step_refine_node = TaskStepRefineNode(
+                        thought=step.get("thought"),
+                        answer=step.get("answer"),
+                        answer_socre=step.get("answer_socre"),
+                    )
+                    task_step_refine_node_list.append(task_step_refine_node)
+ 
 
         return task_step_refine_node_list
 

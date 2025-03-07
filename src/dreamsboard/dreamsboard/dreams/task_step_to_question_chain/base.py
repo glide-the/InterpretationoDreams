@@ -175,6 +175,7 @@ class TaskStepToQuestionChain(ABC):
         task_step_node = self.task_step_store.get_task_step(task_step_id)
         result = self.task_step_to_question_chain.invoke(task_step_node.__dict__)
         cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', result["task_step_question_context"], flags=re.DOTALL)
+        cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
         task_step_node.task_step_question = cleaned_text
         self.task_step_store.add_task_step([task_step_node])
 

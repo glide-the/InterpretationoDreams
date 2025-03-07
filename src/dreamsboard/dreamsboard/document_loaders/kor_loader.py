@@ -96,7 +96,7 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
         )
 
         chain = create_extraction_chain(llm_runable, schema)
-        return chain
+        return chain, schema
 
     @classmethod
     def form_kor_dreams_personality_builder(
@@ -200,7 +200,7 @@ Do NOT add any clarifying information. Output MUST follow the schema above. Do N
             many=True,
         )
         chain = create_extraction_chain(llm_runable, schema)
-        return chain
+        return chain, schema
 
     @classmethod
     def form_kor_dreams_task_step_builder(
@@ -481,4 +481,4 @@ Text2SQL 研究在近年来取得了显著进展，特别是在深度学习模�
         )
 
         chain = create_extraction_chain(llm_runable, schema)
-        return chain
+        return chain, schema

@@ -193,6 +193,7 @@ class StructuredTaskStepStoryboard:
             result = self.aemo_representation_chain.invoke_aemo_representation_context()
     
             cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', result["aemo_representation_context"], flags=re.DOTALL)
+            cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
             task_step_iter = (
                 self.aemo_representation_chain.invoke_kor_dreams_task_step_context(
                     aemo_representation_context=cleaned_text
