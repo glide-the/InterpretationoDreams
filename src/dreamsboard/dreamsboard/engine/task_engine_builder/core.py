@@ -332,6 +332,14 @@ class TaskEngineBuilder:
         _ai_message = results[0]
         cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
         cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+        # 定义要去除的前缀
+        prefix = "<think>"
+
+        # 如果字符串以指定前缀开头，则去除该前缀
+        if cleaned_text.startswith(prefix):
+            cleaned_text = cleaned_text[len(prefix):]
+        else:
+            cleaned_text = cleaned_text
         task_step.task_step_question_answer = cleaned_text
         self.task_step_store.add_task_step([task_step])
         # 每处理一个任务步骤，就持久化一次

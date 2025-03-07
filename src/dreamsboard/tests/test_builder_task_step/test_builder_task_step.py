@@ -22,6 +22,7 @@ from dreamsboard.engine.storage.task_step_store.types import (
 )
 from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
 from dreamsboard.engine.utils import concat_dirs
+from dreamsboard.common.callback import process_registry
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -473,6 +474,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
         task_step_store: BaseTaskStepStore,
         buffer_queue,
     ):
+        thread_id = threading.get_ident()
         owner = f"step:{step}, task_step_id:{task_engine.task_step_id}, thread {threading.get_native_id()}"
         logger.info(f"{owner}，任务开始")
         try:
@@ -521,11 +523,28 @@ def test_builder_task_step_mctsr_threads(setup_log):
 
         except Exception as e:
             logger.error("场景加载失败", e)
-
-        logger.info(f"{owner}，任务结束")
-        # After completing the task, remove an item from the buffer queue
-        buffer_queue.get()
-        buffer_queue.task_done()
+        finally:
+            # 清理操作：释放 buffer_queue 中的资源（如果需要的话）
+            try: 
+                # After completing the task, remove an item from the buffer queue
+                buffer_queue.get()
+                buffer_queue.task_done() 
+            except Exception:
+                pass
+            
+            try:  
+                # 清理当前线程中所有的子进程
+                for proc in process_registry.get(thread_id, []):
+                    try:
+                        proc.terminate()  # 或者使用 proc.kill() 更为强制
+                        proc.wait(timeout=5)
+                        print(f"子进程 {proc.pid} 已终止")
+                    except Exception as ex:
+                        print(f"终止子进程 {proc.pid} 时出错: {ex}")
+            except Exception:
+                pass
+            logger.info(f"{owner}，任务结束")
+       
 
     buffer_queue = queue.Queue(maxsize=6)  # Create the buffer queue with max size of 2
     threads = []

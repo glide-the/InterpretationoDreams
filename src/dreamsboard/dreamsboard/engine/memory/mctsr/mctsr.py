@@ -463,6 +463,14 @@ class MCTSrStoryboard(MCTSr):
         assert _ai_message.content is not None
         cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
         cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+        # 定义要去除的前缀
+        prefix = "<think>"
+
+        # 如果字符串以指定前缀开头，则去除该前缀
+        if cleaned_text.startswith(prefix):
+            cleaned_text = cleaned_text[len(prefix):]
+        else:
+            cleaned_text = cleaned_text
         critique = cleaned_text
         assert critique is not None
         self.critiques.append(critique)
@@ -602,6 +610,14 @@ class MCTSrStoryboard(MCTSr):
                 assert _ai_message.content is not None
                 cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
                 cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+                # 定义要去除的前缀
+                prefix = "<think>"
+
+                # 如果字符串以指定前缀开头，则去除该前缀
+                if cleaned_text.startswith(prefix):
+                    cleaned_text = cleaned_text[len(prefix):]
+                else:
+                    cleaned_text = cleaned_text
                 return int(cleaned_text)
             except ValueError:
                 user_prompt = (
@@ -647,6 +663,14 @@ class MCTSrStoryboard(MCTSr):
             
             cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', raw, flags=re.DOTALL)
             cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+            # 定义要去除的前缀
+            prefix = "<think>"
+
+            # 如果字符串以指定前缀开头，则去除该前缀
+            if cleaned_text.startswith(prefix):
+                cleaned_text = cleaned_text[len(prefix):]
+            else:
+                cleaned_text = cleaned_text
             response = parser.parse(cleaned_text)
 
             if (

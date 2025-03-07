@@ -203,7 +203,11 @@ def call_func(func, resource_id, kwargs={}):
         sentinel=sentinel, 
         kwargs=kwargs,
     )
+    thread_id = threading.get_ident()
 
+    # 确保当前线程在注册时有一个列表
+    process_registry.setdefault(thread_id, [])
+    process_registry[thread_id].append(it.process)
     thread = threading.Thread(target=run_iterator, args=(it, result_holder))
 
     thread.start()
@@ -302,4 +306,6 @@ class EventManager:
         self.results.clear()
 
 
+# 用于保存各线程的子进程引用（示例：全局字典）
+process_registry = {}
 event_manager = EventManager()

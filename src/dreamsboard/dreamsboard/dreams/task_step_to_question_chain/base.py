@@ -176,6 +176,14 @@ class TaskStepToQuestionChain(ABC):
         result = self.task_step_to_question_chain.invoke(task_step_node.__dict__)
         cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', result["task_step_question_context"], flags=re.DOTALL)
         cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+        # 定义要去除的前缀
+        prefix = "<think>"
+
+        # 如果字符串以指定前缀开头，则去除该前缀
+        if cleaned_text.startswith(prefix):
+            cleaned_text = cleaned_text[len(prefix):]
+        else:
+            cleaned_text = cleaned_text
         task_step_node.task_step_question = cleaned_text
         self.task_step_store.add_task_step([task_step_node])
 

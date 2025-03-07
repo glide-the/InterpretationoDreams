@@ -194,6 +194,14 @@ class StructuredTaskStepStoryboard:
     
             cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', result["aemo_representation_context"], flags=re.DOTALL)
             cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
+            # 定义要去除的前缀
+            prefix = "<think>"
+
+            # 如果字符串以指定前缀开头，则去除该前缀
+            if cleaned_text.startswith(prefix):
+                cleaned_text = cleaned_text[len(prefix):]
+            else:
+                cleaned_text = cleaned_text
             task_step_iter = (
                 self.aemo_representation_chain.invoke_kor_dreams_task_step_context(
                     aemo_representation_context=cleaned_text
