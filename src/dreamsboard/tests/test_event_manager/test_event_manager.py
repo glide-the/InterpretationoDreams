@@ -13,9 +13,9 @@ from dreamsboard.engine.generate.code_generate import (
     QueryProgramGenerator,
 )
 from dreamsboard.engine.memory.mctsr.prompt import (
-    RefineResponse,
     gpt_prompt_config,
 )
+from dreamsboard.engine.entity.task_step.task_step import RefineResponse
 from dreamsboard.engine.storage.storage_context import StorageContext
 from dreamsboard.engine.task_engine_builder.core import CodeGeneratorBuilder
 

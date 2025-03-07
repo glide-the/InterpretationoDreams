@@ -11,8 +11,8 @@ from dreamsboard.dreams.builder_task_step.base import StructuredTaskStepStoryboa
 from dreamsboard.dreams.task_step_md.base import TaskStepMD
 from dreamsboard.dreams.task_step_to_question_chain.weaviate.prepare_load import (
     get_query_hash,
-)
-from dreamsboard.engine.memory.mctsr.prompt import RefineResponse
+) 
+from dreamsboard.engine.entity.task_step.task_step import RefineResponse
 from dreamsboard.engine.storage.task_step_store.simple_task_step_store import (
     SimpleTaskStepStore,
 )
@@ -496,14 +496,22 @@ def test_builder_task_step_mctsr_threads(setup_log):
             ):
                 task_engine.generate_step_answer(code_gen_builder)
 
-            logger.info(f"step:{step}, {owner}，get_mcts_node")
-            mcts_node = task_engine.get_mcts_node()
+            if task_step.task_step_rewards is None or len(task_step.task_step_rewards)==0:
 
-            logger.info(f"step:{step}, {owner}，get_mcts_node run")
-            mcts_node.initialize()
-            answer = mcts_node.run()
+                logger.info(f"step:{step}, {owner}，get_mcts_node")
+                mcts_node = task_engine.get_mcts_node()
 
-            mcts_node.print()
+                logger.info(f"step:{step}, {owner}，get_mcts_node run")
+                mcts_node.initialize()
+                
+                answer = mcts_node.run()
+                mcts_node.print()
+                task_step.task_step_critiques = mcts_node.critiques
+                task_step.task_step_refinements = mcts_node.refinements
+                task_step.task_step_rewards = mcts_node.rewards
+            else:
+                answer = task_step.task_step_question_answe
+
             print(answer)
             task_step.task_step_question_answer = answer
             task_step_id = task_engine.task_step_id
@@ -536,8 +544,8 @@ def test_builder_task_step_mctsr_threads(setup_log):
                 # 清理当前线程中所有的子进程
                 for proc in process_registry.get(thread_id, []):
                     try:
-                        proc.terminate()  # 或者使用 proc.kill() 更为强制
-                        proc.wait(timeout=5)
+                        proc.kill()  # 或者使用 proc.kill() 更为强制
+                    
                         print(f"子进程 {proc.pid} 已终止")
                     except Exception as ex:
                         print(f"终止子进程 {proc.pid} 时出错: {ex}")

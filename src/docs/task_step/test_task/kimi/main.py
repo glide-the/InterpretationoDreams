@@ -6,7 +6,8 @@ from dreamsboard.dreams.builder_task_step.base import StructuredTaskStepStoryboa
 from dreamsboard.engine.utils import concat_dirs
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
-from dreamsboard.engine.memory.mctsr.prompt import RefineResponse
+ 
+from dreamsboard.engine.entity.task_step.task_step import RefineResponse
 from dreamsboard.dreams.task_step_md.base import TaskStepMD
 from dreamsboard.common import _get_assistants_tool
 

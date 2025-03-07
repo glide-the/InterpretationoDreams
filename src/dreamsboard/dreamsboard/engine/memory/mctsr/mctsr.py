@@ -90,14 +90,14 @@ from dreamsboard.engine.generate.code_generate import (
     BaseProgramGenerator,
     QueryProgramGenerator,
 )
-from dreamsboard.engine.memory.mctsr.prompt import (
-    RefineResponse,
+from dreamsboard.engine.memory.mctsr.prompt import ( 
     gpt_prompt_config,
 )
 from dreamsboard.engine.storage.storage_context import StorageContext
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.task_engine_builder.core import CodeGeneratorBuilder
 from dreamsboard.common import paser_response_data
+from dreamsboard.engine.entity.task_step.task_step import RefineResponse
 import tiktoken  # 使用 tiktoken 库来校验 token 大小
 
 logger = logging.getLogger(__name__)
@@ -218,7 +218,7 @@ class MCTSr(BaseModel):
 
     # Logs
     critiques: list[str] = []
-    refinements: list[str] = []
+    refinements: list[RefineResponse] = []
     rewards: list[float] = []
     selected_nodes: list[MCTSNode] = []
 
@@ -693,7 +693,7 @@ class MCTSrStoryboard(MCTSr):
                         task_step_refine_node_list.append(task_step_refine_node)
             except:
                 pass
-            
+
         return task_step_refine_node_list
 
 

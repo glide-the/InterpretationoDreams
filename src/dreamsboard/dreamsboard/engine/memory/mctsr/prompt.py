@@ -10,11 +10,6 @@ class PromptConfig(BaseModel):
     evaluate_system_prompt_data: str
 
 
-class RefineResponse(BaseModel):
-    thought: str = Field(..., description="The thought process behind the answer.")
-    answer: str = Field(..., description="The thought process behind the answer.")
-    answer_score: float = Field(..., description="The answer to the problem.")
-
 
 gpt_prompt_config = PromptConfig(
     critic_system_prompt="""完成你的目标任务,输出详细且有建设性的批评意见以改进`<current_answer>`， step by step plan. 

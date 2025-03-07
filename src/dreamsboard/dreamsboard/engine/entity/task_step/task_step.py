@@ -26,6 +26,11 @@ class TaskStepContext(BaseModel):
     score: float = Field(default=0.0, description="score")
     text: str = Field(default="", description="text")
 
+class RefineResponse(BaseModel):
+    thought: str = Field(..., description="The thought process behind the answer.")
+    answer: str = Field(..., description="The thought process behind the answer.")
+    answer_score: float = Field(..., description="The answer to the problem.")
+
 
 class TaskStepNode(BaseNode, ABC):
     """任务步骤节点"""
@@ -42,6 +47,16 @@ class TaskStepNode(BaseNode, ABC):
         default=[], description="任务步骤问题上下文"
     )
 
+
+    task_step_critiques: Optional[List[str]] = Field(
+        default=[], description="任务步骤建议内容"
+    )
+    task_step_refinements: Optional[List[RefineResponse]] = Field(
+        default=[], description="任务步骤问题上下文"
+    )
+    task_step_rewards: Optional[List[float]] = Field(
+        default=[], description="任务步骤问题上下文"
+    )
     task_step_question_answer: Optional[str] = Field(
         default="", description="任务步骤答案"
     )
