@@ -97,6 +97,7 @@ from dreamsboard.engine.memory.mctsr.prompt import (
 from dreamsboard.engine.storage.storage_context import StorageContext
 from dreamsboard.engine.storage.task_step_store.types import BaseTaskStepStore
 from dreamsboard.engine.task_engine_builder.core import CodeGeneratorBuilder
+from dreamsboard.common import paser_response_data
 import tiktoken  # 使用 tiktoken 库来校验 token 大小
 
 logger = logging.getLogger(__name__)
@@ -643,40 +644,11 @@ class MCTSrStoryboard(MCTSr):
             refined_answer_response_message.content
         )
         task_step_refine_node_list = []
-        if (
-            response.get("data") is not None
-            and response.get("data").get("script") is not None
-        ):
-            step_list = response.get("data").get("script")
-            for step in step_list:
-                task_step_refine_node = TaskStepRefineNode(
-                    thought=step.get("thought"),
-                    answer=step.get("answer"),
-                    answer_socre=step.get("answer_socre"),
-                )
-                task_step_refine_node_list.append(task_step_refine_node)
-
-        else:
-            encoder = CSVEncoder(node=schema)
-            parser = KorParser(encoder=encoder, schema_=schema)
-            raw = response.get("raw")
-            
-            cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', raw, flags=re.DOTALL)
-            cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
-            # 定义要去除的前缀
-            prefix = "<think>"
-
-            # 如果字符串以指定前缀开头，则去除该前缀
-            if cleaned_text.startswith(prefix):
-                cleaned_text = cleaned_text[len(prefix):]
-            else:
-                cleaned_text = cleaned_text
-            response = parser.parse(cleaned_text)
-
+        try:
             if (
                 response.get("data") is not None
                 and response.get("data").get("script") is not None
-            ): 
+            ):
                 step_list = response.get("data").get("script")
                 for step in step_list:
                     task_step_refine_node = TaskStepRefineNode(
@@ -685,8 +657,43 @@ class MCTSrStoryboard(MCTSr):
                         answer_socre=step.get("answer_socre"),
                     )
                     task_step_refine_node_list.append(task_step_refine_node)
- 
 
+            else: 
+                response = paser_response_data(response, schema)
+
+                if (
+                    response.get("data") is not None
+                    and response.get("data").get("script") is not None
+                ): 
+                    step_list = response.get("data").get("script")
+                    for step in step_list:
+                        task_step_refine_node = TaskStepRefineNode(
+                            thought=step.get("thought"),
+                            answer=step.get("answer"),
+                            answer_socre=step.get("answer_socre"),
+                        )
+                        task_step_refine_node_list.append(task_step_refine_node)
+        except Exception as e: 
+            logger.error("抽取根据批评意见优化当前回答并续写上下文内容，失败, 重新尝试", e)  
+
+            try:
+                response = paser_response_data(response, schema)
+
+                if (
+                    response.get("data") is not None
+                    and response.get("data").get("script") is not None
+                ): 
+                    step_list = response.get("data").get("script")
+                    for step in step_list:
+                        task_step_refine_node = TaskStepRefineNode(
+                            thought=step.get("thought"),
+                            answer=step.get("answer"),
+                            answer_socre=step.get("answer_socre"),
+                        )
+                        task_step_refine_node_list.append(task_step_refine_node)
+            except:
+                pass
+            
         return task_step_refine_node_list
 
 

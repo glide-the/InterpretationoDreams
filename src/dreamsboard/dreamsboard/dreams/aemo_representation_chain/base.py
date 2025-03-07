@@ -24,6 +24,7 @@ from dreamsboard.document_loaders.protocol.ner_protocol import TaskStepNode
 from dreamsboard.dreams.aemo_representation_chain.prompts import (
     AEMO_REPRESENTATION_PROMPT_TEMPLATE,
 )
+from dreamsboard.common import paser_response_data
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -105,37 +106,7 @@ class AEMORepresentationChain(ABC):
 
         response = self.kor_dreams_task_step_chain.run(aemo_representation_context)
         task_step_node_list = []
-        if (
-            response.get("data") is not None
-            and response.get("data").get("script") is not None
-        ):
-            step_list = response.get("data").get("script")
-            for step in step_list:
-                task_step_node = TaskStepNode(
-                    start_task_context=self.start_task_context,
-                    aemo_representation_context=aemo_representation_context,
-                    task_step_name=step.get("task_step_name"),
-                    task_step_description=step.get("task_step_description"),
-                    task_step_level=step.get("task_step_level"),
-                )
-                task_step_node_list.append(task_step_node)
-        else:
-            encoder = CSVEncoder(node=self.kor_schema)
-            parser = KorParser(encoder=encoder, schema_=self.kor_schema)
-            raw = response.get("raw")
-            
-            cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '', raw, flags=re.DOTALL)
-            cleaned_text = re.sub(r'<think>.*?</think>', '', cleaned_text, flags=re.DOTALL)
-            # 定义要去除的前缀
-            prefix = "<think>"
-
-            # 如果字符串以指定前缀开头，则去除该前缀
-            if cleaned_text.startswith(prefix):
-                cleaned_text = cleaned_text[len(prefix):]
-            else:
-                cleaned_text = cleaned_text
-            response = parser.parse(cleaned_text)
-
+        try:
             if (
                 response.get("data") is not None
                 and response.get("data").get("script") is not None
@@ -150,6 +121,46 @@ class AEMORepresentationChain(ABC):
                         task_step_level=step.get("task_step_level"),
                     )
                     task_step_node_list.append(task_step_node)
+            else: 
+                response = paser_response_data(response, self.kor_schema)
+                    
+                if (
+                    response.get("data") is not None
+                    and response.get("data").get("script") is not None
+                ):
+                    step_list = response.get("data").get("script")
+                    for step in step_list:
+                        task_step_node = TaskStepNode(
+                            start_task_context=self.start_task_context,
+                            aemo_representation_context=aemo_representation_context,
+                            task_step_name=step.get("task_step_name"),
+                            task_step_description=step.get("task_step_description"),
+                            task_step_level=step.get("task_step_level"),
+                        )
+                        task_step_node_list.append(task_step_node)
+        except Exception as e: 
+            logger.error("对开始任务进行抽取，得到任务步骤，失败, 重新尝试", e)  
+            try:
+                response = paser_response_data(response, self.kor_schema)
+                    
+                if (
+                    response.get("data") is not None
+                    and response.get("data").get("script") is not None
+                ):
+                    step_list = response.get("data").get("script")
+                    for step in step_list:
+                        task_step_node = TaskStepNode(
+                            start_task_context=self.start_task_context,
+                            aemo_representation_context=aemo_representation_context,
+                            task_step_name=step.get("task_step_name"),
+                            task_step_description=step.get("task_step_description"),
+                            task_step_level=step.get("task_step_level"),
+                        )
+                        task_step_node_list.append(task_step_node)
+
+            except:
+                pass
+
         return task_step_node_list
 
     def invoke_aemo_representation_context(self) -> Dict[str, Any]:
