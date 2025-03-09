@@ -496,7 +496,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
             ):
                 task_engine.generate_step_answer(code_gen_builder)
 
-            if task_step.task_step_rewards is None or len(task_step.task_step_rewards)==0:
+            if task_step.task_step_critiques is None or len(task_step.task_step_critiques)==0:
 
                 logger.info(f"step:{step}, {owner}，get_mcts_node")
                 mcts_node = task_engine.get_mcts_node()
@@ -510,7 +510,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
                 task_step.task_step_refinements = mcts_node.refinements
                 task_step.task_step_rewards = mcts_node.rewards
             else:
-                answer = task_step.task_step_question_answe
+                answer = task_step.task_step_question_answer
 
             print(answer)
             task_step.task_step_question_answer = answer

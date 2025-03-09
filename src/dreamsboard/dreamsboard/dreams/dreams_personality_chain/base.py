@@ -62,7 +62,10 @@ class StoryBoardDreamsGenerationChain(ABC):
     ) -> StoryBoardDreamsGenerationChain:
         # 03- 故事情境生成 `story_scenario_context`.txt STORY_BOARD_SCENE_TEMPLATE_Chain
         prompt_template1 = PromptTemplate(
-            input_variables=["scene_content"], template=STORY_BOARD_SCENE_TEMPLATE
+            input_variables=["scene_content"], template=os.environ.get(
+                "STORY_BOARD_SCENE_TEMPLATE",
+                STORY_BOARD_SCENE_TEMPLATE,
+            ),
         )
 
         review_chain1 = prompt_template1 | llm_runable | StrOutputParser()

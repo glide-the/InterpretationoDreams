@@ -36,7 +36,7 @@ from dreamsboard.engine.storage.storage_context import BaseTaskStepStore
 from dreamsboard.engine.storage.task_step_store.types import DEFAULT_PERSIST_FNAME
 from dreamsboard.engine.utils import concat_dirs
 from dreamsboard.vector.base import CollectionService, DocumentWithVSId
-
+import time
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -265,6 +265,9 @@ class TaskStepToQuestionChain(ABC):
         # 插入数据到数据库
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
+        # 设置超时时间，例如 10 秒
+        timeout = 20
+        start_time = time.time()
         event_id = event_manager.register_event(
             self._into_database_query,
             resource_id=f"resource_collection_{self.collection.kb_name}",
@@ -277,7 +280,10 @@ class TaskStepToQuestionChain(ABC):
             },
         )
         results = None
-        while results is None or len(results) == 0:
+        while (results is None or len(results) == 0) and (time.time() - start_time < timeout):
+            # 每次循环延时 0.5 秒
+            time.sleep(0.5)
+                    
             results = event_manager.get_results(event_id)
         response = results[0]
         if len(response) == 0:

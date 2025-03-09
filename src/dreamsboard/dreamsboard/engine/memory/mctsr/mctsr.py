@@ -100,6 +100,8 @@ from dreamsboard.common import paser_response_data
 from dreamsboard.engine.entity.task_step.task_step import RefineResponse
 import tiktoken  # 使用 tiktoken 库来校验 token 大小
 
+import time
+from dreamsboard.common.callback import event_manager
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -448,8 +450,10 @@ class MCTSrStoryboard(MCTSr):
 
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
-
-        results = call_func(
+        # 设置超时时间，例如 10 秒
+        timeout = 300
+        start_time = time.time()
+        event_id = event_manager.register_event(
             self._get_ai_message,
             resource_id=f"resource_critic_{self.task_step_id}",
             kwargs={
@@ -459,7 +463,14 @@ class MCTSrStoryboard(MCTSr):
                 "storage_context": self.storage_context,
             },
         )
-
+        results = None
+        while (results is None or len(results) == 0) and (time.time() - start_time < timeout):
+            # 每次循环延时 0.5 秒
+            time.sleep(0.5)
+                    
+            results = event_manager.get_results(event_id)
+        _ai_message = results[0]
+  
         _ai_message = results[0]
         assert _ai_message.content is not None
         cleaned_text = re.sub(r'◁think▷.*?◁/think▷', '',_ai_message.content, flags=re.DOTALL)
@@ -498,8 +509,10 @@ class MCTSrStoryboard(MCTSr):
 
         owner = f"register_event thread {threading.get_native_id()}"
         logger.info(f"owner:{owner}")
-
-        results = call_func(
+        # 设置超时时间，例如 10 秒
+        timeout = 300
+        start_time = time.time()
+        event_id = event_manager.register_event(
             self._get_ai_message,
             resource_id=f"resource_refine_{node.task_step_id}",
             kwargs={
@@ -509,8 +522,14 @@ class MCTSrStoryboard(MCTSr):
                 "storage_context": self.storage_context,
             },
         )
-
+        results = None
+        while (results is None or len(results) == 0) and (time.time() - start_time < timeout):
+            # 每次循环延时 0.5 秒
+            time.sleep(0.5)
+                    
+            results = event_manager.get_results(event_id)
         _refined_answer_response_message = results[0]
+           
         assert _refined_answer_response_message.content is not None
 
         json_object = {}
@@ -590,8 +609,10 @@ class MCTSrStoryboard(MCTSr):
             try:
                 owner = f"register_event thread {threading.get_native_id()}, _evaluate_answer"
                 logger.info(f"owner:{owner}")
-
-                results = call_func(
+                # 设置超时时间，例如 10 秒
+                timeout = 300
+                start_time = time.time()
+                event_id = event_manager.register_event(
                     self._get_ai_message,
                     resource_id=f"resource_evaluate_{node.task_step_id}",
                     kwargs={
@@ -601,9 +622,14 @@ class MCTSrStoryboard(MCTSr):
                         "storage_context": self.storage_context,
                     },
                 )
-
+                results = None
+                while (results is None or len(results) == 0) and (time.time() - start_time < timeout):
+                    # 每次循环延时 0.5 秒
+                    time.sleep(0.5)
+                            
+                    results = event_manager.get_results(event_id)
                 _ai_message = results[0]
-
+         
                 owner = (
                     f"event end thread {threading.get_native_id()}, _evaluate_answer"
                 )
@@ -928,7 +954,7 @@ def linked_list_to_tree(linked_list_head):
             answer=node.task_step_question_answer,
             children=[],
             visits=0,
-            Q=0,
+            Q=5,
             reward_samples=[],
             parent=parent,
         )

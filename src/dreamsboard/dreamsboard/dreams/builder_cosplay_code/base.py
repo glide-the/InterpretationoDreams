@@ -266,7 +266,7 @@ class StructuredDreamsStoryboard:
     def loader_cosplay_builder(
         self,
         dreams_cosplay_role: str = "心理咨询工作者",
-        dreams_cosplay_step: int = 1,
+        dreams_cosplay_step: int = 5,
         storage_context: Optional[StorageContext] = None,
     ) -> CodeGeneratorBuilder:
         """

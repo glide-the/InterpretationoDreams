@@ -85,6 +85,8 @@ task_step_level: {task_step_level}
 输出要求
     - 格式`分数/总分`
 
+# 使用中文回复
+
 """,
     refine_system_prompt_data="""# 当前上下文：
 <context>
@@ -113,9 +115,9 @@ task_step_level: {task_step_level}
 - Do not give a full score above 95. Ensure the reward score is an integer.
 - Does not want answers with numbered or structured content like 1. 2. 3. 4. 
 - Avoid using any segmented or explicitly structured terms. If disallowed content appears, assign a score of 10. 
+- Do not reply in languages ​​other than Chinese. If disallowed content appears, assign a score of 40. 
 - Return *ONLY* the score. 
 - 只返回数字，不要返回其它内容
-- 使用中文回复
 """,
     evaluate_system_prompt_data="""你的目标:
 <problem>
