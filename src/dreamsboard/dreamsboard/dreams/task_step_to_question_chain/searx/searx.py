@@ -64,7 +64,7 @@ def searx_query(query, top_k):
     # 第一步：模糊查询论文
     logger.info(f"Searching papers for query: {query}")
 
-    s = SearxSearchWrapper(searx_host="http://127.0.0.1:8080")
+    s = SearxSearchWrapper(engines=['google', 'bing'],searx_host="http://127.0.0.1:8080")
 
     # {
     #     "snippet": result.get("content", ""),
@@ -78,19 +78,26 @@ def searx_query(query, top_k):
         num_results=top_k,
     )
     logger.info(results)
+    api_key = "sk-nnvsTgCojtYSPkD42cn3lA0UZMIrRWMe8dpxP40YRkpCj9wm"
+    properties_list = []
+    for item in results:
+        try:
+            details_url = f"https://api.unifuncs.com/api/web-reader/{item.get('link')}?apiKey={api_key}&format=text"
+            response = requests.get(details_url)
+            json_data = {
+                "chunk_text": response.text,
+                "ref_id": get_query_hash(item.get("link", "")),
+                "chunk_id": get_query_hash(item.get("link", "")),
+                "title": item.get("title", ""),
+                "link": item.get("link"),
+                "engines": item.get("engines"),
+                "category": item.get("category"),
+            }
+            properties_list.append(json_data)
+        except Exception as e:
+            logger.error(f"Error getting details for {item.get('link')}: {e}")
+            continue
 
-    properties_list = [
-        {
-            "chunk_text": item.get("snippet", ""),
-            "ref_id": get_query_hash(item.get("link", "")),
-            "chunk_id": get_query_hash(item.get("link", "")),
-            "title": item.get("title", ""),
-            "link": item.get("link"),
-            "engines": item.get("engines"),
-            "category": item.get("category"),
-        }
-        for item in results
-    ]
     # 保存 properties_list 到临时文件
     save_to_cache(query, properties_list)
 
