@@ -13,7 +13,7 @@ from dreamsboard.vector.base import CollectionService, DocumentWithVSId
 import torch
 import logging
 
-import pytest
+import os
 import threading
 
 from dreamsboard.common.callback import (event_manager)
@@ -72,7 +72,7 @@ def test_loader_into_database():
             chunks = text_splitter.split_text(doc.page_content)
             for chunk in chunks:
                 if doc.metadata:
-                    chunk.metadata["source"] = doc.metadata["source"]
+                    chunk.metadata["source"] = os.path.basename(doc.metadata["source"])
 
             all_chunks.extend(chunks)
 
@@ -88,8 +88,8 @@ def test_loader_into_database():
     )
     properties_list = [
         {
-            "ref_id": get_query_hash(chunk.metadata["head2"]),
-            "title": chunk.metadata["head2"],
+            "ref_id": get_query_hash(chunk.metadata["source"]),
+            "title": chunk.metadata["source"],
             "chunk_text": chunk.page_content,
             **chunk.metadata,
         }
