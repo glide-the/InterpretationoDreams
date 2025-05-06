@@ -49,7 +49,7 @@ def _into_database_query(callback, resource_id, **kwargs) -> None:
 
 
 def test_loader_into_database():
-    loader = DirectoryLoader('C:/Users/Administrator/Desktop/监管',
+    loader = DirectoryLoader('/mnt/ceph/develop/jiawei/InterpretationoDreams/监管',
                              glob="**/*.md",
                              loader_cls=TextLoader,
                              loader_kwargs={"encoding": "utf-8"},
@@ -77,7 +77,7 @@ def test_loader_into_database():
             all_chunks.extend(chunks)
 
     collection_id = get_query_hash("test_loader_into_database")
-    embed_model_path = "D:/model/m3e-base"
+    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     collection = FaissCollectionService(
@@ -112,5 +112,4 @@ def test_loader_into_database():
     while results is None or len(results) == 0:
         results = event_manager.get_results(event_id)
     response = results[0]
-
-    print(response)
+ 
