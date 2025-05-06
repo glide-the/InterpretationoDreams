@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dreamsboard"
-version = "0.3.16"
+version = "0.4.0"
 description = ""
 authors = ["glide-the <2533736852@qq.com>"]
 readme = "README.md"
