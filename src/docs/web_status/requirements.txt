@@ -1,0 +1,5 @@
+# ---------- 运行 Demo 的必要依赖 ----------
+aiohttp>=3.9
+aiofiles>=23.2
+uvloop>=0.19; sys_platform != "win32"   # Windows 自动跳过
+ 

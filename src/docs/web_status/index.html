@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>InterpretationoDreams – 实时状态图</title>
+<style>
+  body{margin:0;font-family:sans-serif;background:#fafafa}
+  #graph svg{width:100%;height:100vh}
+  .node rect{stroke:#333;fill:#fff;transition:fill .3s}
+  .node.active rect{fill:#ffd966}
+  .edgePath path{stroke:#333;fill:none}
+</style>
+</head>
+<body>
+<div id="graph"></div>
+
+<!-- D3 & graphlib-dot CDN -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://unpkg.com/graphlib-dot@0.6.2/dist/graphlib-dot.min.js"></script>
+<script src="https://unpkg.com/dagre-d3@0.6.4/dist/dagre-d3.min.js"></script>
+
+<script>
+// 1. 画初始图
+const render = new dagreD3.render();
+let g;
+fetch('state.dot')
+  .then(r => r.text())
+  .then(dot => {
+    g = graphlibDot.read(dot);
+    const svg = d3.select('#graph').append('svg');
+    const inner = svg.append('g');
+    render(inner, g);
+    const bbox = svg.node().getBBox();
+    svg.attr('viewBox', `0 0 ${bbox.width} ${bbox.height}`);
+  });
+
+// 2. 接收 SSE 动态高亮
+const evtSource = new EventSource('/events');
+evtSource.onmessage = e => {
+  const {state} = JSON.parse(e.data);
+  d3.selectAll('.node').classed('active', false);
+  d3.select(`g[id="${state}"]`).classed('active', true);
+};
+</script>
+</body>
+</html> 

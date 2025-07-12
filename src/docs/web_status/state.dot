@@ -1,0 +1,9 @@
+digraph G {
+  rankdir=LR;
+  node [shape=rect];
+  InitEnv -> LoadConfig -> InitLLMClient -> Idle;
+  Idle -> TaskPlanning -> TaskStepGen -> TaskStepStore -> TaskReady;
+  TaskReady -> SceneBuild -> AemoPrompt -> EdreamsPrompt -> ResourcePool;
+  ResourcePool -> MCTSLoop -> AnswerMerge -> PostRank -> PresentResult;
+  PresentResult -> UserFeedback -> UpdateReward -> Idle;
+} 
