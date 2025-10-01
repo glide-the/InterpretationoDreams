@@ -400,9 +400,9 @@ def test_builder_task_step_mctsr_threads(setup_log):
     # kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
 
     llm = ChatOpenAI(
-        openai_api_base=os.environ.get("VINLIC_API_BASE"),
-        model=os.environ.get("VINLIC_API_MODEL"),
-        openai_api_key=os.environ.get("VINLIC_API_KEY"),
+        openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
+        model=os.environ.get("DEEPSEEK_API_MODEL"),
+        openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
         verbose=True,
         temperature=0.9,
         top_p=0.9,
@@ -410,9 +410,9 @@ def test_builder_task_step_mctsr_threads(setup_log):
     )
 
     guiji_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("VINLIC_API_BASE"),
-        model=os.environ.get("VINLIC_API_MODEL"),
-        openai_api_key=os.environ.get("VINLIC_API_KEY"),
+        openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
+        model=os.environ.get("DEEPSEEK_API_MODEL"),
+        openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
         verbose=True,
         temperature=0.1,
         top_p=0.9,
@@ -619,9 +619,9 @@ def test_prompt():
     )
 
     llm_runable = ChatOpenAI(
-        openai_api_base=os.environ.get("VINLIC_API_BASE"),
-        model=os.environ.get("VINLIC_API_MODEL"),
-        openai_api_key=os.environ.get("VINLIC_API_KEY"),
+        openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
+        model=os.environ.get("DEEPSEEK_API_MODEL"),
+        openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
         verbose=True,
         temperature=0.9,
         top_p=0.9,
