@@ -1,0 +1,54 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+  
+        {
+            "name": "pytest",
+            "purpose": ["debug-test"],
+            "presentation": {
+              "hidden": true
+            },
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "internalConsole",
+            "justMyCode": false,
+            "env": { 
+                "API_BASE": "https://ark.cn-beijing.volces.com/api/v3",
+                "API_MODEL": "ep-20241224194233-9mshp",
+                "API_KEY": "2936fb06-eebb-414d-9445-75dbeb1d8596",
+                "DEEPSEEK_API_BASE": "https://api.deepseek.com",
+                "DEEPSEEK_API_MODEL": "deepseek-chat",
+                "DEEPSEEK_API_KEY": "sk-2f46bab967aa4959b71bee499a69f584",
+                "ZHIPUAI_API_BASE": "https://open.bigmodel.cn/api/paas/v4",
+                "ZHIPUAI_API_MODEL": "glm-4-plus",
+                "ZHIPUAI_API_KEY": "68c698412000404fbc2229cf197952f4.daoo6hOcIePTgZuD",
+                "QIANFAN_API_BASE": "https://qianfan.baidubce.com/v2/",
+                "QIANFAN_API_MODEL": "deepseek-r1",
+                "QIANFAN_API_KEY": "bce-v3/ALTAK-TA0EDZx8dcluOERzyhvOI/becdfa2bda49c56ecfe063c4f321a2d9147efa9c",
+                "GUIJI_API_BASE": "https://api.siliconflow.cn/v1/",
+                "GUIJI_API_MODEL": "deepseek-ai/DeepSeek-R1",
+                "GUIJI_API_KEY": "sk-kaxgppfisihefbzpslztpwarnmmplbjhrhwmkhdcpdhyprpn",
+                "HUOSHAN_API_BASE": "https://ark.cn-beijing.volces.com/api/v3/",
+                "HUOSHAN_API_MODEL": "ep-20250205144558-hnhq8",
+                "HUOSHAN_API_KEY": "35752bde-db27-4ed8-aeba-75cdd5b18dfd",
+                "PPINFRA_API_BASE": "https://api.ppinfra.com/v3/openai/",
+                "PPINFRA_API_MODEL": "deepseek/deepseek-r1/community",
+                "PPINFRA_API_KEY": "sk_sXYaTx0NrhVQOrHdxxS0X8LAKdNNEJf2ODxy40ez3_8",
+                "KIMI_API_BASE": "https://api.moonshot.ai/v1",
+                "KIMI_API_MODEL": "kimi-k1.5-preview",
+                "KIMI_API_KEY": "sk-SMoGgZPRoc0eAeREJZzbfeBm29jsKACBJh50BDFtKSdHHMFG",
+                "VINLIC_API_BASE": "https://api.vinlic.com/deepseek-r1/v1",
+                "VINLIC_API_MODEL": "deepseek-r1",
+                "VINLIC_API_KEY": "sk-h3mEUz9t4MDpYPUw3fHNgx9rGiSyGmnJahMKzJ1WQT2mEhbU",
+                
+                "VLLM_API_BASE": "http://127.0.0.1:8000/v1",
+                "VLLM_API_MODEL": "/mnt/ceph/develop/jiawei/model_checkpoint/Qwen3-32B",
+                "VLLM_API_KEY": "sk-h3mEUz9t4MDpYPUw3fHNgx9rGiSyGmnJahMKzJ1WQT2mEhbU",
+                // "http_proxy": "http://127.0.0.1:7890",
+                // "https_proxy": "http://127.0.0.1:7890"
+            },
+          }
+           
+    ]
+}
