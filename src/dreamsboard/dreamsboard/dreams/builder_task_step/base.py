@@ -28,8 +28,7 @@ from dreamsboard.engine.storage.task_step_store.types import (
 )
 from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
 from dreamsboard.engine.utils import concat_dirs
-from dreamsboard.vector.base import CollectionService
-from dreamsboard.vector.faiss_kb_service import FaissCollectionService
+from dreamsboard.collection import BaseCollection, create_collection
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -58,7 +57,7 @@ class StructuredTaskStepStoryboard:
     task_step_store: BaseTaskStepStore
     start_task_context: str
     cross_encoder: CrossEncoder
-    collection: CollectionService
+    collection: BaseCollection
     data_base: str
     llm_runable: Runnable[LanguageModelInput, BaseMessage]
     kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage]
@@ -70,7 +69,7 @@ class StructuredTaskStepStoryboard:
         llm_runable: Runnable[LanguageModelInput, BaseMessage],
         start_task_context: str,
         cross_encoder: CrossEncoder,
-        collection: CollectionService,
+        collection: BaseCollection,
         aemo_representation_chain: AEMORepresentationChain,
         task_step_store: BaseTaskStepStore,
         data_base: str,
@@ -100,6 +99,7 @@ class StructuredTaskStepStoryboard:
         embed_model_path: str,
         start_task_context: str,
         data_base: str = "search_papers",
+        collection_kwargs: dict | None = None,
         kor_dreams_task_step_llm: Runnable[LanguageModelInput, BaseMessage]
         | None = None,
         task_step_store: BaseTaskStepStore | None = None,
@@ -120,13 +120,19 @@ class StructuredTaskStepStoryboard:
                 f"./{base_path}/storage"
             )
 
+        if data_base == "searx":
+            data_base = "web_search"
+
         collection_id = get_query_hash(start_task_context)
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        collection = FaissCollectionService(
+        extra_kwargs = dict(collection_kwargs or {})
+        collection = create_collection(
+            data_base,
             kb_name=collection_id,
             embed_model=embed_model_path,
             vector_name="samples",
             device=device,
+            **extra_kwargs,
         )
         cross_encoder = CrossEncoder(
             cross_encoder_path,
