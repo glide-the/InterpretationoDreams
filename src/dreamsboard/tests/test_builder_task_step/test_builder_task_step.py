@@ -432,7 +432,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
         "/media/checkpoint/jina-reranker-v2-base-multilingual"
     )
     embed_model_path = "/media/checkpoint/m3e-base"
-    start_task_context = "图检索增强生成（GraphRAG）"
+    start_task_context = "在 4-bit 量化后进行微调训练时，如果 cross-entropy loss 在高 step 下仍然波动较大、难以稳定收敛，这种现象是由于 batch 数据分布差异造成的，还是和特殊参数（如 LoRA / WCT / L4Q 的量化感知参数）无法充分拟合有关？针对 L4Q 这类方法，文中是否有对收敛稳定性的分析？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
@@ -442,7 +442,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
         data_base="local_collection",
         collection_kwargs=
             {
-                "docs_path": "/Users/dmeck/Downloads/量化",
+                "docs_path": "/media/gpt4-pdf-chatbot-langchain/量化",
                 "chunk_size": 50,
                 "chunk_overlap": 0,  
                 "glob": "**/*.pdf",
@@ -544,7 +544,7 @@ def test_builder_task_step_mctsr_threads(setup_log):
             logger.info(f"{owner}，任务结束")
        
 
-    buffer_queue = queue.Queue(maxsize=6)  # Create the buffer queue with max size of 2
+    buffer_queue = queue.Queue(maxsize=1)  # Create the buffer queue with max size of 2
     threads = []
     step = 0
 
