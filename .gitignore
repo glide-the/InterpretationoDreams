@@ -31,3 +31,4 @@ storage
 storage*
 监管*
 .DS_Store
+*.log
