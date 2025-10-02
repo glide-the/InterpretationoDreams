@@ -40,7 +40,7 @@ from dreamsboard.engine.storage.task_step_store.types import (
     BaseTaskStepStore,
 )
 from dreamsboard.engine.utils import concat_dirs
-from dreamsboard.vector.base import CollectionService
+from dreamsboard.collection import BaseCollection
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -73,7 +73,7 @@ class TaskEngineBuilder:
     base_path: str
     cross_encoder: CrossEncoder
     data_base: str
-    collection: CollectionService
+    collection: BaseCollection
     storage_context: StorageContext
     task_step_store: BaseTaskStepStore
     task_step_id: str
@@ -87,7 +87,7 @@ class TaskEngineBuilder:
         base_path: str,
         llm_runable: Runnable[LanguageModelInput, BaseMessage],
         cross_encoder: CrossEncoder,
-        collection: CollectionService,
+        collection: BaseCollection,
         start_task_context: str,
         task_step_store: BaseTaskStepStore,
         task_step_id: str,
