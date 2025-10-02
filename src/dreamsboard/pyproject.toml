@@ -16,7 +16,7 @@ Jinja2 = "^3.1.2"
 openapi-pydantic = "^0.5.1"
 tiktoken = "^0.11.0"
 fsspec = "^2025.9.0"
-kor = "^1.0.2"
+kor = "^3.0.0"
 
 fastapi = "^0.118.0"
 uvicorn = "^0.37.0"
@@ -26,7 +26,7 @@ json-repair = "^0.51.0"
 
 # src/dreamsboard/dreamsboard/vector extras
 SQLAlchemy = { version = "~2.0.43", optional = true }
-faiss-cpu = { version = "~1.12.0", optional = true }
+faiss-cpu = { version = "~1.12.0", optional = true, python = ">=3.9,<3.15" }
 sentence-transformers = { version = "~3.4.1", optional = true }
 einops = { version = "~0.8.1", optional = true }
 
@@ -102,7 +102,7 @@ omit = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-plugin-pypi-mirror==0.4.2"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
@@ -142,7 +142,3 @@ dotenv = "dotenv:plugin"
 
 
 # https://python-poetry.org/docs/repositories/
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
-priority = "primary"
