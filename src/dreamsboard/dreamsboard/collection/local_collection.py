@@ -101,7 +101,6 @@ class LocalCollection(BaseCollection):
         if docs_with_ids:
             self._local_service.do_clear_vs()
             self._local_service.do_add_doc(docs_with_ids)
-            self._upsert(docs_with_ids)
 
     def add_texts(
         self,

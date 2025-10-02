@@ -19,7 +19,6 @@ from dreamsboard.engine.generate.code_generate import (
     QueryProgramGenerator,
 )
 from dreamsboard.engine.memory.mctsr.prompt import (
-    RefineResponse,
     gpt_prompt_config,
 )
 
