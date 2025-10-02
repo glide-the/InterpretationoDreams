@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import os
 import uuid
-from typing import Any, Dict, List, Optional, Sequence
-from langchain_community.document_loaders import TextLoader
-from langchain_community.document_loaders.directory import DirectoryLoader
+from typing import Any, Dict, List, Optional, Sequence, Union
+from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
+from langchain_community.document_loaders.directory import DirectoryLoader, FILE_LOADER_TYPE
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from dreamsboard.vector.base import DocumentWithVSId
@@ -26,7 +26,8 @@ class LocalCollection(BaseCollection):
         glob: str = "**/*.md",
         chunk_size: int = 800,
         chunk_overlap: int = 100,
-        encoding: str = "utf-8",
+        loader_cls: FILE_LOADER_TYPE = UnstructuredFileLoader,
+        loader_kwargs: Union[dict, None] = None,
     ) -> None:
         self._service = FaissCollectionService(
             kb_name=kb_name,
@@ -44,7 +45,8 @@ class LocalCollection(BaseCollection):
         self._glob = glob
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
-        self._encoding = encoding
+        self._loader_cls = loader_cls
+        self._loader_kwargs = loader_kwargs
         self._indexed = False
 
     def _ensure_indexed(self) -> None:
@@ -62,8 +64,8 @@ class LocalCollection(BaseCollection):
         loader = DirectoryLoader(
             self._docs_path,
             glob=self._glob,
-            loader_cls=TextLoader,
-            loader_kwargs={"encoding": self._encoding},
+            loader_cls=self._loader_cls,
+            loader_kwargs=self._loader_kwargs,
             use_multithreading=True,
             show_progress=False,
         )

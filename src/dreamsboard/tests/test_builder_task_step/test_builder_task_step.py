@@ -20,6 +20,7 @@ from dreamsboard.engine.storage.task_step_store.types import (
     DEFAULT_PERSIST_FNAME,
     BaseTaskStepStore,
 )
+from langchain_community.document_loaders import UnstructuredPDFLoader
 from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
 from dreamsboard.engine.utils import concat_dirs
 from dreamsboard.common.callback import process_registry
@@ -112,9 +113,9 @@ def test_builder_task_step():
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
 
     cross_encoder_path = (
-        "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+        "/media/checkpoint/jina-reranker-v2-base-multilingual"
     )
-    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
+    embed_model_path = "/media/checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -196,9 +197,9 @@ def test_builder_task_step_answer():
 
     # 存储
     cross_encoder_path = (
-        "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+        "/media/checkpoint/jina-reranker-v2-base-multilingual"
     )
-    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
+    embed_model_path = "/media/checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -303,9 +304,9 @@ def test_builder_task_step_mctsr():
 
     # 存储
     cross_encoder_path = (
-        "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+        "/media/checkpoint/jina-reranker-v2-base-multilingual"
     )
-    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
+    embed_model_path = "/media/checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -374,31 +375,6 @@ def test_task_step_md():
 
 def test_builder_task_step_mctsr_threads(setup_log):
     import threading
-
-    # llm = ChatOpenAI(
-    #     openai_api_base=os.environ.get("API_BASE"),
-    #     model=os.environ.get("API_MODEL"),
-    #     openai_api_key=os.environ.get("API_KEY"),
-    #     verbose=True,
-    #     temperature=0.1,
-    #     top_p=0.9,
-    # )
-    # kor_dreams_task_step_llm = ChatOpenAI(
-    #     openai_api_base=os.environ.get("API_BASE"),
-    #     model=os.environ.get("API_MODEL"),
-    #     openai_api_key=os.environ.get("API_KEY"),
-    #     verbose=True,
-    #     temperature=0.95,
-    #     top_p=0.70,
-    # )
-    # if 'glm' in os.environ.get("API_MODEL"):
-
-    #     tools= [ { "type": "web_search",   "web_search": {"enable": False ,"search_result": False   }}]
-    # else:
-    #     tools = []
-    # llm_with_tools = llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
-    # kor_dreams_task_step_llm_with_tools = kor_dreams_task_step_llm.bind(   tools=[_get_assistants_tool(tool) for tool in tools] )
-
     llm = ChatOpenAI(
         openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
         model=os.environ.get("DEEPSEEK_API_MODEL"),
@@ -453,9 +429,9 @@ def test_builder_task_step_mctsr_threads(setup_log):
 
     # 存储
     cross_encoder_path = (
-        "/mnt/ceph/develop/jiawei/model_checkpoint/jina-reranker-v2-base-multilingual"
+        "/media/checkpoint/jina-reranker-v2-base-multilingual"
     )
-    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
+    embed_model_path = "/media/checkpoint/m3e-base"
     start_task_context = "图检索增强生成（GraphRAG）"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm,
@@ -463,7 +439,21 @@ def test_builder_task_step_mctsr_threads(setup_log):
         start_task_context=start_task_context,
         cross_encoder_path=cross_encoder_path,
         embed_model_path=embed_model_path,
-    )
+        data_base="local_collection",
+        collection_kwargs=
+            {
+                "docs_path": "/Users/dmeck/Downloads/量化",
+                "chunk_size": 50,
+                "chunk_overlap": 0,  
+                "glob": "**/*.pdf",
+                "loader_cls": UnstructuredPDFLoader,
+                "loader_kwargs": {
+                    "strategy": "fast",
+                    "mode": "elements",
+                    "encoding": "utf-8",
+                },
+            }
+         )
 
     # 初始化任务引擎
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
