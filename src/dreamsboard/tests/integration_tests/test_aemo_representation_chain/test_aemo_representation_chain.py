@@ -56,7 +56,7 @@ def test_aemo_representation_chain_custom_prompt():
         temperature=0.1,
         top_p=0.9,
     )
-    from tests.test_aemo_representation_chain.prompts import (
+    from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
 
@@ -91,7 +91,7 @@ def test_aemo_representation_chain_task_step():
         temperature=0.95,
         top_p=0.70,
     )
-    from tests.test_aemo_representation_chain.prompts import (
+    from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
 
@@ -134,7 +134,7 @@ def test_aemo_representation_chain_task_step_store():
         temperature=0.95,
         top_p=0.70,
     )
-    from tests.test_aemo_representation_chain.prompts import (
+    from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
 

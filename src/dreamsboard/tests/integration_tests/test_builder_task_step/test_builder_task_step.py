@@ -82,22 +82,22 @@ def test_builder_task_step():
         tools=[_get_assistants_tool(tool) for tool in tools]
     )
 
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         DREAMS_GEN_TEMPLATE as DREAMS_GEN_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         EDREAMS_EVOLUTIONARY_TEMPLATE as EDREAMS_EVOLUTIONARY_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         EDREAMS_PERSONALITY_TEMPLATE as EDREAMS_PERSONALITY_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE as STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST,
     )
 
@@ -165,22 +165,22 @@ def test_builder_task_step_answer():
         tools=[_get_assistants_tool(tool) for tool in tools]
     )
 
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         DREAMS_GEN_TEMPLATE as DREAMS_GEN_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         EDREAMS_EVOLUTIONARY_TEMPLATE as EDREAMS_EVOLUTIONARY_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         EDREAMS_PERSONALITY_TEMPLATE as EDREAMS_PERSONALITY_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE as STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST,
     )
 
@@ -272,22 +272,22 @@ def test_builder_task_step_mctsr():
         tools=[_get_assistants_tool(tool) for tool in tools]
     )
 
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         DREAMS_GEN_TEMPLATE as DREAMS_GEN_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         EDREAMS_EVOLUTIONARY_TEMPLATE as EDREAMS_EVOLUTIONARY_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         EDREAMS_PERSONALITY_TEMPLATE as EDREAMS_PERSONALITY_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE as STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST,
     )
 
@@ -397,22 +397,22 @@ def test_builder_task_step_mctsr_threads(setup_log):
     llm_with_tools = llm
     kor_dreams_task_step_llm_with_tools = guiji_llm
 
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         DREAMS_GEN_TEMPLATE as DREAMS_GEN_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         EDREAMS_EVOLUTIONARY_TEMPLATE as EDREAMS_EVOLUTIONARY_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         EDREAMS_PERSONALITY_TEMPLATE as EDREAMS_PERSONALITY_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         STORY_BOARD_SCENE_TEMPLATE as STORY_BOARD_SCENE_TEMPLATE_TEST,
     )
-    from tests.test_builder_task_step.prompts import (
+    from tests.integration_tests.test_builder_task_step.prompts import (
         STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE as STORY_BOARD_SUMMARY_CONTEXT_TEMPLATE_TEST,
     )
 
