@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.10"
+  POETRY_VERSION: "1.7.1"
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install "poetry==${{ env.POETRY_VERSION }}"
+
+      - name: Install dependencies
+        env:
+          POETRY_VIRTUALENVS_CREATE: "false"
+        run: |
+          poetry install --with docs,test --no-interaction --no-root
+
+      - name: Run unit test suite
+        run: |
+          pytest src/dreamsboard/tests/unit_tests
