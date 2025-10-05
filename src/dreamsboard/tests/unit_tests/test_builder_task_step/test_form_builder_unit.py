@@ -14,14 +14,7 @@ class _DummyCrossEncoder:
     def rank(self, *args, **kwargs):  # pragma: no cover - not used here
         return []
 
-
-sys.modules.setdefault(
-    "torch", SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False))
-)
-sys.modules.setdefault(
-    "sentence_transformers", SimpleNamespace(CrossEncoder=_DummyCrossEncoder)
-)
-
+ 
 from dreamsboard.collection import BaseCollection
 from dreamsboard.dreams.builder_task_step.base import StructuredTaskStepStoryboard
 
@@ -66,9 +59,7 @@ class _DummyAemoChain:
     ],
 )
 def test_form_builder_uses_collection(monkeypatch, data_base, extra_kwargs):
-    sys.modules.setdefault(
-        "torch", SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False))
-    )
+ 
     created: Dict[str, Dict[str, object]] = {}
 
     def fake_create(mode: str, **kwargs):
