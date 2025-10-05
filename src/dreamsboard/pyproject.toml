@@ -52,7 +52,7 @@ pytest-asyncio = "^1.2.0"
 grandalf = "^0.8"
 pytest-profiling = "^1.8.1"
 responses = "^0.25.8"
-
+pytest-socket = "^0.7.0"
 
 [tool.poetry.group.lint]
 optional = true
