@@ -12,7 +12,7 @@ def faiss_service():
     """Fixture to create a FaissKBService instance."""
     return FaissCollectionService(
         kb_name="faiss",
-        embed_model="D:\model\m3e-base",
+        embed_model="/media/checkpoint/m3e-base",
         vector_name="samples",
         device="cpu",
     )

@@ -51,12 +51,12 @@ def test_invoke_task_step_to_question():
 
     os.environ["ZHIPUAI_API_KEY"] = "testkey"
 
-    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+    cross_encoder_path = "/media/checkpoint/jina-reranker-v2-base-multilingual"
     start_task_context = "有哪些方法可以提升大模型的规划能力，各自优劣是什么？"
     collection_id = get_query_hash(start_task_context)
     collection = FaissCollectionService(
         kb_name=collection_id,
-        embed_model="D:\model\m3e-base",
+        embed_model="/media/checkpoint/m3e-base",
         vector_name="samples",
         device="cpu",
     )
@@ -99,13 +99,13 @@ def test_invoke_task_step_question_context():
     os.environ["ZHIPUAI_API_KEY"] = "testkey"
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
 
-    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+    cross_encoder_path = "/media/checkpoint/jina-reranker-v2-base-multilingual"
 
     start_task_context = "有哪些方法可以提升大模型的规划能力，各自优劣是什么？"
     collection_id = get_query_hash(start_task_context)
     collection = FaissCollectionService(
         kb_name=collection_id,
-        embed_model="D:\model\m3e-base",
+        embed_model="/media/checkpoint/m3e-base",
         vector_name="samples",
         device="cpu",
     )
@@ -147,13 +147,13 @@ def test_export_csv_file_path():
     os.environ["ZHIPUAI_API_KEY"] = "testkey"
     task_step_store = SimpleTaskStepStore.from_persist_dir(persist_dir="./storage")
 
-    cross_encoder_path = "D:\model\jina-reranker-v2-base-multilingual"
+    cross_encoder_path = "/media/checkpoint/jina-reranker-v2-base-multilingual"
 
     start_task_context = "有哪些方法可以提升大模型的规划能力，各自优劣是什么？"
     collection_id = get_query_hash(start_task_context)
     collection = FaissCollectionService(
         kb_name=collection_id,
-        embed_model="D:\model\m3e-base",
+        embed_model="/media/checkpoint/m3e-base",
         vector_name="samples",
         device="cpu",
     )
