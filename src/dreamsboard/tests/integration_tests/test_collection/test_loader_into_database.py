@@ -48,7 +48,7 @@ def _into_database_query(callback, resource_id, **kwargs) -> None:
     callback(doc_infos)
 
 
-def test_loader_into_database():
+def test_loader_into_database(embed_model_path: str):
     loader = DirectoryLoader('/mnt/ceph/develop/jiawei/InterpretationoDreams/监管',
                              glob="**/*.md",
                              loader_cls=TextLoader,
@@ -77,7 +77,6 @@ def test_loader_into_database():
             all_chunks.extend(chunks)
 
     collection_id = get_query_hash("test_loader_into_database")
-    embed_model_path = "/mnt/ceph/develop/jiawei/model_checkpoint/m3e-base"
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     collection = FaissCollectionService(

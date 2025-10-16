@@ -7,7 +7,6 @@ import time
 from pathlib import Path
 
 import langchain
-from langchain_community.chat_models import ChatOpenAI
 from tqdm import tqdm
 
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder, batch, load_csv
@@ -37,6 +36,8 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 from langchain.callbacks import wandb_tracing_enabled
 
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
+
 
 def check_and_convert_special_characters(text):
     # 将除了中文之外的所有字符转换成\U
@@ -55,12 +56,7 @@ def test_batch_extract(setup_log) -> None:
             ds_path.mkdir()
         txt_files = load_csv(data_folder)
         logger.info("获取数据，成功{}".format(len(txt_files)))
-        llm = ChatOpenAI(
-            openai_api_base="http://127.0.0.1:20000/deepseek/v1",
-            model="deepseek-chat",
-            openai_api_key="sk-c7balko7z4266rye",
-            verbose=True,
-        )
+        llm = create_chat_openai(profile="deepseek_base")
 
         # guidance_llm = ChatOpenAI(
         #     openai_api_base='http://127.0.0.1:30000/v1',
@@ -70,22 +66,8 @@ def test_batch_extract(setup_log) -> None:
         #     temperature=0.1,
         #     top_p=0.9,
         # )
-        guidance_llm = ChatOpenAI(
-            openai_api_base="http://127.0.0.1:20000/deepseek/v1",
-            model="deepseek-chat",
-            openai_api_key="sk-c7balko7z4266rye",
-            verbose=True,
-            temperature=0.95,
-            top_p=0.70,
-        )
-        personality_llm = ChatOpenAI(
-            openai_api_base="http://127.0.0.1:20000/deepseek/v1",
-            model="deepseek-chat",
-            openai_api_key="sk-c7balko7z4266rye",
-            verbose=True,
-            temperature=0.95,
-            top_p=0.70,
-        )
+        guidance_llm = create_chat_openai(profile="deepseek_guidance")
+        personality_llm = create_chat_openai(profile="deepseek_guidance")
         batch_len = 10
 
         # 对每一个文件进行操作

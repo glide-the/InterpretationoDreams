@@ -4,7 +4,6 @@ import threading
 
 from langchain.prompts import PromptTemplate
 from langchain.schema import AIMessage
-from langchain_community.chat_models import ChatOpenAI
 
 from dreamsboard.common.callback import event_manager
 from dreamsboard.document_loaders.structured_storyboard_loader import LinkedListNode

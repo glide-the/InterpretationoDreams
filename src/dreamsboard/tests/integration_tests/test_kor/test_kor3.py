@@ -2,18 +2,12 @@ import os
 
 from kor.extraction import create_extraction_chain
 from kor.nodes import Number, Object, Text
-from langchain_community.chat_models import ChatOpenAI
+
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 
 def test_kor3():
-    llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4",
-        model="glm-4",
-        openai_api_key="testkey",
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
+    llm = create_chat_openai(profile="glm4_remote_low_temp")
     # @title 长的prompt
     schema = Object(
         id="script",

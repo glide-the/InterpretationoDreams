@@ -1,7 +1,8 @@
 import logging
 
 import langchain
-from langchain_community.chat_models import ChatOpenAI
+
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
 from dreamsboard.dreams.dreams_personality_chain.base import (
@@ -20,7 +21,7 @@ logger.addHandler(handler)
 
 
 def test_structured_dreams_storyboard() -> None:
-    llm = ChatOpenAI(verbose=True)
+    llm = create_chat_openai(profile="verbose")
 
     dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
         llm_runable=llm,

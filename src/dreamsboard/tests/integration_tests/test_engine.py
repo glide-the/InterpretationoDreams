@@ -8,7 +8,8 @@ from langchain_community.adapters.openai import (
     convert_dict_to_message,
     convert_message_to_dict,
 )
-from langchain_community.chat_models import ChatOpenAI
+
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
 from dreamsboard.engine.generate.code_generate import (
@@ -96,14 +97,7 @@ def test_engine() -> None:
 
 
 def test_code():
-    llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4/",
-        model="glm-4-airx",
-        openai_api_key="12",
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
+    llm = create_chat_openai(profile="glm4_airx_guidance")
     critic_system_prompt_template = PromptTemplate(
         input_variables=[
             "problem",
@@ -159,7 +153,6 @@ def test_code1():
         SystemMessagePromptTemplate,
     )
     from langchain.schema import AIMessage, HumanMessage, SystemMessage
-    from langchain_community.chat_models import ChatOpenAI
 
     messages = []
     messages.append(
