@@ -8,7 +8,9 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
+
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 langchain.verbose = True
 logger = logging.getLogger(__name__)
@@ -26,15 +28,8 @@ def test_runnable_parallel_chain() -> None:
 
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.runnables import RunnableParallel
-    from langchain_openai import ChatOpenAI
 
-    llm = ChatOpenAI(
-        openai_api_base="http://127.0.0.1:30000/v1",
-        model="glm-4",
-        openai_api_key="glm-4",
-        verbose=True,
-        # temperature=0.95,
-    )
+    llm = create_chat_openai(profile="glm4_local_verbose")
     joke_chain = (
         ChatPromptTemplate.from_template("tell me a joke about {topic}")
         | llm

@@ -8,14 +8,17 @@ from dreamsboard.vector.faiss_kb_service import FaissCollectionService
 
 
 @pytest.fixture
-def faiss_service():
-    """Fixture to create a FaissKBService instance."""
-    return FaissCollectionService(
+def faiss_service(embed_model_path: str) -> FaissCollectionService:
+    """Fixture to create a FAISS collection bound to the configured embeddings."""
+
+    service = FaissCollectionService(
         kb_name="faiss",
-        embed_model="/media/checkpoint/m3e-base",
+        embed_model=embed_model_path,
         vector_name="samples",
         device="cpu",
     )
+    yield service
+    service.do_clear_vs()
 
 
 @pytest.mark.parametrize(

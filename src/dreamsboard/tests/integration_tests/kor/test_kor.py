@@ -1,4 +1,4 @@
-from langchain_openai import ChatOpenAI
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 from dreamsboard.document_loaders import KorLoader
 from dreamsboard.document_loaders.protocol.ner_protocol import DreamsStepInfo
@@ -16,13 +16,7 @@ def test_kor_glm_3():
     for val in dreams_analysis_store.analysis_all.values():
         dreams_guidance_context = val.dreams_guidance_context
         dreams_personality_context = val.dreams_personality_context
-    guidance_llm = ChatOpenAI(
-        openai_api_base="http://0.0.0.0:8000/v1",
-        model="glm-4",
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
+    guidance_llm = create_chat_openai(profile="glm4_gateway_guidance")
     kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
         llm_runable=guidance_llm
     )
@@ -53,13 +47,7 @@ def test_kor_glm_4():
     for val in dreams_analysis_store.analysis_all.values():
         dreams_guidance_context = val.dreams_guidance_context
         dreams_personality_context = val.dreams_personality_context
-    guidance_llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4/",
-        model="glm-4",
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
+    guidance_llm = create_chat_openai(profile="glm4_remote_guidance_slash")
     kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
         llm_runable=guidance_llm
     )

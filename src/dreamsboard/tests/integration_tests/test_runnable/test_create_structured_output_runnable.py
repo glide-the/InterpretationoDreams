@@ -3,9 +3,10 @@ from typing import Optional
 
 import langchain
 from langchain.chains.openai_functions import create_structured_output_runnable
-from langchain_community.chat_models import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
+
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 langchain.verbose = True
 logger = logging.getLogger(__name__)
@@ -26,12 +27,7 @@ class Personality(BaseModel):
 
 def test_create_structured_output_runnable() -> None:
     """Test create_structured_output_runnable. 测试创建结构化输出可运行对象。"""
-    llm = ChatOpenAI(
-        openai_api_base="http://127.0.0.1:30000/v1",
-        model="glm-4",
-        openai_api_key="glm-4",
-        verbose=True,
-    )
+    llm = create_chat_openai(profile="glm4_local_verbose")
     prompt = ChatPromptTemplate.from_messages(
         [
             (

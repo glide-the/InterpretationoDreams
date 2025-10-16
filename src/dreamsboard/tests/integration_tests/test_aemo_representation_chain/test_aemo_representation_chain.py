@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from langchain_community.chat_models import ChatOpenAI
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 from dreamsboard.dreams.aemo_representation_chain.base import AEMORepresentationChain
 from dreamsboard.engine.entity.task_step.task_step import TaskStepNode
@@ -27,18 +27,11 @@ logger.addHandler(handler)
 """
 
 
-def test_aemo_representation_chain_context():
-    llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4",
-        model="glm-4-plus",
-        openai_api_key="testkey",
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
+def test_aemo_representation_chain_context(start_task_context: str):
+    llm = create_chat_openai(profile="glm4_plus_low_temp")
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
         llm_runable=llm,
-        start_task_context="有哪些方法可以提升大模型的规划能力，各自优劣是什么？",
+        start_task_context=start_task_context,
     )
 
     result = aemo_representation_chain.invoke_aemo_representation_context()
@@ -47,15 +40,8 @@ def test_aemo_representation_chain_context():
     assert result.get("aemo_representation_context") is not None
 
 
-def test_aemo_representation_chain_custom_prompt():
-    llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4",
-        model="glm-4-plus",
-        openai_api_key="testkey",
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
+def test_aemo_representation_chain_custom_prompt(start_task_context: str):
+    llm = create_chat_openai(profile="glm4_plus_low_temp")
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
@@ -65,7 +51,7 @@ def test_aemo_representation_chain_custom_prompt():
     ] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
         llm_runable=llm,
-        start_task_context="有哪些方法可以提升大模型的规划能力，各自优劣是什么？",
+        start_task_context=start_task_context,
     )
 
     result = aemo_representation_chain.invoke_aemo_representation_context()
@@ -74,23 +60,9 @@ def test_aemo_representation_chain_custom_prompt():
     assert result.get("aemo_representation_context") is not None
 
 
-def test_aemo_representation_chain_task_step():
-    llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4",
-        model="glm-4-plus",
-        openai_api_key="testkey",
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
-    kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4",
-        model="glm-4-plus",
-        openai_api_key="testkey",
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
+def test_aemo_representation_chain_task_step(start_task_context: str):
+    llm = create_chat_openai(profile="glm4_plus_low_temp")
+    kor_dreams_task_step_llm = create_chat_openai(profile="glm4_plus_guidance")
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
@@ -100,7 +72,7 @@ def test_aemo_representation_chain_task_step():
     ] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
         llm_runable=llm,
-        start_task_context="有哪些方法可以提升大模型的规划能力，各自优劣是什么？",
+        start_task_context=start_task_context,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
     )
 
@@ -117,23 +89,9 @@ def test_aemo_representation_chain_task_step():
     assert len(task_step_iter) > 0
 
 
-def test_aemo_representation_chain_task_step_store():
-    llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4",
-        model="glm-4-plus",
-        openai_api_key="testkey",
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
-    kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base="https://open.bigmodel.cn/api/paas/v4",
-        model="glm-4-plus",
-        openai_api_key="testkey",
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
+def test_aemo_representation_chain_task_step_store(start_task_context: str):
+    llm = create_chat_openai(profile="glm4_plus_low_temp")
+    kor_dreams_task_step_llm = create_chat_openai(profile="glm4_plus_guidance")
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
@@ -143,7 +101,7 @@ def test_aemo_representation_chain_task_step_store():
     ] = AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
         llm_runable=llm,
-        start_task_context="有哪些方法可以提升大模型的规划能力，各自优劣是什么？",
+        start_task_context=start_task_context,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm,
     )
 

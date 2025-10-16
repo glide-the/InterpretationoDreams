@@ -3,8 +3,6 @@ import multiprocessing
 import os
 import queue
 
-from langchain_community.chat_models import ChatOpenAI
-
 from dreamsboard.common import _get_assistants_tool
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
 from dreamsboard.dreams.builder_task_step.base import StructuredTaskStepStoryboard
@@ -24,6 +22,8 @@ from langchain_community.document_loaders import UnstructuredPDFLoader
 from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
 from dreamsboard.engine.utils import concat_dirs
 from dreamsboard.common.callback import process_registry
+
+from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -50,25 +50,13 @@ logger.addHandler(handler)
 """
 
 
-def test_builder_task_step():
-    llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
-    kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
+def test_builder_task_step(
+    cross_encoder_path: str, embed_model_path: str
+):
+    llm = create_chat_openai(profile="openai_builder_base")
+    kor_dreams_task_step_llm = create_chat_openai(profile="openai_builder_guidance")
 
-    if "glm" in os.environ.get("API_MODEL"):
+    if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
             {
                 "type": "web_search",
@@ -112,10 +100,6 @@ def test_builder_task_step():
     os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
 
-    cross_encoder_path = (
-        "/media/checkpoint/jina-reranker-v2-base-multilingual"
-    )
-    embed_model_path = "/media/checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -133,25 +117,13 @@ def test_builder_task_step():
     assert builder.base_path == f"./{get_query_hash(start_task_context)}/"
 
 
-def test_builder_task_step_answer():
-    llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
-    kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
+def test_builder_task_step_answer(
+    cross_encoder_path: str, embed_model_path: str
+):
+    llm = create_chat_openai(profile="openai_builder_base")
+    kor_dreams_task_step_llm = create_chat_openai(profile="openai_builder_guidance")
 
-    if "glm" in os.environ.get("API_MODEL"):
+    if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
             {
                 "type": "web_search",
@@ -196,10 +168,6 @@ def test_builder_task_step_answer():
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
 
     # 存储
-    cross_encoder_path = (
-        "/media/checkpoint/jina-reranker-v2-base-multilingual"
-    )
-    embed_model_path = "/media/checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -209,8 +177,7 @@ def test_builder_task_step_answer():
         embed_model_path=embed_model_path,
     )
     # 初始化任务引擎
-    os.environ["OPENAI_API_KEY"] = os.environ.get("ZHIPUAI_API_KEY")
-    os.environ["OPENAI_API_BASE"] = "https://open.bigmodel.cn/api/paas/v4"
+    os.environ.setdefault("OPENAI_API_BASE", "https://open.bigmodel.cn/api/paas/v4")
     task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
     task_step_store = builder.task_step_store
     while not task_engine_builder.empty():
@@ -240,25 +207,13 @@ def test_json_parse():
     refined_answer = RefineResponse.model_validate_json(json_text)
 
 
-def test_builder_task_step_mctsr():
-    llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-    )
-    kor_dreams_task_step_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("API_BASE"),
-        model=os.environ.get("API_MODEL"),
-        openai_api_key=os.environ.get("API_KEY"),
-        verbose=True,
-        temperature=0.95,
-        top_p=0.70,
-    )
+def test_builder_task_step_mctsr(
+    cross_encoder_path: str, embed_model_path: str
+):
+    llm = create_chat_openai(profile="openai_builder_base")
+    kor_dreams_task_step_llm = create_chat_openai(profile="openai_builder_guidance")
 
-    if "glm" in os.environ.get("API_MODEL"):
+    if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
             {
                 "type": "web_search",
@@ -302,11 +257,6 @@ def test_builder_task_step_mctsr():
     os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
 
-    # 存储
-    cross_encoder_path = (
-        "/media/checkpoint/jina-reranker-v2-base-multilingual"
-    )
-    embed_model_path = "/media/checkpoint/m3e-base"
     start_task_context = "什么是损失函数？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
@@ -373,27 +323,13 @@ def test_task_step_md():
     print(md_text.text)
 
 
-def test_builder_task_step_mctsr_threads(setup_log):
+def test_builder_task_step_mctsr_threads(
+    setup_log, cross_encoder_path: str, embed_model_path: str
+):
     import threading
-    llm = ChatOpenAI(
-        openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
-        model=os.environ.get("DEEPSEEK_API_MODEL"),
-        openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
-        verbose=True,
-        temperature=0.9,
-        top_p=0.9,
-        max_tokens=4000,
-    )
+    llm = create_chat_openai(profile="deepseek_env_primary")
 
-    guiji_llm = ChatOpenAI(
-        openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
-        model=os.environ.get("DEEPSEEK_API_MODEL"),
-        openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
-        verbose=True,
-        temperature=0.1,
-        top_p=0.9,
-        max_tokens=4000,
-    )
+    guiji_llm = create_chat_openai(profile="deepseek_env_secondary")
     llm_with_tools = llm
     kor_dreams_task_step_llm_with_tools = guiji_llm
 
@@ -427,11 +363,6 @@ def test_builder_task_step_mctsr_threads(setup_log):
     os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
 
-    # 存储
-    cross_encoder_path = (
-        "/media/checkpoint/jina-reranker-v2-base-multilingual"
-    )
-    embed_model_path = "/media/checkpoint/m3e-base"
     start_task_context = "在 4-bit 量化后进行微调训练时，如果 cross-entropy loss 在高 step 下仍然波动较大、难以稳定收敛，这种现象是由于 batch 数据分布差异造成的，还是和特殊参数（如 LoRA / WCT / L4Q 的量化感知参数）无法充分拟合有关？针对 L4Q 这类方法，文中是否有对收敛稳定性的分析？"
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm,
@@ -608,15 +539,7 @@ def test_prompt():
     ),
     )
 
-    llm_runable = ChatOpenAI(
-        openai_api_base=os.environ.get("DEEPSEEK_API_BASE"),
-        model=os.environ.get("DEEPSEEK_API_MODEL"),
-        openai_api_key=os.environ.get("DEEPSEEK_API_KEY"),
-        verbose=True,
-        temperature=0.9,
-        top_p=0.9,
-        max_tokens=8192,
-    )
+    llm_runable = create_chat_openai(profile="deepseek_env_longform")
 
     aemo_representation_chain = prompt_template1 | llm_runable | StrOutputParser()
 

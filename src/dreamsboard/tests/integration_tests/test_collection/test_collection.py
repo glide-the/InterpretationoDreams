@@ -53,11 +53,19 @@ def _into_database_query(callback, resource_id, **kwargs) -> None:
         ("vs5", 1, "title5", "link5", "engine5", "category5", "chunk_text5"),
     ],
 )
-def test_faiss_collection_insert(setup_log, ref_id, chunk_id, title, link, engines, category, chunk_text):
+def test_faiss_collection_insert(
+    setup_log,
+    embed_model_path: str,
+    ref_id,
+    chunk_id,
+    title,
+    link,
+    engines,
+    category,
+    chunk_text,
+):
 
     collection_id = get_query_hash("start_task_context")
-    embed_model_path = "D:/model/m3e-base"
-
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     collection = FaissCollectionService(
         kb_name=collection_id,

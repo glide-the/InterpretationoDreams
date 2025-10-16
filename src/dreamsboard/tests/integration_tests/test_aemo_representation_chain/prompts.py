@@ -1,5 +1,14 @@
-"""
+"""Integration Test Environment:
+Requires external API access.
+Set the following environment variables before running:
+  - OPENAI_API_KEY
+  - CROSS_ENCODER_PATH
+  - EMBED_MODEL_PATH
 
+Start task context payloads are loaded through the shared
+`start_task_context_payload` fixture, while any cross-encoder or embedding
+artifacts should be wired via the `cross_encoder_path` and `embed_model_path`
+fixtures respectively.
 """
 
 # 00-判断情感表征是否符合.txt

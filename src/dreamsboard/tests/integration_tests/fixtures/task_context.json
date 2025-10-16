@@ -1,0 +1,8 @@
+{
+  "start_task_context": "有哪些方法可以提升大模型的规划能力，各自优劣是什么？",
+  "description": "Shared task context used by integration tests to ensure deterministic prompts.",
+  "metadata": {
+    "source": "integration_tests/fixtures/task_context.json",
+    "updated_at": "2024-06-01T00:00:00Z"
+  }
+}
