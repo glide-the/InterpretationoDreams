@@ -1,6 +1,6 @@
-from dreamsboard.engine.memory.summary import DocumentWithVSId, SummaryAdapter
+# from dreamsboard.engine.memory.summary import DocumentWithVSId, SummaryAdapter
 
-__all__ = [
-    "SummaryAdapter",
-    "DocumentWithVSId",
-]
+# __all__ = [
+#     "SummaryAdapter",
+#     "DocumentWithVSId",
+# ]

@@ -1,9 +1,9 @@
-from dreamsboard.engine.memory.summary.summary_chunk import (
-    DocumentWithVSId,
-    SummaryAdapter,
-)
+# from dreamsboard.engine.memory.summary.summary_chunk import (
+#     DocumentWithVSId,
+#     SummaryAdapter,
+# )
 
-__all__ = [
-    "SummaryAdapter",
-    "DocumentWithVSId",
-]
+# __all__ = [
+#     "SummaryAdapter",
+#     "DocumentWithVSId",
+# ]

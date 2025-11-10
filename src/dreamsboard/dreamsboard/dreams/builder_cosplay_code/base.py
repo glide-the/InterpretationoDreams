@@ -181,7 +181,7 @@ class StructuredDreamsStoryboard:
         对性格分析结果进行抽取，得到性格分析结果
         :return:
         """
-        response = self.kor_dreams_personality_chain.run(
+        response = self.kor_dreams_personality_chain.invoke(
             self.dreams_personality_context
         )
 
