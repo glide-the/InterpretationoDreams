@@ -1,180 +1,136 @@
 {
   "profiles": {
     "default": {
-      "parameters": {}
+      "openai_api_base": "env:OPENAI_API_BASE||https://api.openai.com/v1",
+      "model": "env:OPENAI_MODEL_NAME||gpt-4o-mini",
+      "openai_api_key": "env:OPENAI_API_KEY",
+      "verbose": "env:OPENAI_VERBOSE||false",
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "verbose": {
       "inherit": "default",
-      "parameters": {
-        "verbose": true
-      }
+      "verbose": true
     },
     "gpt4o": {
       "inherit": "verbose",
-      "parameters": {
-        "model": "gpt-4o"
-      }
+      "model": "env:GPT4O_MODEL_NAME||gpt-4o"
     },
     "gpt4o_guidance": {
       "inherit": "gpt4o",
-      "parameters": {
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "deepseek_base": {
-      "parameters": {
-        "openai_api_base": "http://127.0.0.1:20000/deepseek/v1",
-        "model": "deepseek-chat",
-        "openai_api_key": "sk-c7balko7z4266rye",
-        "verbose": true
-      }
+      "openai_api_base": "env:DEEPSEEK_API_BASE||http://127.0.0.1:20000/deepseek/v1",
+      "model": "env:DEEPSEEK_API_MODEL||deepseek-chat",
+      "openai_api_key": "env:DEEPSEEK_API_KEY||env:OPENAI_API_KEY",
+      "verbose": "env:DEEPSEEK_VERBOSE||true",
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "deepseek_guidance": {
       "inherit": "deepseek_base",
-      "parameters": {
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "deepseek_env_primary": {
-      "parameters": {
-        "openai_api_base": "env:DEEPSEEK_API_BASE||env:OPENAI_API_BASE",
-        "model": "env:DEEPSEEK_API_MODEL||env:OPENAI_MODEL_NAME",
-        "openai_api_key": "env:DEEPSEEK_API_KEY||env:OPENAI_API_KEY",
-        "verbose": true,
-        "temperature": 0.9,
-        "top_p": 0.9,
-        "max_tokens": 4000
-      }
+      "openai_api_base": "env:DEEPSEEK_API_BASE||env:OPENAI_API_BASE",
+      "model": "env:DEEPSEEK_API_MODEL||env:OPENAI_MODEL_NAME",
+      "openai_api_key": "env:DEEPSEEK_API_KEY||env:OPENAI_API_KEY",
+      "verbose": true,
+      "temperature": 0.9,
+      "top_p": 0.9
     },
     "deepseek_env_secondary": {
       "inherit": "deepseek_env_primary",
-      "parameters": {
-        "temperature": 0.1
-      }
+      "temperature": 0.1
     },
     "deepseek_env_longform": {
-      "inherit": "deepseek_env_primary",
-      "parameters": {
-        "max_tokens": 8192
-      }
+      "inherit": "deepseek_env_primary"
     },
     "openai_builder_base": {
-      "parameters": {
-        "openai_api_base": "env:OPENAI_API_BASE",
-        "model": "env:OPENAI_MODEL_NAME",
-        "openai_api_key": "env:OPENAI_API_KEY",
-        "verbose": true,
-        "temperature": 0.1,
-        "top_p": 0.9
-      }
+      "openai_api_base": "env:OPENAI_API_BASE",
+      "model": "env:OPENAI_MODEL_NAME",
+      "openai_api_key": "env:OPENAI_API_KEY",
+      "verbose": true,
+      "temperature": 0.1,
+      "top_p": 0.9
     },
     "openai_builder_guidance": {
       "inherit": "openai_builder_base",
-      "parameters": {
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "glm4_gateway_guidance": {
-      "parameters": {
-        "openai_api_base": "http://0.0.0.0:8000/v1",
-        "model": "glm-4",
-        "openai_api_key": "glm-4",
-        "verbose": true,
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "openai_api_base": "env:GLM4_GATEWAY_API_BASE||http://0.0.0.0:8000/v1",
+      "model": "env:GLM4_GATEWAY_MODEL||glm-4",
+      "openai_api_key": "env:GLM4_GATEWAY_API_KEY||glm-4",
+      "verbose": true,
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "glm4_remote_guidance": {
-      "parameters": {
-        "openai_api_base": "https://open.bigmodel.cn/api/paas/v4",
-        "model": "glm-4",
-        "openai_api_key": "testkey",
-        "verbose": true,
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "openai_api_base": "env:GLM4_API_BASE||https://open.bigmodel.cn/api/paas/v4",
+      "model": "env:GLM4_MODEL_NAME||glm-4",
+      "openai_api_key": "env:GLM4_API_KEY||testkey",
+      "verbose": true,
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "glm4_remote_guidance_slash": {
-      "parameters": {
-        "openai_api_base": "https://open.bigmodel.cn/api/paas/v4/",
-        "model": "glm-4",
-        "openai_api_key": "testkey",
-        "verbose": true,
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "inherit": "glm4_remote_guidance",
+      "openai_api_base": "env:GLM4_API_BASE_SLASH||https://open.bigmodel.cn/api/paas/v4/"
     },
     "glm4_remote_low_temp": {
-      "parameters": {
-        "openai_api_base": "https://open.bigmodel.cn/api/paas/v4",
-        "model": "glm-4",
-        "openai_api_key": "testkey",
-        "verbose": true,
-        "temperature": 0.1,
-        "top_p": 0.9
-      }
+      "inherit": "glm4_remote_guidance",
+      "temperature": 0.1,
+      "top_p": 0.9
     },
     "glm4_local_verbose": {
-      "parameters": {
-        "openai_api_base": "http://127.0.0.1:30000/v1",
-        "model": "glm-4",
-        "openai_api_key": "glm-4",
-        "verbose": true
-      }
+      "openai_api_base": "env:GLM4_LOCAL_API_BASE||http://127.0.0.1:30000/v1",
+      "model": "env:GLM4_LOCAL_MODEL||glm-4",
+      "openai_api_key": "env:GLM4_LOCAL_API_KEY||glm-4",
+      "verbose": true
     },
     "glm4_local_low_temp": {
       "inherit": "glm4_local_verbose",
-      "parameters": {
-        "temperature": 0.1,
-        "top_p": 0.9
-      }
+      "temperature": 0.1,
+      "top_p": 0.9
     },
     "glm4_local_guidance": {
       "inherit": "glm4_local_verbose",
-      "parameters": {
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "glm3_local_guidance": {
-      "parameters": {
-        "openai_api_base": "http://127.0.0.1:30000/v1",
-        "model": "glm-3-turbo",
-        "openai_api_key": "glm-4",
-        "verbose": true,
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "openai_api_base": "env:GLM3_LOCAL_API_BASE||http://127.0.0.1:30000/v1",
+      "model": "env:GLM3_LOCAL_MODEL||glm-3-turbo",
+      "openai_api_key": "env:GLM3_LOCAL_API_KEY||glm-4",
+      "verbose": true,
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "glm4_airx_guidance": {
-      "parameters": {
-        "openai_api_base": "https://open.bigmodel.cn/api/paas/v4/",
-        "model": "glm-4-airx",
-        "openai_api_key": "12",
-        "verbose": true,
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "openai_api_base": "env:GLM4_AIRX_API_BASE||https://open.bigmodel.cn/api/paas/v4/",
+      "model": "env:GLM4_AIRX_MODEL||glm-4-airx",
+      "openai_api_key": "env:GLM4_AIRX_API_KEY||12",
+      "verbose": true,
+      "temperature": 0.95,
+      "top_p": 0.7
     },
     "glm4_plus_low_temp": {
-      "parameters": {
-        "openai_api_base": "https://open.bigmodel.cn/api/paas/v4",
-        "model": "glm-4-plus",
-        "openai_api_key": "testkey",
-        "verbose": true,
-        "temperature": 0.1,
-        "top_p": 0.9
-      }
+      "openai_api_base": "env:GLM4_PLUS_API_BASE||https://open.bigmodel.cn/api/paas/v4",
+      "model": "env:GLM4_PLUS_MODEL||glm-4-plus",
+      "openai_api_key": "env:GLM4_PLUS_API_KEY||testkey",
+      "verbose": true,
+      "temperature": 0.1,
+      "top_p": 0.9
     },
     "glm4_plus_guidance": {
       "inherit": "glm4_plus_low_temp",
-      "parameters": {
-        "temperature": 0.95,
-        "top_p": 0.7
-      }
+      "temperature": 0.95,
+      "top_p": 0.7
     }
   }
 }
