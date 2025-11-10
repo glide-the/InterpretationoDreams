@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 
 from kor.extraction.parser import KorParser
 from kor.nodes import Number, Object, Text
-from langchain.chains import LLMChain, SequentialChain
+from langchain.chains import SequentialChain
 from langchain.chains.base import Chain
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import (

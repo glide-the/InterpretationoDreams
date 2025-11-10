@@ -50,6 +50,7 @@ logger.addHandler(handler)
 
 
 def test_builder_task_step(
+    start_task_context: str,
     chat_openai_factory: Callable[..., object],
     cross_encoder_path: str,
     embed_model_path: str,
@@ -100,8 +101,7 @@ def test_builder_task_step(
     os.environ["EDREAMS_EVOLUTIONARY_TEMPLATE"] = EDREAMS_EVOLUTIONARY_TEMPLATE_TEST
     os.environ["EDREAMS_PERSONALITY_TEMPLATE"] = EDREAMS_PERSONALITY_TEMPLATE_TEST
     os.environ["DREAMS_GEN_TEMPLATE"] = DREAMS_GEN_TEMPLATE_TEST
-
-    start_task_context = "什么是损失函数？"
+ 
     builder = StructuredTaskStepStoryboard.form_builder(
         llm_runable=llm_with_tools,
         kor_dreams_task_step_llm=kor_dreams_task_step_llm_with_tools,
@@ -396,7 +396,7 @@ def test_builder_task_step_mctsr_threads(
          )
 
     # 初始化任务引擎
-    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=False)
+    task_engine_builder = builder.loader_task_step_iter_builder(allow_init=True)
 
     def worker(
         step: int,
@@ -528,7 +528,6 @@ def test_prompt(chat_openai_factory: Callable[..., object]) -> None:
 
     from kor.extraction.parser import KorParser
     from kor.nodes import Number, Object, Text
-    from langchain.chains import LLMChain, SequentialChain
     from langchain.chains.base import Chain
     from langchain_core.language_models import LanguageModelInput
     
