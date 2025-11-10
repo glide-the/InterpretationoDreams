@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from langchain.chains import LLMChain
 from langchain.chains.ernie_functions import create_structured_output_runnable
 from langchain.schema.language_model import BaseLanguageModel
 from langchain_community.chat_models import ChatOpenAI
@@ -20,7 +19,7 @@ class NerLoader:
     @classmethod
     def form_ner_dreams_personality_builder(
         cls, llm_runable: Runnable[LanguageModelInput, BaseMessage]
-    ) -> LLMChain:
+    ) -> Runnable:
         """
         生成性格分析的抽取链
         :param llm:

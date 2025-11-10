@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from langchain.chains import LLMChain
 from langchain_core.language_models import LanguageModelInput
 from langchain_core.messages import (
     BaseMessage,
@@ -59,11 +58,11 @@ class StructuredDreamsStoryboard:
         builder: StructuredStoryboardCSVBuilder,
         dreams_guidance_context: str,
         dreams_personality_context: str,
-        kor_dreams_guidance_chain: LLMChain,
+        kor_dreams_guidance_chain: Runnable,
         kor_dreams_guidance_schema: Object,
-        kor_dreams_personality_chain: LLMChain,
+        kor_dreams_personality_chain: Runnable,
         kor_dreams_personality_schema: Object,
-        ner_dreams_personality_chain: LLMChain,
+        ner_dreams_personality_chain: Runnable,
         user_id: str = None,
         llm_runable: Runnable[LanguageModelInput, BaseMessage] | None = None,
     ):

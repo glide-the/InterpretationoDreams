@@ -38,13 +38,13 @@ logger.addHandler(handler)
 
 class AEMORepresentationChain(ABC):
     aemo_representation_chain: Chain
-    kor_dreams_task_step_chain: LLMChain
+    kor_dreams_task_step_chain: Runnable
     kor_schema: Object
 
     def __init__(
         self,
         start_task_context: str,
-        kor_dreams_task_step_chain: LLMChain,
+        kor_dreams_task_step_chain: Runnable,
         kor_schema: Object,
         aemo_representation_chain: Chain,
     ):
