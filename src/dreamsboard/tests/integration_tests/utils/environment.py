@@ -10,6 +10,7 @@ or ``CHAT_OPENAI_PROFILES_JSON``.
 
 from __future__ import annotations
 
+import importlib
 import json
 import os
 from pathlib import Path
@@ -51,6 +52,46 @@ ENV_VALUE_PREFIX = "env:"
 CHAT_OPENAI_PROFILE_SKIP_TEMPLATE = (
     "Skipping test: ChatOpenAI profile '{profile}' requires '{variable}'."
 )
+
+_DOTENV_LOADED = False
+
+
+def _ensure_dotenv_loaded() -> None:
+    """Load ``.env`` configuration once when available."""
+
+    global _DOTENV_LOADED
+    if _DOTENV_LOADED:
+        return
+
+    spec = importlib.util.find_spec("dotenv")
+    if spec is None:
+        _DOTENV_LOADED = True
+        return
+
+    dotenv_module = importlib.import_module("dotenv")
+    load_dotenv = getattr(dotenv_module, "load_dotenv", None)
+    find_dotenv = getattr(dotenv_module, "find_dotenv", None)
+
+    if load_dotenv is None:
+        _DOTENV_LOADED = True
+        return
+
+    if find_dotenv is not None:
+        env_path = find_dotenv(usecwd=True)
+        if env_path:
+            load_dotenv(env_path, override=False)
+        else:
+            load_dotenv(override=False)
+    else:
+        load_dotenv(override=False)
+
+    search_roots = [Path.cwd()] + list(Path(__file__).resolve().parents)
+    for root in search_roots:
+        env_candidate = root / ".env"
+        if env_candidate.exists():
+            load_dotenv(env_candidate, override=False)
+
+    _DOTENV_LOADED = True
 
 
 def missing_required_env_vars(env: Iterable[str] | None = None) -> List[str]:
@@ -159,6 +200,16 @@ def _raw_chat_openai_profiles() -> Dict[str, Any]:
     return profiles
 
 
+def _coerce_env_literal(value: str) -> Any:
+    lowered = value.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        return value
+
+
 def _resolve_profile_value(
     profile: str, key: str, value: Any, skip_message: str
 ) -> Any:
@@ -170,13 +221,13 @@ def _resolve_profile_value(
             if fallback:
                 if fallback.startswith(ENV_VALUE_PREFIX):
                     return _resolve_profile_value(profile, key, fallback, skip_message)
-                return fallback
+                return _coerce_env_literal(fallback)
             pytest.skip(
                 CHAT_OPENAI_PROFILE_SKIP_TEMPLATE.format(
                     profile=profile, variable=variable
                 )
             )
-        return env_value
+        return _coerce_env_literal(env_value)
     if value == "<skip>":
         pytest.skip(skip_message)
     return value
@@ -222,12 +273,19 @@ def _build_chat_openai_profiles() -> Dict[str, Dict[str, Any]]:
     return built
 
 
-CHAT_OPENAI_PROFILES: Dict[str, Dict[str, Any]] = _build_chat_openai_profiles()
+def _resolve_chat_openai_profiles() -> Dict[str, Dict[str, Any]]:
+    _ensure_dotenv_loaded()
+    return _build_chat_openai_profiles()
+
+
+CHAT_OPENAI_PROFILES: Dict[str, Dict[str, Any]] = _resolve_chat_openai_profiles()
 
 
 def get_chat_openai_profile(profile: str = "default") -> Dict[str, Any]:
     """Return the resolved ChatOpenAI parameter set for ``profile``."""
 
+    global CHAT_OPENAI_PROFILES
+    CHAT_OPENAI_PROFILES = _resolve_chat_openai_profiles()
     if profile not in CHAT_OPENAI_PROFILES:
         available = ", ".join(sorted(CHAT_OPENAI_PROFILES))
         raise KeyError(
