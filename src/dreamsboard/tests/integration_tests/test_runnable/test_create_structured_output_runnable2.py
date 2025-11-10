@@ -1,12 +1,10 @@
 import logging
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 import langchain
 from langchain.chains.openai_functions import create_structured_output_runnable
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 from dreamsboard.document_loaders.protocol.ner_protocol import (
     DreamsStepInfo,
@@ -24,9 +22,11 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def test_create_structured_output_runnable2() -> None:
+def test_create_structured_output_runnable2(
+    chat_openai_factory: Callable[..., object]
+) -> None:
     """Test create_structured_output_runnable. 测试创建结构化输出可运行对象。"""
-    llm = create_chat_openai(profile="glm4_local_low_temp")
+    llm = chat_openai_factory(profile="glm4_local_low_temp")
     prompt = ChatPromptTemplate.from_messages(
         [
             (

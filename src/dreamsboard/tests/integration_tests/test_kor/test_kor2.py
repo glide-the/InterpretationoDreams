@@ -1,13 +1,12 @@
 import os
+from typing import Callable
 
 from kor.extraction import create_extraction_chain
 from kor.nodes import Number, Object, Text
 
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
-
-def test_kor2():
-    llm = create_chat_openai(profile="glm4_local_low_temp")
+def test_kor2(chat_openai_factory: Callable[..., object]) -> None:
+    llm = chat_openai_factory(profile="glm4_local_low_temp")
     # @title 长的prompt
     schema = Object(
         id="script",

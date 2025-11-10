@@ -1,11 +1,10 @@
 import logging
+from typing import Callable
 
 import langchain
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 from dreamsboard.document_loaders import StructuredStoryboardCSVBuilder
 from dreamsboard.dreams.builder_cosplay_code.base import StructuredDreamsStoryboard
@@ -38,9 +37,11 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def test_structured_dreams_storyboard_store_test_gpt4o(setup_log) -> None:
-    llm = create_chat_openai(profile="gpt4o")
-    guidance_llm = create_chat_openai(profile="gpt4o_guidance")
+def test_structured_dreams_storyboard_store_test_gpt4o(
+    setup_log, chat_openai_factory: Callable[..., object]
+) -> None:
+    llm = chat_openai_factory(profile="gpt4o")
+    guidance_llm = chat_openai_factory(profile="gpt4o_guidance")
     try:
         storage_context = StorageContext.from_defaults(
             persist_dir="./ieAjabk1_keyframe"

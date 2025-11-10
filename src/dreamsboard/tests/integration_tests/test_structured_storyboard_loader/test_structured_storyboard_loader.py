@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Callable
 
 from dreamsboard.document_loaders.structured_storyboard_loader import (
     StructuredStoryboard,
@@ -11,8 +12,6 @@ from dreamsboard.engine.storage.task_step_store.simple_task_step_store import (
     SimpleTaskStepStore,
 )
 from dreamsboard.engine.utils import concat_dirs
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -30,9 +29,11 @@ logger.addHandler(handler)
 """
 
 
-def test_structured_storyboard_loader(start_task_context: str):
-    llm = create_chat_openai(profile="glm4_plus_low_temp")
-    kor_dreams_task_step_llm = create_chat_openai(profile="glm4_plus_guidance")
+def test_structured_storyboard_loader(
+    start_task_context: str, chat_openai_factory: Callable[..., object]
+):
+    llm = chat_openai_factory(profile="glm4_plus_low_temp")
+    kor_dreams_task_step_llm = chat_openai_factory(profile="glm4_plus_guidance")
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )

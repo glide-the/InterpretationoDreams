@@ -2,6 +2,7 @@ import logging
 import multiprocessing
 import os
 import queue
+from typing import Callable
 
 from dreamsboard.common import _get_assistants_tool
 from dreamsboard.common.try_parse_json_object import try_parse_json_object
@@ -22,8 +23,6 @@ from langchain_community.document_loaders import UnstructuredPDFLoader
 from dreamsboard.engine.task_engine_builder.core import TaskEngineBuilder
 from dreamsboard.engine.utils import concat_dirs
 from dreamsboard.common.callback import process_registry
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -51,10 +50,12 @@ logger.addHandler(handler)
 
 
 def test_builder_task_step(
-    cross_encoder_path: str, embed_model_path: str
-):
-    llm = create_chat_openai(profile="openai_builder_base")
-    kor_dreams_task_step_llm = create_chat_openai(profile="openai_builder_guidance")
+    chat_openai_factory: Callable[..., object],
+    cross_encoder_path: str,
+    embed_model_path: str,
+) -> None:
+    llm = chat_openai_factory(profile="openai_builder_base")
+    kor_dreams_task_step_llm = chat_openai_factory(profile="openai_builder_guidance")
 
     if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
@@ -118,10 +119,12 @@ def test_builder_task_step(
 
 
 def test_builder_task_step_answer(
-    cross_encoder_path: str, embed_model_path: str
-):
-    llm = create_chat_openai(profile="openai_builder_base")
-    kor_dreams_task_step_llm = create_chat_openai(profile="openai_builder_guidance")
+    chat_openai_factory: Callable[..., object],
+    cross_encoder_path: str,
+    embed_model_path: str,
+) -> None:
+    llm = chat_openai_factory(profile="openai_builder_base")
+    kor_dreams_task_step_llm = chat_openai_factory(profile="openai_builder_guidance")
 
     if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
@@ -208,10 +211,12 @@ def test_json_parse():
 
 
 def test_builder_task_step_mctsr(
-    cross_encoder_path: str, embed_model_path: str
-):
-    llm = create_chat_openai(profile="openai_builder_base")
-    kor_dreams_task_step_llm = create_chat_openai(profile="openai_builder_guidance")
+    chat_openai_factory: Callable[..., object],
+    cross_encoder_path: str,
+    embed_model_path: str,
+) -> None:
+    llm = chat_openai_factory(profile="openai_builder_base")
+    kor_dreams_task_step_llm = chat_openai_factory(profile="openai_builder_guidance")
 
     if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
@@ -324,12 +329,16 @@ def test_task_step_md():
 
 
 def test_builder_task_step_mctsr_threads(
-    setup_log, cross_encoder_path: str, embed_model_path: str
-):
+    setup_log,
+    chat_openai_factory: Callable[..., object],
+    cross_encoder_path: str,
+    embed_model_path: str,
+) -> None:
     import threading
-    llm = create_chat_openai(profile="deepseek_env_primary")
 
-    guiji_llm = create_chat_openai(profile="deepseek_env_secondary")
+    llm = chat_openai_factory(profile="deepseek_env_primary")
+
+    guiji_llm = chat_openai_factory(profile="deepseek_env_secondary")
     llm_with_tools = llm
     kor_dreams_task_step_llm_with_tools = guiji_llm
 
@@ -508,7 +517,7 @@ def test_builder_task_step_mctsr_threads(
         t.join()
 
 
-def test_prompt():
+def test_prompt(chat_openai_factory: Callable[..., object]) -> None:
     
  
 
@@ -539,7 +548,7 @@ def test_prompt():
     ),
     )
 
-    llm_runable = create_chat_openai(profile="deepseek_env_longform")
+    llm_runable = chat_openai_factory(profile="deepseek_env_longform")
 
     aemo_representation_chain = prompt_template1 | llm_runable | StrOutputParser()
 

@@ -5,6 +5,7 @@ import re
 import shutil
 import time
 from pathlib import Path
+from typing import Callable
 
 import langchain
 from tqdm import tqdm
@@ -36,9 +37,6 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 from langchain.callbacks import wandb_tracing_enabled
 
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
-
-
 def check_and_convert_special_characters(text):
     # 将除了中文之外的所有字符转换成\U
     converted_text = "".join(
@@ -47,7 +45,7 @@ def check_and_convert_special_characters(text):
     return converted_text
 
 
-def test_batch_extract(setup_log) -> None:
+def test_batch_extract(setup_log, chat_openai_factory: Callable[..., object]) -> None:
     with wandb_tracing_enabled():
         data_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_csv"
         save_folder = "/media/gpt4-pdf-chatbot-langchain/InterpretationoDreams/社会交流步骤分析/msg_extract_storage_deepseek"
@@ -56,7 +54,7 @@ def test_batch_extract(setup_log) -> None:
             ds_path.mkdir()
         txt_files = load_csv(data_folder)
         logger.info("获取数据，成功{}".format(len(txt_files)))
-        llm = create_chat_openai(profile="deepseek_base")
+        llm = chat_openai_factory(profile="deepseek_base")
 
         # guidance_llm = ChatOpenAI(
         #     openai_api_base='http://127.0.0.1:30000/v1',
@@ -66,8 +64,8 @@ def test_batch_extract(setup_log) -> None:
         #     temperature=0.1,
         #     top_p=0.9,
         # )
-        guidance_llm = create_chat_openai(profile="deepseek_guidance")
-        personality_llm = create_chat_openai(profile="deepseek_guidance")
+        guidance_llm = chat_openai_factory(profile="deepseek_guidance")
+        personality_llm = chat_openai_factory(profile="deepseek_guidance")
         batch_len = 10
 
         # 对每一个文件进行操作
