@@ -96,7 +96,7 @@ def test_engine() -> None:
 
 
 def test_code(chat_openai_factory: Callable[..., Any]) -> None:
-    llm = chat_openai_factory(profile="glm4_airx_guidance")
+    llm = chat_openai_factory()
     critic_system_prompt_template = PromptTemplate(
         input_variables=[
             "problem",

@@ -88,11 +88,8 @@ def chat_openai_factory(
 ) -> Callable[..., Any]:
     """Return a factory that instantiates ChatOpenAI-compatible clients."""
 
-    def _factory(profile: str = "default", **overrides: Any) -> Any:
-        if profile == "default":
-            params = {**chat_openai_defaults}
-        else:
-            params = get_chat_openai_profile(profile)
+    def _factory(profile: str = "openai_builder_base", **overrides: Any) -> Any:
+        params = get_chat_openai_profile(profile)
         params.update(overrides)
         params = {key: value for key, value in params.items() if value is not None}
         return chat_openai_class(**params)

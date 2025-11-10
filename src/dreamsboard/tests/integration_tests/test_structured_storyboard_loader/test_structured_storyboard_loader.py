@@ -32,8 +32,8 @@ logger.addHandler(handler)
 def test_structured_storyboard_loader(
     start_task_context: str, chat_openai_factory: Callable[..., object]
 ):
-    llm = chat_openai_factory(profile="glm4_plus_low_temp")
-    kor_dreams_task_step_llm = chat_openai_factory(profile="glm4_plus_guidance")
+    llm = chat_openai_factory()
+    kor_dreams_task_step_llm = chat_openai_factory()
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )

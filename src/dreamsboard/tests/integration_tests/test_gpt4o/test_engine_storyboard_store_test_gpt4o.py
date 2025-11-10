@@ -40,8 +40,8 @@ logger.addHandler(handler)
 def test_structured_dreams_storyboard_store_test_gpt4o(
     setup_log, chat_openai_factory: Callable[..., object]
 ) -> None:
-    llm = chat_openai_factory(profile="gpt4o")
-    guidance_llm = chat_openai_factory(profile="gpt4o_guidance")
+    llm = chat_openai_factory()
+    guidance_llm = chat_openai_factory()
     try:
         storage_context = StorageContext.from_defaults(
             persist_dir="./ieAjabk1_keyframe"

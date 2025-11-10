@@ -28,7 +28,7 @@ def test_story_board_dreams_generation_chain(
     # here we are configuring the wandb project name
     # os.environ["WANDB_PROJECT"] = "StoryBoardDreamsGenerationChain"
     # os.environ["WANDB_API_KEY"] = "key"
-    llm = chat_openai_factory(profile="verbose")
+    llm = chat_openai_factory()
 
     dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
         llm_runable=llm,

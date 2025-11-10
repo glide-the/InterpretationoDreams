@@ -29,7 +29,7 @@ logger.addHandler(handler)
 def test_aemo_representation_chain_context(
     start_task_context: str, chat_openai_factory: Callable[..., object]
 ):
-    llm = chat_openai_factory(profile="glm4_plus_low_temp")
+    llm = chat_openai_factory()
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
         llm_runable=llm,
         start_task_context=start_task_context,
@@ -44,7 +44,7 @@ def test_aemo_representation_chain_context(
 def test_aemo_representation_chain_custom_prompt(
     start_task_context: str, chat_openai_factory: Callable[..., object]
 ):
-    llm = chat_openai_factory(profile="glm4_plus_low_temp")
+    llm = chat_openai_factory()
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
@@ -66,8 +66,8 @@ def test_aemo_representation_chain_custom_prompt(
 def test_aemo_representation_chain_task_step(
     start_task_context: str, chat_openai_factory: Callable[..., object]
 ):
-    llm = chat_openai_factory(profile="glm4_plus_low_temp")
-    kor_dreams_task_step_llm = chat_openai_factory(profile="glm4_plus_guidance")
+    llm = chat_openai_factory()
+    kor_dreams_task_step_llm = chat_openai_factory()
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
@@ -97,8 +97,8 @@ def test_aemo_representation_chain_task_step(
 def test_aemo_representation_chain_task_step_store(
     start_task_context: str, chat_openai_factory: Callable[..., object]
 ):
-    llm = chat_openai_factory(profile="glm4_plus_low_temp")
-    kor_dreams_task_step_llm = chat_openai_factory(profile="glm4_plus_guidance")
+    llm = chat_openai_factory()
+    kor_dreams_task_step_llm = chat_openai_factory()
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )

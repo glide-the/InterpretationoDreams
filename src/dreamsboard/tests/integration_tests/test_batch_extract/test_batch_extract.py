@@ -54,7 +54,7 @@ def test_batch_extract(setup_log, chat_openai_factory: Callable[..., object]) ->
             ds_path.mkdir()
         txt_files = load_csv(data_folder)
         logger.info("获取数据，成功{}".format(len(txt_files)))
-        llm = chat_openai_factory(profile="deepseek_base")
+        llm = chat_openai_factory()
 
         # guidance_llm = ChatOpenAI(
         #     openai_api_base='http://127.0.0.1:30000/v1',
@@ -64,8 +64,8 @@ def test_batch_extract(setup_log, chat_openai_factory: Callable[..., object]) ->
         #     temperature=0.1,
         #     top_p=0.9,
         # )
-        guidance_llm = chat_openai_factory(profile="deepseek_guidance")
-        personality_llm = chat_openai_factory(profile="deepseek_guidance")
+        guidance_llm = chat_openai_factory()
+        personality_llm = chat_openai_factory()
         batch_len = 10
 
         # 对每一个文件进行操作

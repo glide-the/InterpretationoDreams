@@ -6,7 +6,7 @@ from kor.nodes import Number, Object, Text
 
 
 def test_kor(chat_openai_factory: Callable[..., object]) -> None:
-    llm = chat_openai_factory(profile="glm3_local_guidance")
+    llm = chat_openai_factory()
     # @title 长的prompt
 
     schema = Object(

@@ -29,7 +29,7 @@ def test_runnable_parallel_chain(
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.runnables import RunnableParallel
 
-    llm = chat_openai_factory(profile="glm4_local_verbose")
+    llm = chat_openai_factory()
     joke_chain = (
         ChatPromptTemplate.from_template("tell me a joke about {topic}")
         | llm

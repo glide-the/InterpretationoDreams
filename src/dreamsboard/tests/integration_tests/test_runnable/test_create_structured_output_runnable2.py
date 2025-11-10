@@ -26,7 +26,7 @@ def test_create_structured_output_runnable2(
     chat_openai_factory: Callable[..., object]
 ) -> None:
     """Test create_structured_output_runnable. 测试创建结构化输出可运行对象。"""
-    llm = chat_openai_factory(profile="glm4_local_low_temp")
+    llm = chat_openai_factory()
     prompt = ChatPromptTemplate.from_messages(
         [
             (

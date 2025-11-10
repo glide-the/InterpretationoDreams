@@ -54,8 +54,8 @@ def test_builder_task_step(
     cross_encoder_path: str,
     embed_model_path: str,
 ) -> None:
-    llm = chat_openai_factory(profile="openai_builder_base")
-    kor_dreams_task_step_llm = chat_openai_factory(profile="openai_builder_guidance")
+    llm = chat_openai_factory()
+    kor_dreams_task_step_llm = chat_openai_factory()
 
     if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
@@ -123,8 +123,8 @@ def test_builder_task_step_answer(
     cross_encoder_path: str,
     embed_model_path: str,
 ) -> None:
-    llm = chat_openai_factory(profile="openai_builder_base")
-    kor_dreams_task_step_llm = chat_openai_factory(profile="openai_builder_guidance")
+    llm = chat_openai_factory()
+    kor_dreams_task_step_llm = chat_openai_factory()
 
     if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
@@ -215,8 +215,8 @@ def test_builder_task_step_mctsr(
     cross_encoder_path: str,
     embed_model_path: str,
 ) -> None:
-    llm = chat_openai_factory(profile="openai_builder_base")
-    kor_dreams_task_step_llm = chat_openai_factory(profile="openai_builder_guidance")
+    llm = chat_openai_factory()
+    kor_dreams_task_step_llm = chat_openai_factory()
 
     if "glm" in (os.environ.get("OPENAI_MODEL_NAME") or ""):
         tools = [
@@ -336,9 +336,9 @@ def test_builder_task_step_mctsr_threads(
 ) -> None:
     import threading
 
-    llm = chat_openai_factory(profile="deepseek_env_primary")
+    llm = chat_openai_factory()
 
-    guiji_llm = chat_openai_factory(profile="deepseek_env_secondary")
+    guiji_llm = chat_openai_factory()
     llm_with_tools = llm
     kor_dreams_task_step_llm_with_tools = guiji_llm
 
@@ -548,7 +548,7 @@ def test_prompt(chat_openai_factory: Callable[..., object]) -> None:
     ),
     )
 
-    llm_runable = chat_openai_factory(profile="deepseek_env_longform")
+    llm_runable = chat_openai_factory()
 
     aemo_representation_chain = prompt_template1 | llm_runable | StrOutputParser()
 

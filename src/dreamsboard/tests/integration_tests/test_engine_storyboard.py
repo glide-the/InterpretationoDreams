@@ -22,7 +22,7 @@ logger.addHandler(handler)
 def test_structured_dreams_storyboard(
     chat_openai_factory: Callable[..., object]
 ) -> None:
-    llm = chat_openai_factory(profile="verbose")
+    llm = chat_openai_factory()
 
     dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
         llm_runable=llm,

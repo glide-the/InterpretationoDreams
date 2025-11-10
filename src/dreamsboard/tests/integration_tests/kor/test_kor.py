@@ -16,7 +16,7 @@ def test_kor_glm_3(chat_openai_factory: Callable[..., object]) -> None:
     for val in dreams_analysis_store.analysis_all.values():
         dreams_guidance_context = val.dreams_guidance_context
         dreams_personality_context = val.dreams_personality_context
-    guidance_llm = chat_openai_factory(profile="glm4_gateway_guidance")
+    guidance_llm = chat_openai_factory()
     kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
         llm_runable=guidance_llm
     )
@@ -47,7 +47,7 @@ def test_kor_glm_4(chat_openai_factory: Callable[..., object]) -> None:
     for val in dreams_analysis_store.analysis_all.values():
         dreams_guidance_context = val.dreams_guidance_context
         dreams_personality_context = val.dreams_personality_context
-    guidance_llm = chat_openai_factory(profile="glm4_remote_guidance_slash")
+    guidance_llm = chat_openai_factory()
     kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
         llm_runable=guidance_llm
     )
