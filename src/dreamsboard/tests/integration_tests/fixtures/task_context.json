@@ -1,5 +1,5 @@
 {
-  "start_task_context": "有哪些方法可以提升大模型的规划能力，各自优劣是什么？",
+  "start_task_context": "与女朋友吵架，观念和价值观不合怎么办？",
   "description": "Shared task context used by integration tests to ensure deterministic prompts.",
   "metadata": {
     "source": "integration_tests/fixtures/task_context.json",
