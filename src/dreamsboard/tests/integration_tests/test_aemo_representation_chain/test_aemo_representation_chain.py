@@ -1,8 +1,7 @@
 import json
 import logging
 import os
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
+from typing import Callable
 
 from dreamsboard.dreams.aemo_representation_chain.base import AEMORepresentationChain
 from dreamsboard.engine.entity.task_step.task_step import TaskStepNode
@@ -27,8 +26,10 @@ logger.addHandler(handler)
 """
 
 
-def test_aemo_representation_chain_context(start_task_context: str):
-    llm = create_chat_openai(profile="glm4_plus_low_temp")
+def test_aemo_representation_chain_context(
+    start_task_context: str, chat_openai_factory: Callable[..., object]
+):
+    llm = chat_openai_factory(profile="glm4_plus_low_temp")
     aemo_representation_chain = AEMORepresentationChain.from_aemo_representation_chain(
         llm_runable=llm,
         start_task_context=start_task_context,
@@ -40,8 +41,10 @@ def test_aemo_representation_chain_context(start_task_context: str):
     assert result.get("aemo_representation_context") is not None
 
 
-def test_aemo_representation_chain_custom_prompt(start_task_context: str):
-    llm = create_chat_openai(profile="glm4_plus_low_temp")
+def test_aemo_representation_chain_custom_prompt(
+    start_task_context: str, chat_openai_factory: Callable[..., object]
+):
+    llm = chat_openai_factory(profile="glm4_plus_low_temp")
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
@@ -60,9 +63,11 @@ def test_aemo_representation_chain_custom_prompt(start_task_context: str):
     assert result.get("aemo_representation_context") is not None
 
 
-def test_aemo_representation_chain_task_step(start_task_context: str):
-    llm = create_chat_openai(profile="glm4_plus_low_temp")
-    kor_dreams_task_step_llm = create_chat_openai(profile="glm4_plus_guidance")
+def test_aemo_representation_chain_task_step(
+    start_task_context: str, chat_openai_factory: Callable[..., object]
+):
+    llm = chat_openai_factory(profile="glm4_plus_low_temp")
+    kor_dreams_task_step_llm = chat_openai_factory(profile="glm4_plus_guidance")
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )
@@ -89,9 +94,11 @@ def test_aemo_representation_chain_task_step(start_task_context: str):
     assert len(task_step_iter) > 0
 
 
-def test_aemo_representation_chain_task_step_store(start_task_context: str):
-    llm = create_chat_openai(profile="glm4_plus_low_temp")
-    kor_dreams_task_step_llm = create_chat_openai(profile="glm4_plus_guidance")
+def test_aemo_representation_chain_task_step_store(
+    start_task_context: str, chat_openai_factory: Callable[..., object]
+):
+    llm = chat_openai_factory(profile="glm4_plus_low_temp")
+    kor_dreams_task_step_llm = chat_openai_factory(profile="glm4_plus_guidance")
     from tests.integration_tests.test_aemo_representation_chain.prompts import (
         AEMO_REPRESENTATION_PROMPT_TEMPLATE as AEMO_REPRESENTATION_PROMPT_TEMPLATE_TEST,
     )

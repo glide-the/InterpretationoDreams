@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import Any, Callable
 
 import langchain
 from langchain.prompts import PromptTemplate
@@ -8,8 +9,6 @@ from langchain_community.adapters.openai import (
     convert_dict_to_message,
     convert_message_to_dict,
 )
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 from dreamsboard.engine.engine_builder import CodeGeneratorBuilder
 from dreamsboard.engine.generate.code_generate import (
@@ -96,8 +95,8 @@ def test_engine() -> None:
     assert True
 
 
-def test_code():
-    llm = create_chat_openai(profile="glm4_airx_guidance")
+def test_code(chat_openai_factory: Callable[..., Any]) -> None:
+    llm = chat_openai_factory(profile="glm4_airx_guidance")
     critic_system_prompt_template = PromptTemplate(
         input_variables=[
             "problem",

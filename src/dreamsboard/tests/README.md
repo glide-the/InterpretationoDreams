@@ -25,13 +25,12 @@ This guide documents the environment requirements for `src/dreamsboard/tests/int
 
 - **版本与导入**：默认使用 `langchain_openai.ChatOpenAI` 或 `langchain_community.chat_models.ChatOpenAI`。
 - **默认配置**：`CHAT_OPENAI_DEFAULTS` 中定义，模型默认为 `gpt-4o-mini`，`temperature=0`，`max_retries=2`，`request_timeout=120s`。
-- **环境 Profile**：使用 `create_chat_openai(profile="<name>")` 调用 `config/chat_openai_profiles.json` 中定义的参数集合，例如：
+- **环境 Profile**：在测试中通过 `chat_openai_factory(profile="<name>")` 调用 `config/chat_openai_profiles.json` 中定义的参数集合，例如：
 
   ```python
-  from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
-
-  llm = create_chat_openai(profile="glm4_plus_low_temp")
-  guidance_llm = create_chat_openai(profile="glm4_plus_guidance")
+  def test_llm(chat_openai_factory):
+      llm = chat_openai_factory(profile="glm4_plus_low_temp")
+      guidance_llm = chat_openai_factory(profile="glm4_plus_guidance")
   ```
 
   Profile 支持环境变量占位符（如 `env:OPENAI_API_BASE` 或带回退的 `env:DEEPSEEK_API_BASE||env:OPENAI_API_BASE`），缺失时会 `pytest.skip` 提示所需变量。

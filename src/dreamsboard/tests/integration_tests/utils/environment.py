@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Type
 
 import pytest
 
@@ -236,18 +236,6 @@ def get_chat_openai_profile(profile: str = "default") -> Dict[str, Any]:
     return CHAT_OPENAI_PROFILES[profile].copy()
 
 
-def create_chat_openai(profile: str = "default", **overrides: Any) -> Any:
-    """Instantiate a ChatOpenAI-compatible object using an environment profile."""
-
-    ensure_external_services_available()
-    params = get_chat_openai_profile(profile)
-    params.update(overrides)
-    params = {key: value for key, value in params.items() if value is not None}
-
-    chat_cls = resolve_chat_openai_class()
-    return chat_cls(**params)
-
-
 __all__ = [
     "ALL_ENV_VARS",
     "CHAT_OPENAI_DEFAULTS",
@@ -257,7 +245,6 @@ __all__ = [
     "REQUIRED_ENV_VARS",
     "SKIP_MESSAGE",
     "START_TASK_CONTEXT",
-    "create_chat_openai",
     "ensure_external_services_available",
     "get_chat_openai_profile",
     "get_env_path",

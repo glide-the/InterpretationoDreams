@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 import langchain
 from langchain.chains.openai_functions import create_structured_output_runnable
@@ -9,8 +9,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import OpenAIEmbeddings
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 langchain.verbose = True
 logger = logging.getLogger(__name__)
@@ -23,13 +21,15 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def test_runnable_parallel_chain() -> None:
+def test_runnable_parallel_chain(
+    chat_openai_factory: Callable[..., object]
+) -> None:
     """Test create_structured_output_runnable. 测试创建结构化输出可运行对象。"""
 
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.runnables import RunnableParallel
 
-    llm = create_chat_openai(profile="glm4_local_verbose")
+    llm = chat_openai_factory(profile="glm4_local_verbose")
     joke_chain = (
         ChatPromptTemplate.from_template("tell me a joke about {topic}")
         | llm

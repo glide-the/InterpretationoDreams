@@ -100,13 +100,6 @@ def chat_openai_factory(
     return _factory
 
 
-@pytest.fixture
-def chat_openai(chat_openai_factory: Callable[..., Any]) -> Any:
-    """Provide a default ChatOpenAI-compatible instance."""
-
-    return chat_openai_factory()
-
-
 @pytest.fixture(scope="session")
 def cross_encoder_path() -> str:
     """Return the configured cross-encoder model path or skip if missing."""

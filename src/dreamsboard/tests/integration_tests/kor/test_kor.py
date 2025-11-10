@@ -1,4 +1,4 @@
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
+from typing import Callable
 
 from dreamsboard.document_loaders import KorLoader
 from dreamsboard.document_loaders.protocol.ner_protocol import DreamsStepInfo
@@ -7,7 +7,7 @@ from dreamsboard.engine.storage.dreams_analysis_store.simple_dreams_analysis_sto
 )
 
 
-def test_kor_glm_3():
+def test_kor_glm_3(chat_openai_factory: Callable[..., object]) -> None:
     dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(
         persist_dir="./storage"
     )
@@ -16,7 +16,7 @@ def test_kor_glm_3():
     for val in dreams_analysis_store.analysis_all.values():
         dreams_guidance_context = val.dreams_guidance_context
         dreams_personality_context = val.dreams_personality_context
-    guidance_llm = create_chat_openai(profile="glm4_gateway_guidance")
+    guidance_llm = chat_openai_factory(profile="glm4_gateway_guidance")
     kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
         llm_runable=guidance_llm
     )
@@ -38,7 +38,7 @@ def test_kor_glm_3():
     print(dreams_step_list)
 
 
-def test_kor_glm_4():
+def test_kor_glm_4(chat_openai_factory: Callable[..., object]) -> None:
     dreams_analysis_store = SimpleDreamsAnalysisStore.from_persist_dir(
         persist_dir="./storage"
     )
@@ -47,7 +47,7 @@ def test_kor_glm_4():
     for val in dreams_analysis_store.analysis_all.values():
         dreams_guidance_context = val.dreams_guidance_context
         dreams_personality_context = val.dreams_personality_context
-    guidance_llm = create_chat_openai(profile="glm4_remote_guidance_slash")
+    guidance_llm = chat_openai_factory(profile="glm4_remote_guidance_slash")
     kor_dreams_guidance_chain = KorLoader.form_kor_dreams_guidance_builder(
         llm_runable=guidance_llm
     )

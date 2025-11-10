@@ -1,8 +1,7 @@
 import logging
+from typing import Callable
 
 import langchain
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 from dreamsboard.dreams.dreams_personality_chain.base import (
     StoryBoardDreamsGenerationChain,
@@ -19,7 +18,9 @@ handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 
-def test_story_board_dreams_generation_chain():
+def test_story_board_dreams_generation_chain(
+    chat_openai_factory: Callable[..., object]
+) -> None:
     # os.environ["LANGCHAIN_WANDB_TRACING"] = "true"
 
     # wandb documentation to configure wandb using env variables
@@ -27,7 +28,7 @@ def test_story_board_dreams_generation_chain():
     # here we are configuring the wandb project name
     # os.environ["WANDB_PROJECT"] = "StoryBoardDreamsGenerationChain"
     # os.environ["WANDB_API_KEY"] = "key"
-    llm = create_chat_openai(profile="verbose")
+    llm = chat_openai_factory(profile="verbose")
 
     dreams_generation_chain = StoryBoardDreamsGenerationChain.from_dreams_personality_chain(
         llm_runable=llm,

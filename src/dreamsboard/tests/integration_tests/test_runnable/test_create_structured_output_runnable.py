@@ -1,12 +1,10 @@
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 import langchain
 from langchain.chains.openai_functions import create_structured_output_runnable
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
-
-from dreamsboard.tests.integration_tests.utils.environment import create_chat_openai
 
 langchain.verbose = True
 logger = logging.getLogger(__name__)
@@ -25,9 +23,11 @@ class Personality(BaseModel):
     personality: str = Field(..., description="性格评价")
 
 
-def test_create_structured_output_runnable() -> None:
+def test_create_structured_output_runnable(
+    chat_openai_factory: Callable[..., object]
+) -> None:
     """Test create_structured_output_runnable. 测试创建结构化输出可运行对象。"""
-    llm = create_chat_openai(profile="glm4_local_verbose")
+    llm = chat_openai_factory(profile="glm4_local_verbose")
     prompt = ChatPromptTemplate.from_messages(
         [
             (
